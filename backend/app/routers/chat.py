@@ -11,6 +11,12 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 HISTORY_LIMIT = 12
 
+AI_DISCLAIMER_TEMPLATE = (
+    "Olá! Este é um assistente virtual (inteligência artificial) para dúvidas "
+    "iniciais sobre o atendimento de {name}. Não sou uma pessoa e não substituo "
+    "consulta ou atendimento clínico."
+)
+
 
 @router.post("/simulate", response_model=schemas.ChatResponse)
 def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
@@ -24,11 +30,17 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
         .filter_by(professional_id=professional.id, session_id=session_id)
         .first()
     )
+
+    disclaimer = None
     if not conversation:
         conversation = models.Conversation(professional_id=professional.id, session_id=session_id)
         db.add(conversation)
         db.commit()
         db.refresh(conversation)
+
+        disclaimer = AI_DISCLAIMER_TEMPLATE.format(name=professional.name)
+        db.add(models.Message(conversation_id=conversation.id, role="assistant", content=disclaimer))
+        db.commit()
 
     db.add(models.Message(conversation_id=conversation.id, role="user", content=payload.message))
     db.commit()
@@ -51,4 +63,4 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
 
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
 
-    return schemas.ChatResponse(session_id=session_id, reply=reply, sources=sources)
+    return schemas.ChatResponse(session_id=session_id, reply=reply, sources=sources, disclaimer=disclaimer)

@@ -84,7 +84,12 @@ export default function Dashboard() {
     try {
       const response = await api.sendChatMessage(professional.slug, text, chatSessionId);
       setChatSessionId(response.session_id);
-      setChatMessages((prev) => [...prev, { role: "assistant", content: response.reply, sources: response.sources }]);
+      setChatMessages((prev) => {
+        const next = [...prev];
+        if (response.disclaimer) next.push({ role: "disclaimer", content: response.disclaimer });
+        next.push({ role: "assistant", content: response.reply, sources: response.sources });
+        return next;
+      });
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -172,7 +177,11 @@ export default function Dashboard() {
                   <div
                     style={{
                       display: "inline-block",
-                      background: msg.role === "user" ? "#daf1ff" : "#f0f0f0",
+                      background:
+                        msg.role === "user" ? "#daf1ff" : msg.role === "disclaimer" ? "#fff6dd" : "#f0f0f0",
+                      border: msg.role === "disclaimer" ? "1px solid #e8d9a0" : "none",
+                      fontSize: msg.role === "disclaimer" ? 13 : undefined,
+                      fontStyle: msg.role === "disclaimer" ? "italic" : undefined,
                       borderRadius: 8,
                       padding: "6px 10px",
                       maxWidth: "80%",

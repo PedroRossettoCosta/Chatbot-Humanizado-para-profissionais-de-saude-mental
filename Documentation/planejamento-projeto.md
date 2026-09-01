@@ -129,9 +129,9 @@ Chatbot-Humanizado-para-profissionais-de-saude-mental/
 ## 8. Roadmap — próximos passos
 
 1. ~~**Finalizar RAG + resposta real, já multi-tenant**~~ — ✅ concluído. Upload de documentos e chat recebem o profissional como parâmetro (slug); coleção própria no ChromaDB por profissional; resposta real via Claude API no lugar do placeholder. Inclui também um painel simples (front-end) pra gerenciar tom de voz e documentos por slug.
-2. **Desenhar o protocolo de segurança com a profissional** (próximo passo) — o que ela considera sinal de risco, quão conservador o sistema deve ser, como ela quer ser notificada. Roteiro de entrevista pronto em `Entrevista_Marilia_Protocolo_Seguranca.md`, aguardando a conversa.
-3. **Construir a triagem de forma conservadora** — priorizando alertar demais a deixar passar um caso real.
-4. **Resolver o básico de LGPD** — criptografia, aviso de transparência ao paciente, política de retenção de dados.
+2. **Desenhar o protocolo de segurança com a profissional** (aguardando) — o que ela considera sinal de risco, quão conservador o sistema deve ser, como ela quer ser notificada. Roteiro de entrevista pronto em `Entrevista_Marilia_Protocolo_Seguranca.md`, aguardando a conversa.
+3. **Construir a triagem de forma conservadora** — priorizando alertar demais a deixar passar um caso real. Depende do passo 2.
+4. ~~**Resolver o básico de LGPD**~~ — ✅ concluído (adiantado enquanto o passo 2 aguarda resposta da profissional). Criptografia do conteúdo das mensagens em repouso (transparente via um `TypeDecorator` do SQLAlchemy), aviso automático e determinístico de que é um assistente de IA logo na primeira mensagem de cada conversa (não depende do modelo lembrar de avisar), e uma política de retenção definida (90 dias, configurável via `DATA_RETENTION_DAYS`) com um script manual (`backend/scripts/purge_old_conversations.py`) para aplicá-la — sem automação agendada ainda, já que não há dados reais em produção nesta fase.
 5. **A profissional testa extensivamente** — antes de qualquer paciente real interagir com o sistema.
 6. **Lançamento gradual e supervisionado** — acompanhamento próximo nas primeiras semanas, com capacidade de intervenção imediata.
 

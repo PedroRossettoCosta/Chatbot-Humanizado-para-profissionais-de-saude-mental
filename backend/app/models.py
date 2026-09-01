@@ -4,12 +4,31 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import TypeDecorator
 
 from app.database import Base
+from app.services import crypto
 
 
 def _uuid() -> str:
     return str(uuid.uuid4())
+
+
+class EncryptedText(TypeDecorator):
+    """Texto criptografado em repouso (LGPD) — transparente para o resto do código."""
+
+    impl = Text
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        return crypto.encrypt(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        return crypto.decrypt(value)
 
 
 class Professional(Base):
@@ -58,7 +77,7 @@ class Message(Base):
     id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     conversation_id = Column(UUID(as_uuid=False), ForeignKey("conversations.id"), nullable=False)
     role = Column(String(16), nullable=False)
-    content = Column(Text, nullable=False)
+    content = Column(EncryptedText, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     conversation = relationship("Conversation", back_populates="messages")

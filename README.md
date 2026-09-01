@@ -22,11 +22,18 @@ Implementado até aqui:
   dos documentos daquele profissional e envia isso, junto com o
   histórico da conversa, para a API da Claude.
 - **Painel simples (front-end)**: uma tela onde, informando o slug do
-  profissional, dá pra editar o tom de voz e enviar/listar documentos —
-  sem login, chamando os mesmos endpoints por slug.
+  profissional, dá pra editar o tom de voz, enviar/listar documentos e
+  testar o chat diretamente — sem login, chamando os mesmos endpoints
+  por slug.
+- **LGPD básico**: o conteúdo das mensagens é criptografado em repouso
+  no banco; toda nova conversa recebe automaticamente um aviso de que é
+  um assistente de IA (não depende do modelo lembrar de avisar); e há
+  uma política de retenção (90 dias, configurável) aplicável por um
+  script manual.
 
 Ainda não implementado (próximos itens do roadmap): protocolo de
-segurança/triagem, LGPD, testes extensivos, lançamento supervisionado.
+segurança/triagem (aguardando conversa com a profissional), testes
+extensivos, lançamento supervisionado.
 
 ## Pré-requisitos
 
@@ -61,7 +68,9 @@ Rodado a partir da raiz do repositório, a não ser onde indicado.
 
    Abra o `backend\.env` e preencha `ANTHROPIC_API_KEY` com sua chave.
    Esse arquivo **não vai para o Git** (está no `.gitignore`) — cada
-   máquina precisa do seu próprio.
+   máquina precisa do seu próprio. Deixe `DATA_ENCRYPTION_KEY` em branco
+   por enquanto — o próximo passo instala o pacote necessário pra
+   gerá-la.
 
 3. **Backend — crie o ambiente virtual e instale as dependências**
    (ainda dentro de `backend/`)
@@ -73,6 +82,12 @@ Rodado a partir da raiz do repositório, a não ser onde indicado.
    ```
 
    O `.venv/` também não vai para o Git — é recriado em cada máquina.
+
+   Com as dependências instaladas, volte ao `backend\.env` e preencha
+   `DATA_ENCRYPTION_KEY`:
+   ```
+   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ```
 
 4. **Backend — rode a API** (ainda dentro de `backend/`)
 
@@ -155,9 +170,10 @@ rodando até você rodar `docker compose down` ou fechar o Docker Desktop
    }
    ```
    A resposta traz `reply` (texto gerado pela Claude usando o contexto
-   recuperado) e `sources` (quais documentos foram usados). Reenviando
-   com o mesmo `session_id` da resposta anterior continua a mesma
-   conversa.
+   recuperado), `sources` (quais documentos foram usados) e, só na
+   primeira mensagem de cada conversa nova, `disclaimer` (o aviso fixo
+   de que é um assistente de IA). Reenviando com o mesmo `session_id` da
+   resposta anterior continua a mesma conversa, sem repetir o aviso.
 
 ### Testes automatizados
 
@@ -167,6 +183,17 @@ chamadas reais ao banco). De dentro de `backend/`, com o venv ativado:
 ```
 pytest
 ```
+
+### Retenção de dados (LGPD)
+
+Conversas com mais de `DATA_RETENTION_DAYS` (padrão: 90) podem ser
+removidas rodando manualmente, de dentro de `backend/`:
+
+```
+python scripts/purge_old_conversations.py
+```
+
+Não há agendamento automático ainda — é rodado quando necessário.
 
 ## Estrutura do projeto
 
@@ -179,6 +206,8 @@ Chatbot-Humanizado-para-profissionais-de-saude-mental/
 │   ├── pytest.ini
 │   ├── .env.example / .env      # .env é local, não vai pro Git
 │   ├── tests/                    # testes automatizados (pytest)
+│   ├── scripts/
+│   │   └── purge_old_conversations.py  # aplica a política de retenção (LGPD)
 │   └── app/
 │       ├── main.py                 # cria a app FastAPI, CORS, registra as rotas
 │       ├── config.py                # lê variáveis de ambiente (.env)
@@ -188,11 +217,12 @@ Chatbot-Humanizado-para-profissionais-de-saude-mental/
 │       ├── routers/
 │       │   ├── professionals.py          # cadastro e edição de profissionais (por slug)
 │       │   ├── documents.py              # upload e listagem de documentos (por slug)
-│       │   └── chat.py                     # endpoint de chat com RAG + Claude (público)
+│       │   └── chat.py                     # chat com RAG + Claude (público) + aviso de IA
 │       └── services/
-│           ├── text_extraction.py            # extrai texto de pdf/docx/txt e divide em chunks
-│           ├── rag.py                         # ChromaDB: uma coleção por profissional
-│           └── llm.py                          # monta o prompt e chama a API da Claude
+│           ├── crypto.py                     # criptografia do conteúdo das mensagens (LGPD)
+│           ├── text_extraction.py             # extrai texto de pdf/docx/txt e divide em chunks
+│           ├── rag.py                          # ChromaDB: uma coleção por profissional
+│           └── llm.py                           # monta o prompt e chama a API da Claude
 └── frontend/                   # painel em React + Vite
     ├── package.json
     ├── .env.example / .env      # .env é local, não vai pro Git

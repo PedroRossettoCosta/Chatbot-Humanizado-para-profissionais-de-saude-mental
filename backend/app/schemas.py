@@ -45,3 +45,4 @@ class ChatResponse(BaseModel):
     session_id: str
     reply: str
     sources: list[str] = []
+    disclaimer: Optional[str] = None
