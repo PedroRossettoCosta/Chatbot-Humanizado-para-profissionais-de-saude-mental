@@ -10,15 +10,31 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 
 
+def _get_professional(slug: str, db: Session) -> models.Professional:
+    professional = db.query(models.Professional).filter_by(slug=slug).first()
+    if not professional:
+        raise HTTPException(status_code=404, detail="Profissional não encontrado")
+    return professional
+
+
+@router.get("/{slug}", response_model=list[schemas.DocumentOut])
+def list_documents(slug: str, db: Session = Depends(get_db)):
+    professional = _get_professional(slug, db)
+    return (
+        db.query(models.Document)
+        .filter_by(professional_id=professional.id)
+        .order_by(models.Document.uploaded_at.desc())
+        .all()
+    )
+
+
 @router.post("/upload", response_model=schemas.DocumentOut, status_code=201)
 async def upload_document(
     professional_slug: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    professional = db.query(models.Professional).filter_by(slug=professional_slug).first()
-    if not professional:
-        raise HTTPException(status_code=404, detail="Profissional não encontrado")
+    professional = _get_professional(professional_slug, db)
 
     extension = "." + file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
     if extension not in ALLOWED_EXTENSIONS:

@@ -32,3 +32,15 @@ def get_professional(slug: str, db: Session = Depends(get_db)):
     if not professional:
         raise HTTPException(status_code=404, detail="Profissional não encontrado")
     return professional
+
+
+@router.patch("/{slug}", response_model=schemas.ProfessionalOut)
+def update_professional(slug: str, payload: schemas.ProfessionalUpdate, db: Session = Depends(get_db)):
+    professional = db.query(models.Professional).filter_by(slug=slug).first()
+    if not professional:
+        raise HTTPException(status_code=404, detail="Profissional não encontrado")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(professional, field, value)
+    db.commit()
+    db.refresh(professional)
+    return professional

@@ -20,6 +20,11 @@ class ProfessionalOut(BaseModel):
     created_at: datetime
 
 
+class ProfessionalUpdate(BaseModel):
+    name: Optional[str] = None
+    voice_tone: Optional[str] = None
+
+
 class DocumentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
