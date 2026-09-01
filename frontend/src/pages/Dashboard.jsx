@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingTone, setSavingTone] = useState(false);
+  const [toneMessage, setToneMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -29,6 +30,7 @@ export default function Dashboard() {
       setDocuments(docs);
       setChatMessages([]);
       setChatSessionId(null);
+      setToneMessage("");
     } catch (err) {
       setProfessional(null);
       setDocuments([]);
@@ -41,13 +43,13 @@ export default function Dashboard() {
   async function handleSaveTone(event) {
     event.preventDefault();
     setSavingTone(true);
-    setMessage("");
+    setToneMessage("");
     try {
       const updated = await api.updateProfessional(professional.slug, { voice_tone: voiceTone });
       setProfessional(updated);
-      setMessage("Tom de voz atualizado.");
+      setToneMessage("Tom de voz atualizado.");
     } catch (err) {
-      setMessage(err.message);
+      setToneMessage(err.message);
     } finally {
       setSavingTone(false);
     }
@@ -127,9 +129,12 @@ export default function Dashboard() {
                 style={{ width: "100%" }}
                 placeholder="Ex: acolhedor, direto, sem jargões técnicos"
               />
-              <button type="submit" disabled={savingTone} style={{ marginTop: 8 }}>
-                {savingTone ? "Salvando..." : "Salvar"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+                <button type="submit" disabled={savingTone}>
+                  {savingTone ? "Salvando..." : "Salvar"}
+                </button>
+                {toneMessage && <span style={{ color: "#555" }}>{toneMessage}</span>}
+              </div>
             </form>
           </section>
 
