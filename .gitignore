@@ -3,6 +3,7 @@ backend/.venv/
 backend/**/__pycache__/
 backend/**/*.pyc
 backend/.env
+backend/secrets/
 backend/chroma_data/
 backend/**/*.log
 backend/.pytest_cache/
