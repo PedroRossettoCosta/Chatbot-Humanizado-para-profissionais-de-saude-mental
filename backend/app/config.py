@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     data_encryption_key: str = ""
     data_retention_days: int = 90
+    whatsapp_access_token: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

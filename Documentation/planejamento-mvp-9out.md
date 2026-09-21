@@ -126,7 +126,7 @@ onboarding simples (a profissional escolhe qual agenda compartilhar).
 | D7 | Marcar **3 sessões** com a Marília: A (até qua 23), B (assíncrona, envio qua 30), C (qua 07/10) | Pedro | Dom 20 | A Marília é irmã do Pedro e está disponível a qualquer hora, então a sessão A pode ser conversa curta ou áudio. O que precisa ficar fechado são as datas de B e C |
 | D1 | App no Meta for Developers + **número brasileiro real** dedicado (linha sem uso da casa ou chip/eSIM novo) na Cloud API | Pedro | Dom 20 | Item mais crítico do canal. O número precisa receber SMS ou ligação e não pode estar em nenhum WhatsApp. Não usar o atual da Marília sem antes checar a coexistência da Meta |
 | D2 | Iniciar a verificação do negócio na Meta | Pedro | Dom 20 | Leva dias ou semanas. Não dependa dela |
-| D8 | Gerar chaves novas de produção (Anthropic, `DATA_ENCRYPTION_KEY`) e revogar a chave de dev da Anthropic | Pedro | Seg 28, antes do deploy | Baixa urgência: a chave nunca foi para o Git; a exposição é o histórico de conversa. Produção usa uma chave separada da de dev |
+| D8 | Gerar chaves novas de produção (Anthropic, `DATA_ENCRYPTION_KEY`, token da Meta) e revogar as de dev (Anthropic e "Anular tokens" do `maria-sistema`) | Pedro | Seg 28, antes do deploy | Baixa urgência: nada foi para o Git; a exposição é o histórico de conversa. Produção usa chaves separadas das de dev |
 | D3 | Token permanente (System User) | Pedro | Seg 21 | O token de 24h quebra a demo |
 | D4 | Submeter o template de **alerta de segurança** para a Marília | Pedro | Seg 21 | Utility; aprovação de minutos a dias |
 | D5 | Google Cloud + Calendar API + service account; Marília compartilha a agenda | Pedro | Ter 22 | |
