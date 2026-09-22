@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
-from app.services import llm, rag
+from app.models import Channel, MessageRole, SentBy
+from app.services import conversations, llm, rag
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -20,46 +21,39 @@ AI_DISCLAIMER_TEMPLATE = (
 
 @router.post("/simulate", response_model=schemas.ChatResponse)
 def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
+    """Canal simulado: mesma lógica do WhatsApp, sem depender da Meta.
+
+    O `session_id` faz aqui o papel que o número de telefone faz no
+    WhatsApp — é o identificador do contato dentro do canal.
+    """
     professional = db.query(models.Professional).filter_by(slug=payload.professional_slug).first()
     if not professional:
         raise HTTPException(status_code=404, detail="Profissional não encontrado")
 
     session_id = payload.session_id or str(uuid.uuid4())
-    conversation = (
-        db.query(models.Conversation)
-        .filter_by(professional_id=professional.id, session_id=session_id)
-        .first()
+    contact = conversations.get_or_create_contact(
+        db, professional, Channel.SIMULATOR, external_id=session_id
     )
+    conversation, is_new = conversations.get_or_create_conversation(db, contact)
 
     disclaimer = None
-    if not conversation:
-        conversation = models.Conversation(professional_id=professional.id, session_id=session_id)
-        db.add(conversation)
-        db.commit()
-        db.refresh(conversation)
-
+    if is_new:
         disclaimer = AI_DISCLAIMER_TEMPLATE.format(name=professional.name)
-        db.add(models.Message(conversation_id=conversation.id, role="assistant", content=disclaimer))
-        db.commit()
+        conversations.record_message(
+            db, conversation, MessageRole.ASSISTANT, disclaimer, sent_by=SentBy.SYSTEM
+        )
 
-    db.add(models.Message(conversation_id=conversation.id, role="user", content=payload.message))
-    db.commit()
+    conversations.record_message(db, conversation, MessageRole.USER, payload.message)
 
     chunks, metadatas = rag.query(professional.slug, payload.message)
     system_prompt = llm.build_system_prompt(professional.name, professional.voice_tone, chunks)
-
-    recent_messages = (
-        db.query(models.Message)
-        .filter_by(conversation_id=conversation.id)
-        .order_by(models.Message.created_at)
-        .all()[-HISTORY_LIMIT:]
-    )
-    history = [{"role": m.role, "content": m.content} for m in recent_messages]
+    history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
 
     reply = llm.generate_reply(system_prompt, history)
 
-    db.add(models.Message(conversation_id=conversation.id, role="assistant", content=reply))
-    db.commit()
+    conversations.record_message(
+        db, conversation, MessageRole.ASSISTANT, reply, sent_by=SentBy.BOT
+    )
 
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
 

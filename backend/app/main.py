@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import models  # noqa: F401 - registers models with Base before create_all
 from app.config import settings
-from app.database import Base, engine
 from app.routers import chat, documents, professionals
 
-Base.metadata.create_all(bind=engine)
+# A estrutura do banco é criada e evoluída pelo Alembic
+# (`alembic upgrade head`), não pela aplicação ao subir. Ter as duas
+# coisas criando tabelas levaria o banco e as migrações a divergirem.
+# Ver Documentation/tecnico/desenvolvimento.md.
 
-app = FastAPI(title="Chatbot Humanizado TCC")
+app = FastAPI(title="MarIA — Assistente para profissionais de saúde mental")
 
 app.add_middleware(
     CORSMiddleware,
