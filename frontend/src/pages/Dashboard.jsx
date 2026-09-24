@@ -6,6 +6,7 @@ export default function Dashboard() {
   const [slugInput, setSlugInput] = useState("");
   const [professional, setProfessional] = useState(null);
   const [voiceTone, setVoiceTone] = useState("");
+  const [audience, setAudience] = useState("");
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingTone, setSavingTone] = useState(false);
@@ -26,6 +27,7 @@ export default function Dashboard() {
       const data = await api.getProfessional(slugInput.trim());
       setProfessional(data);
       setVoiceTone(data.voice_tone || "");
+      setAudience(data.audience_description || "");
       const docs = await api.listDocuments(data.slug);
       setDocuments(docs);
       setChatMessages([]);
@@ -45,9 +47,12 @@ export default function Dashboard() {
     setSavingTone(true);
     setToneMessage("");
     try {
-      const updated = await api.updateProfessional(professional.slug, { voice_tone: voiceTone });
+      const updated = await api.updateProfessional(professional.slug, {
+        voice_tone: voiceTone,
+        audience_description: audience,
+      });
       setProfessional(updated);
-      setToneMessage("Tom de voz atualizado.");
+      setToneMessage("Perfil atualizado.");
     } catch (err) {
       setToneMessage(err.message);
     } finally {
@@ -87,7 +92,8 @@ export default function Dashboard() {
       setChatMessages((prev) => {
         const next = [...prev];
         if (response.disclaimer) next.push({ role: "disclaimer", content: response.disclaimer });
-        next.push({ role: "assistant", content: response.reply, sources: response.sources });
+        // Sem resposta: o bot está em silêncio (alerta ou profissional no controle).
+        if (response.reply) next.push({ role: "assistant", content: response.reply, sources: response.sources });
         return next;
       });
     } catch (err) {
@@ -125,9 +131,28 @@ export default function Dashboard() {
           </section>
 
           <section style={{ marginTop: 32 }}>
-            <h2>Tom de voz</h2>
+            <h2>Perfil do atendimento</h2>
             <form onSubmit={handleSaveTone}>
+              <label htmlFor="audience">
+                <strong>Especialidade e público</strong>
+              </label>
+              <p style={{ margin: "4px 0", color: "#555", fontSize: 13 }}>
+                Ajuda a MarIA a entender o que é comum no seu consultório. Não muda os critérios de
+                emergência, que são iguais para todas as profissionais.
+              </p>
               <textarea
+                id="audience"
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+                rows={3}
+                style={{ width: "100%" }}
+                placeholder="Ex: psicanalista; atendo principalmente pessoas em sofrimento por relacionamentos (término, traição, dependência emocional)"
+              />
+              <label htmlFor="voice-tone" style={{ display: "block", marginTop: 12 }}>
+                <strong>Tom de voz</strong>
+              </label>
+              <textarea
+                id="voice-tone"
                 value={voiceTone}
                 onChange={(e) => setVoiceTone(e.target.value)}
                 rows={4}

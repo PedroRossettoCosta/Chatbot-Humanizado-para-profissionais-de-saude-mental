@@ -9,7 +9,7 @@ payload da Meta, e nada aqui precisa mudar quando entrar um canal novo.
 from sqlalchemy.orm import Session
 
 from app import models
-from app.models import Channel, ConversationState, MessageRole, SentBy
+from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
 from app.services import crypto
 
 
@@ -117,3 +117,45 @@ def recent_history(db: Session, conversation: models.Conversation, limit: int) -
         .all()
     )
     return [{"role": m.role, "content": m.content} for m in reversed(messages)]
+
+
+def raise_safety_alert(
+    db: Session,
+    conversation: models.Conversation,
+    message: models.Message,
+    level: AlertLevel,
+    trigger: str,
+    excerpt: str,
+) -> models.SafetyAlert:
+    """Grava o alerta e coloca a conversa em espera de emergência.
+
+    O alerta e a mudança de estado vão no mesmo commit: não pode existir
+    alerta com o bot ainda respondendo normalmente, nem o contrário.
+    """
+    alert = models.SafetyAlert(
+        professional_id=conversation.professional_id,
+        conversation_id=conversation.id,
+        message_id=message.id,
+        level=level,
+        trigger=trigger,
+        excerpt=excerpt,
+    )
+    db.add(alert)
+    if level == AlertLevel.EMERGENCY:
+        conversation.state = ConversationState.EMERGENCY_HOLD
+    else:
+        conversation.needs_attention = True
+    db.commit()
+    db.refresh(alert)
+    return alert
+
+
+def mark_needs_attention(db: Session, conversation: models.Conversation) -> None:
+    """Sofrimento intenso: sinaliza para a profissional, sem abrir alerta.
+
+    A Marília pediu que sofrimento sem referência a risco não vire alerta
+    de segurança, só a marcação "necessita atenção" no inbox.
+    """
+    if not conversation.needs_attention:
+        conversation.needs_attention = True
+        db.commit()

@@ -8,6 +8,7 @@ class ProfessionalCreate(BaseModel):
     slug: str = Field(min_length=3, max_length=64, pattern=r"^[a-z0-9-]+$")
     name: str
     voice_tone: Optional[str] = None
+    audience_description: Optional[str] = None
 
 
 class ProfessionalOut(BaseModel):
@@ -17,12 +18,14 @@ class ProfessionalOut(BaseModel):
     slug: str
     name: str
     voice_tone: Optional[str] = None
+    audience_description: Optional[str] = None
     created_at: datetime
 
 
 class ProfessionalUpdate(BaseModel):
     name: Optional[str] = None
     voice_tone: Optional[str] = None
+    audience_description: Optional[str] = None
 
 
 class DocumentOut(BaseModel):
@@ -43,6 +46,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     session_id: str
-    reply: str
+    # Nulo quando o bot fica em silêncio (profissional no controle ou
+    # conversa em espera depois de um alerta).
+    reply: Optional[str] = None
     sources: list[str] = []
     disclaimer: Optional[str] = None

@@ -131,9 +131,12 @@ class SentBy(StrEnum):
 
 
 class AlertLevel(StrEnum):
-    """Os dois níveis que a profissional definiu na entrevista de protocolo."""
+    """Níveis definidos pela profissional no protocolo e na rotulagem de 23/09."""
 
     EMERGENCY = "emergency"  # risco à vida: interrompe o fluxo e encaminha
+    # Referência a morte com intenção incerta ("quero morrer" pode ser
+    # expressão forte): avisa a profissional e o bot segue a conversa.
+    POSSIBLE_RISK = "possible_risk"
     INTENSE_SUFFERING = "intense_suffering"  # sinaliza para atenção humana
 
 
@@ -163,6 +166,10 @@ class Professional(Base):
     slug = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String(255), nullable=False)
     voice_tone = Column(Text, nullable=True)
+    # Especialidade e público, escritos pela profissional. A triagem usa
+    # isto só para entender o que é sofrimento comum naquele consultório
+    # (normal x sofrimento intenso); nunca rebaixa dúvida ou emergência.
+    audience_description = Column(Text, nullable=True)
     # Agenda do Google usada para pré-agendamento. Fica por profissional
     # para que cada uma exponha só a agenda que quiser.
     calendar_id = Column(String(255), nullable=True)
@@ -290,6 +297,10 @@ class SafetyAlert(Base):
     # pela política de retenção — o alerta em si permanece.
     message_id = Column(UUID(as_uuid=False), ForeignKey("messages.id", ondelete="SET NULL"), nullable=True)
     level = Column(String(30), nullable=False)
+    # Qual camada e regra da triagem disparou (ex.: "camada1:suicidio").
+    # Sem conteúdo da mensagem, então não precisa de cifra e sobrevive à
+    # retenção: é o que permite medir falsos positivos depois.
+    trigger = Column(String(64), nullable=True)
     # Trecho que motivou o disparo, para a profissional entender o porquê
     # sem precisar abrir a conversa inteira.
     excerpt = Column(EncryptedText, nullable=True)

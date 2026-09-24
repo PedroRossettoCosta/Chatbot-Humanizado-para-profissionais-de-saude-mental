@@ -326,8 +326,35 @@ de rotas, falha fechada, assinatura do webhook.
 2. Agenda: Google Calendar (service account), sem agenda dedicada de reserva.
 3. Entrega de 09/10: demo para o Thiago, ensaio do produto da defesa.
 
+**Resolvidas em 23/09 (Marília):**
+1. Caso ambíguo (não dá para saber se é brincadeira ou forma de falar):
+   alerta para a profissional e o bot continua a conversa, sem a
+   mensagem de emergência. Vira um terceiro nível na camada 2.
+2. Retomada após emergência: o bot só volta a falar quando a
+   profissional liberar pelo painel. Não há retomada automática.
+3. Texto de emergência em forma neutra (gênero e canal), igual para
+   todas as profissionais e não editável por elas.
+4. **Preço é informado logo na primeira resposta** (inverte o "preço sem
+   informar de cara" da seção 1): valor, como funciona, convite para o
+   próximo passo. Nunca condicionar o preço a a pessoa contar a história.
+5. Apresentação, tom de voz (3 exemplos bons e ruins) e lista de "nunca
+   dizer" entregues. A lista de "nunca dizer" foi escrita para qualquer
+   profissional e vira guardrail do produto, não configuração dela.
+
+6. A assistente se chama **MarIA** em todas as contas: é o nome do
+   produto, igual para toda profissional e não configurável. Ela se
+   apresenta como assistente virtual e fala da profissional em terceira
+   pessoa. A secretária fictícia "Isadora" dos exemplos da Marília sai.
+7. Triagem em dois níveis na camada 1: sinais explícitos de suicídio,
+   automutilação, tentativa e violência são emergência; desejo de morrer
+   isolado ("quero morrer") é dúvida (alerta, bot segue). Vem da
+   rotulagem do conjunto de teste (`triagem-conjunto-teste.md`).
+
 **Abertas:**
 1. Número brasileiro: usar uma linha sem uso da casa (dedicada ao MVP), desde que receba SMS/ligação e esteja livre de WhatsApp. Confirmar isso na segunda.
 2. Fins de semana entram como capacidade ou ficam livres?
-3. Regra de retomada após emergência: confirmar a proposta na sessão A.
-4. Aviso de IA e consentimento: texto, e se haverá "aceite" antes da resposta.
+3. Aviso de IA e consentimento: recomendação de 23/09 é aceite explícito
+   antes do bot responder (triagem roda mesmo antes do aceite). Validar
+   com o Thiago.
+4. Paciente em acompanhamento ativo com alerta de emergência: a Marília
+   quer "algo a mais" além do alerta padrão. Definir o quê.
