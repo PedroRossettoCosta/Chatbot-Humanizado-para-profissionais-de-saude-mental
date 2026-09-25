@@ -44,3 +44,39 @@ def test_create_professional_rejects_uppercase_slug(client):
         json={"slug": "Nao-Pode-Maiuscula", "name": "Teste"},
     )
     assert response.status_code == 422
+
+
+def test_update_assistant_profile_and_reject_unknown_question(client, db):
+    _cleanup(db)
+    client.post("/professionals", json={"slug": TEST_SLUG, "name": "Teste Pytest"})
+
+    response = client.patch(
+        f"/professionals/{TEST_SLUG}",
+        json={
+            "service_info": "R$ 200 a sessão.",
+            "voice_examples": {"preco": {"good": "Custa R$ 200.", "bad": "Depende."}},
+            "extra_never_say": ["Falar de política.", "   "],
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["service_info"] == "R$ 200 a sessão."
+    assert body["voice_examples"]["preco"]["good"] == "Custa R$ 200."
+    assert body["extra_never_say"] == ["Falar de política."]
+
+    response = client.patch(
+        f"/professionals/{TEST_SLUG}",
+        json={"voice_examples": {"pergunta-inventada": {"good": "x", "bad": "y"}}},
+    )
+    assert response.status_code == 422
+
+    _cleanup(db)
+
+
+def test_guidelines_expose_fixed_rules(client):
+    response = client.get("/assistant/guidelines")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["assistant_name"] == "MarIA"
+    assert [q["key"] for q in body["voice_questions"]] == ["preco", "funcionamento", "momento_dificil"]
+    assert len(body["never_say"]) > 0

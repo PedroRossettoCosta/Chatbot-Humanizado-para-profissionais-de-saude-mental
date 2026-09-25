@@ -41,6 +41,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -138,12 +139,18 @@ class AlertLevel(StrEnum):
     # expressão forte): avisa a profissional e o bot segue a conversa.
     POSSIBLE_RISK = "possible_risk"
     INTENSE_SUFFERING = "intense_suffering"  # sinaliza para atenção humana
+    # Não é risco: a pessoa recusou falar com o bot. Usa a mesma tabela
+    # para chegar à profissional pelo mesmo caminho (tela e aviso), mas
+    # fica fora das métricas da triagem, que filtram pelos níveis acima.
+    BOT_REFUSED = "bot_refused"
 
 
 class AlertEventType(StrEnum):
     VIEWED = "viewed"
     REVIEWED = "reviewed"
     NOTIFIED = "notified"  # aviso enviado à profissional (WhatsApp/e-mail)
+    # A profissional liberou o bot para voltar a responder na conversa.
+    BOT_RELEASED = "bot_released"
 
 
 class AppointmentStatus(StrEnum):
@@ -170,10 +177,32 @@ class Professional(Base):
     # isto só para entender o que é sofrimento comum naquele consultório
     # (normal x sofrimento intenso); nunca rebaixa dúvida ou emergência.
     audience_description = Column(Text, nullable=True)
+    # Como funciona o atendimento e quanto custa, nas palavras dela. Fica
+    # sempre no prompt (e não só nos documentos do RAG) porque o preço é
+    # respondido logo na primeira pergunta e não pode depender da busca.
+    service_info = Column(Text, nullable=True)
+    # Respostas às perguntas fixas de `services/guidelines.VOICE_QUESTIONS`,
+    # no formato {chave: {"good": "...", "bad": "..."}}.
+    voice_examples = Column(JSON, nullable=True)
+    # Itens de "nunca dizer" acrescentados por ela, além dos fixos do
+    # produto (`guidelines.NEVER_SAY_DEFAULTS`). Lista de textos.
+    extra_never_say = Column(JSON, nullable=True)
     # Agenda do Google usada para pré-agendamento. Fica por profissional
     # para que cada uma exponha só a agenda que quiser.
     calendar_id = Column(String(255), nullable=True)
+    # Botão "Em consulta" do painel. Nulo = desligado. Com `in_session_since`
+    # preenchido e `in_session_until` nulo, fica ligado até ela desligar;
+    # com os dois, desliga sozinho no horário (para não ficar esquecido
+    # ligado o dia inteiro). Ver `is_in_session`.
+    in_session_since = Column(DateTime(timezone=True), nullable=True)
+    in_session_until = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
+
+    @property
+    def is_in_session(self) -> bool:
+        if self.in_session_since is None:
+            return False
+        return self.in_session_until is None or self.in_session_until > _now()
 
     documents = relationship("Document", back_populates="professional", cascade="all, delete-orphan")
     contacts = relationship("Contact", back_populates="professional", cascade="all, delete-orphan")

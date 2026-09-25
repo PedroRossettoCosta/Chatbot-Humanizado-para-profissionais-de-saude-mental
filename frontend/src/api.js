@@ -20,6 +20,7 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
 }
 
 export const api = {
+  getGuidelines: () => request("/assistant/guidelines"),
   getProfessional: (slug) => request(`/professionals/${slug}`),
   updateProfessional: (slug, payload) => request(`/professionals/${slug}`, { method: "PATCH", body: payload }),
   listDocuments: (slug) => request(`/documents/${slug}`),
@@ -34,4 +35,11 @@ export const api = {
       method: "POST",
       body: { professional_slug: slug, message, session_id: sessionId || null },
     }),
+  // minutes nulo = "Em consulta" até desligar.
+  startSession: (slug, minutes) => request(`/professionals/${slug}/in-session`, { method: "PUT", body: { minutes } }),
+  endSession: (slug) => request(`/professionals/${slug}/in-session`, { method: "DELETE" }),
+  takeOver: (conversationId) => request(`/conversations/${conversationId}/take-over`, { method: "POST" }),
+  releaseToBot: (conversationId) => request(`/conversations/${conversationId}/release`, { method: "POST" }),
+  sendProfessionalMessage: (conversationId, content) =>
+    request(`/conversations/${conversationId}/messages`, { method: "POST", body: { content } }),
 };

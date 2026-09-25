@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.services import handoff
 
 router = APIRouter(prefix="/professionals", tags=["professionals"])
 
@@ -43,4 +44,26 @@ def update_professional(slug: str, payload: schemas.ProfessionalUpdate, db: Sess
         setattr(professional, field, value)
     db.commit()
     db.refresh(professional)
+    return professional
+
+
+def _get_or_404(db: Session, slug: str) -> models.Professional:
+    professional = db.query(models.Professional).filter_by(slug=slug).first()
+    if not professional:
+        raise HTTPException(status_code=404, detail="Profissional não encontrado")
+    return professional
+
+
+@router.put("/{slug}/in-session", response_model=schemas.ProfessionalOut)
+def start_session(slug: str, payload: schemas.InSessionStart, db: Session = Depends(get_db)):
+    """Liga o botão "Em consulta" (por `minutes`, ou até desligar se nulo)."""
+    professional = _get_or_404(db, slug)
+    handoff.start_session(db, professional, payload.minutes)
+    return professional
+
+
+@router.delete("/{slug}/in-session", response_model=schemas.ProfessionalOut)
+def end_session(slug: str, db: Session = Depends(get_db)):
+    professional = _get_or_404(db, slug)
+    handoff.end_session(db, professional)
     return professional

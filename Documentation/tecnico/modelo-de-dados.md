@@ -46,7 +46,13 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `slug` | texto, único | Identificador legível (`marilia`), usado nas rotas |
 | `name` | texto | Nome exibido ao paciente |
 | `voice_tone` | texto | Instrução de tom, injetada no prompt |
+| `audience_description` | texto, opcional | Especialidade e público. Vai sempre no prompt de resposta (para a MarIA apresentar a profissional) e calibra a triagem |
+| `service_info` | texto, opcional | Atendimento e valores. Sempre no prompt, porque o preço é respondido na primeira pergunta |
+| `voice_examples` | JSON, opcional | Resposta boa e ruim para cada uma das 3 perguntas fixas (`services/guidelines.py`) |
+| `extra_never_say` | JSON, opcional | Itens de "nunca dizer" da profissional, somados aos fixos do produto |
 | `calendar_id` | texto, opcional | Agenda do Google usada no pré-agendamento |
+| `in_session_since` | data, opcional | Botão "Em consulta" ligado desde. Nulo = desligado |
+| `in_session_until` | data, opcional | Fim automático do "Em consulta". Nulo com `in_session_since` preenchido = até ela desligar |
 | `created_at` | data | |
 
 `calendar_id` fica por profissional para que cada uma exponha só a
@@ -187,7 +193,7 @@ Um disparo da triagem de segurança. **Imutável depois de criado.**
 | `professional_id` | UUID | |
 | `conversation_id` | UUID | |
 | `message_id` | UUID, opcional | Mensagem que disparou |
-| `level` | texto | `emergency` ou `intense_suffering` |
+| `level` | texto | `emergency`, `possible_risk` ou `bot_refused` (a pessoa recusou falar com o bot; não é risco e fica fora das métricas da triagem) |
 | `excerpt` | **cifrado**, opcional | Trecho que motivou o disparo |
 | `created_at` | data | |
 
@@ -211,7 +217,7 @@ A trilha de auditoria de um alerta. Só acrescenta linhas, nunca altera.
 |---|---|---|
 | `id` | UUID | |
 | `alert_id` | UUID | |
-| `event_type` | texto | `viewed`, `reviewed` ou `notified` |
+| `event_type` | texto | `viewed`, `reviewed`, `notified` ou `bot_released` (a profissional devolveu a conversa ao bot) |
 | `actor` | texto | `system` ou o id da profissional |
 | `note` | texto, opcional | |
 | `created_at` | data | |

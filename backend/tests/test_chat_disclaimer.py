@@ -24,6 +24,7 @@ def test_first_message_includes_disclaimer_and_second_does_not(client, db, monke
     body1 = r1.json()
     assert body1["disclaimer"] is not None
     assert "inteligência artificial" in body1["disclaimer"]
+    assert "MarIA" in body1["disclaimer"]
 
     r2 = client.post(
         "/chat/simulate",

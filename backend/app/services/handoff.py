@@ -1,0 +1,191 @@
+"""Handoff: passar a conversa do bot para a profissional e de volta.
+
+Quatro caminhos levam a conversa para a profissional (estado `human`,
+bot em silêncio):
+
+1. ela assume pelo painel (`take_over`);
+2. ela responde pelo painel (`send_professional_message`): quem escreve
+   assume, para o bot e a profissional não falarem ao mesmo tempo;
+3. o contato **recusa falar com um bot** ("não quero falar com robô",
+   "quero falar com uma pessoa de verdade"): mensagem fixa de
+   compreensão, bot parado e alerta para a profissional, esteja ela em
+   consulta ou não. Sem números de emergência: não é risco;
+4. o contato pede para falar **com a profissional** ("quero falar com o
+   Pedro"), com o botão "Em consulta" desligado.
+
+Com o botão "Em consulta" ligado, o pedido do caminho 4 não muda o
+estado: a MarIA avisa que a profissional está em atendimento, oferece
+ajuda e marca a conversa como "necessita atenção". Quem recusou o bot
+não recebe essa oferta de ajuda, porque acabou de dizer que não quer.
+
+Só ela devolve a conversa ao bot (`release`), inclusive depois de uma
+emergência (decisão da Marília em 23/09: não há retomada automática).
+
+Os textos daqui são fixos e iguais para todas as profissionais, como o
+texto de emergência: o bot não improvisa nada sobre a agenda dela.
+"""
+
+import re
+from datetime import timedelta
+from enum import StrEnum
+
+from sqlalchemy.orm import Session
+
+from app import models
+from app.models import AlertEventType, AlertLevel, ConversationState, MessageRole, SentBy
+from app.services import conversations
+from app.services.triage import normalize
+
+# Forma neutra de gênero ("{name}" e não "ela"), porque vale para
+# qualquer profissional.
+HANDOFF_MESSAGE = (
+    "Claro! Vou avisar {name}, e a resposta chega por aqui assim que possível."
+)
+IN_SESSION_MESSAGE = (
+    "{name} está em atendimento agora e responde assim que terminar. "
+    "Enquanto isso, posso te ajudar com alguma dúvida?"
+)
+BOT_REFUSED_MESSAGE = (
+    "Entendo, e tudo bem preferir conversar com uma pessoa. Vou parar por "
+    "aqui e avisar {name}, que responde pessoalmente por este canal assim "
+    "que possível."
+)
+BOT_REFUSED_IN_SESSION_MESSAGE = (
+    "Entendo, e tudo bem preferir conversar com uma pessoa. Vou parar por "
+    "aqui e avisar {name}, que está em atendimento agora e responde "
+    "pessoalmente por este canal assim que terminar."
+)
+
+
+class HumanRequest(StrEnum):
+    REFUSES_BOT = "refuses_bot"  # não quer falar com o bot
+    WANTS_PROFESSIONAL = "wants_professional"  # quer falar com a profissional
+
+
+_RECUSA_BOT = [
+    # "não quero falar com robô", "não gosto de conversar com IA"
+    r"\bnao (quero|gosto de|gostaria de|vou) (falar|conversar) com (robo|bot|maquina|ia|inteligencia artificial"
+    r"|assistente virtual|computador)\b",
+    # "quero falar com uma pessoa", "prefiro alguém de verdade", "atendente humano"
+    r"\b(falar|conversar|atendimento|atendido|atendida) (diretamente |direto )?(com|por) (a |o |uma |um )?"
+    r"(pessoa|humano|humana|atendente|alguem de verdade|gente de verdade|pessoa de verdade|pessoa real)\b",
+    r"\b(odeio|detesto|chega de|cansei de) (falar com )?(robo|bot|maquina|ia)\b",
+    r"\b(me passa|me transfere|me encaminha) (pra|para) (uma pessoa|alguem|um humano|um atendente)\b",
+]
+_PEDIDO_PROFISSIONAL = [
+    # "tem como conversar com a psicóloga?"
+    r"\b(falar|conversar|atendimento|contato) (diretamente |direto )?com (a |o )?"
+    r"(psicologa|psicologo|psicanalista|terapeuta|profissional|doutora|doutor|dra|dr)\b",
+    # "quero falar com ela", "posso falar direto com ele?"
+    r"\b(quero|queria|prefiro|preferia|posso|gostaria de|da pra|tem como|preciso) (falar|conversar) "
+    r"(diretamente |direto )?com (ela|ele)\b",
+    # "me passa pra ela"
+    r"\b(me passa|me transfere|me encaminha) (pra|para) (ela|ele|a doutora|o doutor)\b",
+]
+_RECUSA_BOT_COMPILADA = [re.compile(p) for p in _RECUSA_BOT]
+_PEDIDO_PROFISSIONAL_COMPILADO = [re.compile(p) for p in _PEDIDO_PROFISSIONAL]
+
+
+def classify_request(text: str, professional: models.Professional) -> HumanRequest | None:
+    """O contato recusou o bot, pediu a profissional, ou nenhum dos dois?
+
+    Regras e não modelo: é barato, previsível e fácil de explicar. Perguntar
+    "você é humana?" não conta, porque a MarIA responde isso sozinha. A
+    recusa é verificada primeiro: "não quero falar com robô, quero falar
+    com o Pedro" é recusa.
+    """
+    texto = normalize(text)
+    if any(p.search(texto) for p in _RECUSA_BOT_COMPILADA):
+        return HumanRequest.REFUSES_BOT
+    if any(p.search(texto) for p in _PEDIDO_PROFISSIONAL_COMPILADO):
+        return HumanRequest.WANTS_PROFESSIONAL
+    primeiro_nome = normalize(professional.name).split(" ")[0] if professional.name else ""
+    if primeiro_nome:
+        pelo_nome = rf"\b(falar|conversar) (diretamente |direto )?com (a |o )?{re.escape(primeiro_nome)}\b"
+        if re.search(pelo_nome, texto):
+            return HumanRequest.WANTS_PROFESSIONAL
+    return None
+
+
+def handle_human_request(
+    db: Session,
+    professional: models.Professional,
+    conversation: models.Conversation,
+    user_message: models.Message,
+    request: HumanRequest,
+) -> str:
+    """Responde ao pedido e devolve o texto enviado ao contato."""
+    in_session = professional.is_in_session
+    if request == HumanRequest.REFUSES_BOT:
+        template = BOT_REFUSED_IN_SESSION_MESSAGE if in_session else BOT_REFUSED_MESSAGE
+        conversations.raise_safety_alert(
+            db,
+            conversation,
+            user_message,
+            AlertLevel.BOT_REFUSED,
+            trigger="handoff:recusa_bot",
+            excerpt=user_message.content[:500],
+        )
+        conversation.state = ConversationState.HUMAN
+    elif in_session:
+        template = IN_SESSION_MESSAGE
+    else:
+        template = HANDOFF_MESSAGE
+        conversation.state = ConversationState.HUMAN
+    conversation.needs_attention = True
+    reply = template.format(name=professional.name)
+    conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply, sent_by=SentBy.SYSTEM)
+    return reply
+
+
+def take_over(db: Session, conversation: models.Conversation) -> None:
+    """A profissional assume. Em emergência, a conversa continua em espera."""
+    if conversation.state == ConversationState.ACTIVE:
+        conversation.state = ConversationState.HUMAN
+        db.commit()
+
+
+def release(db: Session, conversation: models.Conversation) -> None:
+    """Devolve a conversa ao bot.
+
+    Se ela estava em espera de emergência, a liberação entra na trilha de
+    auditoria de cada alerta da conversa: fica registrado quando e por
+    quem o bot voltou a falar depois de um disparo.
+    """
+    if conversation.state == ConversationState.EMERGENCY_HOLD:
+        for alert in conversation.alerts:
+            db.add(
+                models.SafetyAlertEvent(
+                    alert_id=alert.id,
+                    event_type=AlertEventType.BOT_RELEASED,
+                    actor=conversation.professional_id,
+                )
+            )
+    conversation.state = ConversationState.ACTIVE
+    conversation.needs_attention = False
+    db.commit()
+
+
+def send_professional_message(
+    db: Session, conversation: models.Conversation, content: str
+) -> models.Message:
+    """Mensagem escrita pela profissional no painel. Quem escreve, assume."""
+    if conversation.state == ConversationState.ACTIVE:
+        conversation.state = ConversationState.HUMAN
+    conversation.needs_attention = False
+    return conversations.record_message(
+        db, conversation, MessageRole.ASSISTANT, content, sent_by=SentBy.PROFESSIONAL
+    )
+
+
+def start_session(db: Session, professional: models.Professional, minutes: int | None) -> None:
+    now = models._now()
+    professional.in_session_since = now
+    professional.in_session_until = now + timedelta(minutes=minutes) if minutes else None
+    db.commit()
+
+
+def end_session(db: Session, professional: models.Professional) -> None:
+    professional.in_session_since = None
+    professional.in_session_until = None
+    db.commit()

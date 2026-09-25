@@ -6,16 +6,19 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
-from app.services import conversations, llm, rag, triage
+from app.services import conversations, guidelines, handoff, llm, rag, triage
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 HISTORY_LIMIT = 12
 
+# Primeira mensagem de toda conversa, antes de qualquer resposta do
+# modelo. Diz o nome da assistente e que ela é uma IA (o aviso de IA
+# nunca sai do fluxo, ver planejamento-mvp-9out.md, seção 8).
 AI_DISCLAIMER_TEMPLATE = (
-    "Olá! Este é um assistente virtual (inteligência artificial) para dúvidas "
-    "iniciais sobre o atendimento de {name}. Não sou uma pessoa e não substituo "
-    "consulta ou atendimento clínico."
+    "Oi! Eu sou a {assistant}, assistente virtual com inteligência artificial "
+    "de {name}. Posso tirar suas dúvidas sobre o atendimento. Não sou uma "
+    "pessoa e não substituo consulta ou atendimento clínico."
 )
 
 
@@ -38,7 +41,9 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
 
     disclaimer = None
     if is_new:
-        disclaimer = AI_DISCLAIMER_TEMPLATE.format(name=professional.name)
+        disclaimer = AI_DISCLAIMER_TEMPLATE.format(
+            assistant=guidelines.ASSISTANT_NAME, name=professional.name
+        )
         conversations.record_message(
             db, conversation, MessageRole.ASSISTANT, disclaimer, sent_by=SentBy.SYSTEM
         )
@@ -62,18 +67,23 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
         conversations.record_message(
             db, conversation, MessageRole.ASSISTANT, triage.EMERGENCY_MESSAGE, sent_by=SentBy.SYSTEM
         )
-        return schemas.ChatResponse(
-            session_id=session_id, reply=triage.EMERGENCY_MESSAGE, disclaimer=disclaimer
-        )
+        return _response(session_id, conversation, triage.EMERGENCY_MESSAGE, disclaimer)
 
     # Com a profissional no controle, ou depois de um alerta, o bot fica
     # em silêncio. Não há retomada automática: só a profissional libera o
     # bot de novo, pelo painel (decisão da Marília em 23/09).
     if conversation.state in (ConversationState.HUMAN, ConversationState.EMERGENCY_HOLD):
-        return schemas.ChatResponse(session_id=session_id, reply=None, disclaimer=disclaimer)
+        return _response(session_id, conversation, None, disclaimer)
+
+    # Recusa do bot ou pedido para falar com a profissional: texto fixo, sem passar pelo
+    # modelo. Ver `services/handoff.py` (inclui o botão "Em consulta").
+    request = handoff.classify_request(payload.message, professional)
+    if request:
+        reply = handoff.handle_human_request(db, professional, conversation, user_message, request)
+        return _response(session_id, conversation, reply, disclaimer)
 
     chunks, metadatas = rag.query(professional.slug, payload.message)
-    system_prompt = llm.build_system_prompt(professional.name, professional.voice_tone, chunks)
+    system_prompt = llm.build_system_prompt(professional, chunks)
 
     reply = llm.generate_reply(system_prompt, history)
 
@@ -83,4 +93,15 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
 
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
 
-    return schemas.ChatResponse(session_id=session_id, reply=reply, sources=sources, disclaimer=disclaimer)
+    return _response(session_id, conversation, reply, disclaimer, sources)
+
+
+def _response(session_id, conversation, reply, disclaimer, sources=None) -> schemas.ChatResponse:
+    return schemas.ChatResponse(
+        session_id=session_id,
+        conversation_id=conversation.id,
+        state=conversation.state,
+        reply=reply,
+        sources=sources or [],
+        disclaimer=disclaimer,
+    )
