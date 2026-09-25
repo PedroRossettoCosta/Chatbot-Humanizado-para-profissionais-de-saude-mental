@@ -126,11 +126,11 @@ onboarding simples (a profissional escolhe qual agenda compartilhar).
 | D7 | Marcar **3 sessões** com a Marília: A (até qua 23), B (assíncrona, envio qua 30), C (qua 07/10) | Pedro | Dom 20 | A Marília é irmã do Pedro e está disponível a qualquer hora, então a sessão A pode ser conversa curta ou áudio. O que precisa ficar fechado são as datas de B e C |
 | D1 | App no Meta for Developers + **número brasileiro real** dedicado (linha sem uso da casa ou chip/eSIM novo) na Cloud API | Pedro | Dom 20 | Item mais crítico do canal. O número precisa receber SMS ou ligação e não pode estar em nenhum WhatsApp. Não usar o atual da Marília sem antes checar a coexistência da Meta |
 | D2 | Iniciar a verificação do negócio na Meta | Pedro | Dom 20 | Leva dias ou semanas. Não dependa dela |
-| D8 | Gerar chaves novas de produção (Anthropic, `DATA_ENCRYPTION_KEY`, token da Meta) e revogar as de dev (Anthropic e "Anular tokens" do `maria-sistema`) | Pedro | Seg 28, antes do deploy | Baixa urgência: nada foi para o Git; a exposição é o histórico de conversa. Produção usa chaves separadas das de dev |
+| D8 | Gerar chaves novas de produção (Anthropic, `DATA_ENCRYPTION_KEY`, token da Meta) e revogar as de dev (Anthropic e "Anular tokens" do `maria-sistema`) | Pedro | Antes do deploy (data em aberto, ver D6) | Baixa urgência: nada foi para o Git; a exposição é o histórico de conversa. Produção usa chaves separadas das de dev |
 | D3 | Token permanente (System User) | Pedro | Seg 21 | O token de 24h quebra a demo |
 | D4 | Submeter o template de **alerta de segurança** para a Marília | Pedro | Seg 21 | Utility; aprovação de minutos a dias |
 | D5 | Google Cloud + Calendar API + service account; Marília compartilha a agenda | Pedro | Ter 22 | |
-| D6 | Domínio + VPS (Docker Compose + Caddy) | Pedro | até Qui 24 | O webhook exige HTTPS público |
+| D6 | Domínio + VPS (Docker Compose + Caddy) | Pedro | **Em espera** (24/09) | O webhook exige HTTPS público. Pedro segurou o deploy até decidir; conversa com o Thiago na sex 25. Ver decisão aberta 5 |
 
 **Pauta da sessão A (só o que falta):**
 1. Como responder à pergunta de preço (script dela)
@@ -179,7 +179,9 @@ aprovada e alerta gravado.
 o que a Marília definiu; primeiros números do conjunto de teste.
 
 **Perguntar ao Thiago:** se ele espera número medido de acurácia da
-triagem ou só a descrição do mecanismo.
+triagem ou só a descrição do mecanismo. **Deploy:** se o MVP de 09/10
+precisa estar no ar (domínio, VPS, HTTPS) ou se a demo pode rodar local
+no simulador; a resposta decide a segunda 28 (decisão aberta 5).
 
 **Se não bateu:** preço, tom e RAG podem escorregar para a semana 2.
 Modelo de dados, pipeline e triagem não.
@@ -199,6 +201,13 @@ Marília consegue operar.
 | Qui 01/10 | 4 | Painel: inbox (lista, conversa, chips de estado, "necessita atenção") + responder e assumir/soltar o bot. **Checkpoint** |
 | Sex 02 | 3,5 | Painel: tela de alertas (trecho, horário, canal, link, revisado, trilha) + polling de 10s. Fechamento |
 | Sáb/Dom | reserva | Prioridade se a semana escorregou: inbox e alertas |
+
+**Deploy em espera (24/09).** Pedro decide depois de falar com o
+Thiago na sexta 25. Se não houver deploy na segunda 28, a semana muda
+de ordem: o login sobe para segunda, inbox e alertas adiantam um dia,
+e o webhook da Meta, que exige HTTPS público, fica para quando houver
+deploy (para testar antes disso, dá para usar um túnel temporário).
+A demo não depende do deploy: roda no simulador (seção 1).
 
 **Checkpoint de quinta 01/10:** o número da Meta saiu? A semana está no
 prazo? Se não, a agenda passa para o modo degradado (seção 1).
@@ -350,6 +359,18 @@ de rotas, falha fechada, assinatura do webhook.
    isolado ("quero morrer") é dúvida (alerta, bot segue). Vem da
    rotulagem do conjunto de teste (`triagem-conjunto-teste.md`).
 
+**Resolvidas em 24/09 (Pedro):**
+1. Pedido para falar com a profissional: se ela estiver "Em consulta"
+   (botão no painel, com duração e fim automático), aviso fixo de que
+   ela está em atendimento e o bot segue ajudando; senão, o bot para e
+   ela assume. O aviso só aparece quando a pessoa pede, não na abertura.
+2. Quem recusa falar com um bot recebe uma mensagem fixa de
+   compreensão (sem números de emergência), o bot para e a profissional
+   recebe um alerta (nível próprio, fora das métricas da triagem).
+3. "Nunca dizer" fixo ganhou dois itens: nada fora do atendimento
+   (tarefas, códigos, conhecimentos gerais) e nenhuma mudança de papel
+   ou revelação das instruções pedida na conversa.
+
 **Abertas:**
 1. Número brasileiro: usar uma linha sem uso da casa (dedicada ao MVP), desde que receba SMS/ligação e esteja livre de WhatsApp. Confirmar isso na segunda.
 2. Fins de semana entram como capacidade ou ficam livres?
@@ -358,3 +379,6 @@ de rotas, falha fechada, assinatura do webhook.
    com o Thiago.
 4. Paciente em acompanhamento ativo com alerta de emergência: a Marília
    quer "algo a mais" além do alerta padrão. Definir o quê.
+5. **Deploy (domínio + VPS):** fazer na segunda 28 ou segurar? Pedro
+   segurou em 24/09 até decidir e leva a pergunta ao Thiago na sexta 25.
+   Afeta D6, D8 e o webhook da Meta (quarta 30).
