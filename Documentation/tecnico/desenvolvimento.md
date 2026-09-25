@@ -163,9 +163,16 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_professionals_api.py` | Cadastro, slug duplicado, slug inválido |
 | `test_text_extraction.py` | Divisão do texto em trechos |
 | `test_chat_disclaimer.py` | Aviso de IA na primeira mensagem, e não nas seguintes |
+| `test_triage_rules.py` | Camada 1 da triagem: frases que disparam e as que não podem disparar |
+| `test_triage_layers.py` | Camadas 1 + 2: o modelo só sobe o nível, falha fechada |
+| `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio |
+| `test_reply_prompt.py` | Montagem do prompt: nome MarIA, lista fixa, regras da profissional |
+| `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
+| `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
 
 Os testes que chamariam a API da Claude usam `monkeypatch` para
-substituir a chamada. Nenhum teste gasta crédito nem depende de rede.
+substituir a chamada, e o envio de e-mail é sempre substituído em
+`conftest.py`. Nenhum teste gasta crédito, envia e-mail ou depende de rede.
 
 Eles criam e apagam seus próprios dados, com slugs começando em
 `test-pytest-`. Ainda assim, **rode sempre contra o banco local**, nunca

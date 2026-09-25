@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [professional, setProfessional] = useState(null);
   const [voiceTone, setVoiceTone] = useState("");
   const [audience, setAudience] = useState("");
+  const [alertEmail, setAlertEmail] = useState("");
   const [serviceInfo, setServiceInfo] = useState("");
   const [voiceExamples, setVoiceExamples] = useState({});
   const [extraNeverSay, setExtraNeverSay] = useState("");
@@ -52,6 +53,7 @@ export default function Dashboard() {
       setProfessional(data);
       setVoiceTone(data.voice_tone || "");
       setAudience(data.audience_description || "");
+      setAlertEmail(data.alert_email || "");
       setServiceInfo(data.service_info || "");
       setVoiceExamples(data.voice_examples || {});
       setExtraNeverSay((data.extra_never_say || []).join("\n"));
@@ -78,6 +80,7 @@ export default function Dashboard() {
     try {
       const updated = await api.updateProfessional(professional.slug, {
         voice_tone: voiceTone,
+        alert_email: alertEmail,
         audience_description: audience,
         service_info: serviceInfo,
         voice_examples: voiceExamples,
@@ -248,6 +251,21 @@ export default function Dashboard() {
           <section style={{ marginTop: 32 }}>
             <h2>Perfil do atendimento</h2>
             <form onSubmit={handleSaveTone}>
+              <label htmlFor="alert-email">
+                <strong>E-mail para alertas</strong>
+              </label>
+              <p style={{ margin: "4px 0", color: "#555", fontSize: 13 }}>
+                Você recebe um e-mail na hora quando houver emergência, dúvida sobre segurança ou alguém
+                pedir para não falar com a MarIA. O e-mail não traz o conteúdo da conversa.
+              </p>
+              <input
+                id="alert-email"
+                type="email"
+                value={alertEmail}
+                onChange={(e) => setAlertEmail(e.target.value)}
+                style={{ width: "100%", marginBottom: 12 }}
+                placeholder="voce@exemplo.com"
+              />
               <label htmlFor="audience">
                 <strong>Especialidade e público</strong>
               </label>

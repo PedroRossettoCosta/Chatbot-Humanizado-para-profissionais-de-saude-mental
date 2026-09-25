@@ -40,7 +40,14 @@ Paciente escreve
 ┌─────────────────┐   Roda ANTES de qualquer outra coisa.
 │  Triagem de     │   ├─ emergência → texto fixo aprovado + alerta,
 │  segurança      │   │                e o fluxo normal para aqui
-│  (em construção)│   └─ sofrimento intenso → marca a conversa e segue
+│                 │   ├─ dúvida → alerta e segue
+│                 │   └─ sofrimento intenso → marca a conversa e segue
+└────────┬────────┘
+         ▼
+┌─────────────────┐   Profissional no controle ou espera de
+│  Handoff        │   emergência → silêncio. Pedido da profissional
+│                 │   ou recusa do bot → texto fixo (ver
+│                 │   funcionalidades/handoff-e-em-consulta.md)
 └────────┬────────┘
          ▼
 ┌─────────────────┐   Busca os trechos mais parecidos com a pergunta
@@ -53,6 +60,7 @@ Paciente escreve
 └────────┬────────┘
          ▼
    Resposta gravada e devolvida pelo mesmo canal
+   (e, se houve alerta, e-mail para a profissional em segundo plano)
 ```
 
 ### Por que a triagem roda primeiro
@@ -94,6 +102,10 @@ alteração.
 | `llm.py` | Montar o prompt de sistema e chamar a API da Claude |
 | `text_extraction.py` | Extrair texto de PDF/DOCX/TXT e dividir em trechos |
 | `crypto.py` | Cifrar dados sensíveis e gerar índice de busca |
+| `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
+| `guidelines.py` | Regras fixas do produto: nome da MarIA, perguntas de tom, lista "nunca dizer" |
+| `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
+| `notifications.py` | E-mail de alerta para a profissional e registro do resultado na trilha |
 
 ## 4. O canal é desacoplado do núcleo
 
@@ -142,9 +154,8 @@ gestão passam a exigir sessão — o isolamento em si não muda.
 Estas peças estão desenhadas mas não construídas. A ordem está no
 [plano do MVP](../planejamento-mvp-9out.md).
 
-- **Triagem de segurança**: as tabelas (`safety_alerts`,
-  `safety_alert_events`) já existem; falta a lógica de classificação em
-  duas camadas — padrões determinísticos primeiro, modelo depois.
+- **Triagem de mensagens quebradas**: juntar as últimas mensagens do
+  contato antes de avaliar.
 - **Webhook do WhatsApp**: receber com validação de assinatura,
   deduplicar reenvios e responder pela API da Meta.
 - **Login** e proteção das rotas de gestão.

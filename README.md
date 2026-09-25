@@ -55,6 +55,10 @@ Souza.
 | [Configuração](Documentation/tecnico/configuracao.md) | Variáveis de ambiente e as integrações externas (Google, Meta) |
 | [Segurança e LGPD](Documentation/tecnico/seguranca-lgpd.md) | Criptografia, retenção, aviso de IA e o protocolo de risco |
 
+**Funcionalidades** — o que cada uma faz, por que existe e como usar:
+[índice](Documentation/funcionalidades/README.md) (triagem de segurança,
+perfil e regras da MarIA, handoff e "Em consulta", alerta por e-mail).
+
 **Do projeto** — para entender as decisões e o percurso do TCC:
 
 | Documento | O que tem dentro |
@@ -106,7 +110,15 @@ Funcionando:
 - **RAG**: documentos (`.pdf`, `.docx`, `.txt`, `.md`) são divididos,
   indexados no ChromaDB e consultados a cada mensagem.
 - **Resposta via Claude**, no tom de voz configurado pela profissional.
-- **Painel web** para editar o tom de voz, gerenciar documentos e testar
+- **Triagem de segurança** em duas camadas (regras fixas e modelo), com
+  quatro níveis, texto fixo de emergência e falha fechada.
+- **Perfil e regras da MarIA**: tom de voz, exemplos, valores na
+  primeira resposta e a lista fixa do que ela nunca diz.
+- **Handoff**: a profissional assume, responde e devolve ao bot; pedido
+  de humano, recusa do bot e botão "Em consulta".
+- **Alerta por e-mail** para a profissional, sem conteúdo da conversa
+  (falta configurar a conta de envio).
+- **Painel web** para editar o perfil, gerenciar documentos e testar
   a conversa.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
   repouso, aviso automático de que é uma IA, política de retenção.
@@ -117,7 +129,7 @@ Funcionando:
 Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
 
-- Triagem de segurança em dois níveis (emergência e sofrimento intenso)
+- Triagem de mensagens quebradas em várias partes
 - Webhook do WhatsApp e envio de mensagens
 - Painel: caixa de entrada e tela de alertas
 - Login e pré-agendamento no Google Calendar

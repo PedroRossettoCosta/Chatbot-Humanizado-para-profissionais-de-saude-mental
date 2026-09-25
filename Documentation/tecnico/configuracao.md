@@ -15,11 +15,17 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `DATABASE_URL` | sim | Conexão com o PostgreSQL. O padrão já aponta para o contêiner local |
 | `ANTHROPIC_API_KEY` | sim | Chave da API da Claude, que gera as respostas |
 | `CLAUDE_MODEL` | não | Modelo usado. Padrão: `claude-sonnet-5` |
+| `TRIAGE_MODEL` | não | Modelo da camada 2 da triagem, separado de propósito. Padrão: `claude-opus-5` |
+| `TRIAGE_TIMEOUT_SECONDS` | não | Tempo máximo da camada 2 antes de tratar como falha (dúvida). Padrão: 20 |
 | `CHROMA_PERSIST_DIR` | não | Pasta onde o ChromaDB guarda os vetores |
 | `FRONTEND_URL` | não | Origem liberada no CORS. Precisa bater com a porta do Vite |
 | `DATA_ENCRYPTION_KEY` | sim | Cifra os dados sensíveis em repouso |
 | `DATA_RETENTION_DAYS` | não | Dias até uma conversa inativa ser apagada. Padrão: 90 |
 | `WHATSAPP_ACCESS_TOKEN` | só com WhatsApp | Token permanente do usuário de sistema da Meta |
+| `SMTP_HOST` | para enviar alertas | Servidor de e-mail. Sem ele, o alerta registra `notify_failed` ([alerta por e-mail](../funcionalidades/alerta-por-email.md)) |
+| `SMTP_PORT` | não | Padrão: 587 (STARTTLS) |
+| `SMTP_USER` / `SMTP_PASSWORD` | para enviar alertas | Conta que envia. No Gmail, use uma **senha de app**, nunca a senha da conta |
+| `SMTP_FROM` | não | Remetente exibido. Padrão: o `SMTP_USER` |
 
 Para declarar uma variável nova, adicione o campo em
 `app/config.py` **e** a linha correspondente no `.env.example`. Se a
@@ -135,7 +141,7 @@ não é exposto ao sistema.
 
 | Segredo | Onde | Versionado? |
 |---|---|---|
-| Chaves de API e tokens | `backend/.env` | Não |
+| Chaves de API, tokens e senha do e-mail de envio | `backend/.env` | Não |
 | Chave da conta de serviço do Google | `backend/secrets/*.json` | Não |
 | Valores de exemplo, em branco | `backend/.env.example` | Sim |
 

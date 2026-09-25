@@ -15,6 +15,15 @@ class Settings(BaseSettings):
     data_encryption_key: str = ""
     data_retention_days: int = 90
     whatsapp_access_token: str = ""
+    # Conta de e-mail do produto que envia os alertas para as
+    # profissionais (uma só para todas; cada profissional só informa o
+    # endereço onde recebe). Sem `smtp_host`, o envio é registrado como
+    # falha na trilha do alerta.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

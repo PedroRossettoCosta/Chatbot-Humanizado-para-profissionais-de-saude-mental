@@ -151,6 +151,10 @@ class AlertEventType(StrEnum):
     NOTIFIED = "notified"  # aviso enviado à profissional (WhatsApp/e-mail)
     # A profissional liberou o bot para voltar a responder na conversa.
     BOT_RELEASED = "bot_released"
+    # O aviso por e-mail não saiu (sem endereço, sem SMTP ou erro no
+    # envio). Fica na trilha para que um alerta que não chegou à
+    # profissional não passe despercebido.
+    NOTIFY_FAILED = "notify_failed"
 
 
 class AppointmentStatus(StrEnum):
@@ -190,6 +194,9 @@ class Professional(Base):
     # Agenda do Google usada para pré-agendamento. Fica por profissional
     # para que cada uma exponha só a agenda que quiser.
     calendar_id = Column(String(255), nullable=True)
+    # Onde ela recebe os alertas por e-mail. Quem envia é a conta do
+    # produto (`settings.smtp_*`), igual para todas.
+    alert_email = Column(String(255), nullable=True)
     # Botão "Em consulta" do painel. Nulo = desligado. Com `in_session_since`
     # preenchido e `in_session_until` nulo, fica ligado até ela desligar;
     # com os dois, desliga sozinho no horário (para não ficar esquecido

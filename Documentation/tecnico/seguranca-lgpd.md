@@ -82,12 +82,19 @@ Os critérios abaixo foram definidos pela profissional e são a
 especificação que o módulo de triagem deve seguir. O detalhamento está
 em [requisitos](../levantamento-requisitos-mvp.md#7-critérios-de-triagem-já-aprovados-pela-marília-resumo-operacional).
 
-### Dois níveis, e por que a distinção importa
+### Os níveis, e por que a distinção importa
 
 | Nível | O que dispara | O que o sistema faz |
 |---|---|---|
-| **Emergência** | Indicação clara de risco à vida: querer morrer, se machucar, plano ou tentativa em andamento, violência ou perigo imediato | Interrompe o fluxo normal, envia o texto fixo aprovado com SAMU 192, 190 e CVV 188, registra alerta e avisa a profissional |
+| **Emergência** | Indicação clara de risco à vida: se machucar, plano ou tentativa em andamento, violência ou perigo imediato | Interrompe o fluxo normal, envia o texto fixo aprovado com SAMU 192, 190 e CVV 188, registra alerta e avisa a profissional |
+| **Dúvida sobre segurança** | Desejo de morrer com intenção incerta ("quero morrer" isolado), rotulado assim pela Marília em 23/09 | Registra alerta e avisa a profissional; o bot segue |
 | **Sofrimento intenso** | Sofrimento relacional forte, sem indicação de risco à vida | Marca a conversa como "necessita atenção" e segue atendendo normalmente |
+
+Há ainda um alerta que **não é de risco**: `bot_refused`, quando a pessoa
+recusa falar com um bot. Usa a mesma trilha para chegar à profissional,
+mas fica fora das métricas da triagem. Detalhes em
+[triagem de segurança](../funcionalidades/triagem-de-seguranca.md) e
+[handoff](../funcionalidades/handoff-e-em-consulta.md).
 
 A profissional atende principalmente questões de relacionamento. Frases
 como "preciso de ajuda", "estou desesperada", "perdi meu chão" ou "não
@@ -118,6 +125,12 @@ acrescentados, preservando quando disparou, quando foi visto e quando
 foi revisado. Ver
 [modelo de dados](modelo-de-dados.md#por-que-a-situação-do-alerta-não-é-uma-coluna).
 
+O aviso por e-mail também entra na trilha (`notified` ou
+`notify_failed`, com o motivo), para que um alerta que não chegou à
+profissional não passe despercebido. O e-mail **não leva conteúdo da
+conversa**: sai do sistema e ficaria no provedor dela, fora da cifra e
+da retenção. Ver [alerta por e-mail](../funcionalidades/alerta-por-email.md).
+
 Ela pediu esse registro para poder avaliar depois se o sistema
 classificou corretamente — é insumo do ajuste do protocolo, e também dos
 resultados do TCC.
@@ -126,15 +139,16 @@ resultados do TCC.
 
 Se a classificação falhar (erro de rede, tempo esgotado, resposta
 inesperada do modelo), o sistema **não segue como se nada tivesse
-acontecido**: sinaliza a conversa, avisa a profissional e responde
-apenas com uma mensagem neutra. Silêncio ou resposta normal diante de
-uma falha são inaceitáveis num canal onde pode haver risco à vida.
+acontecido**: a mensagem é tratada como "dúvida sobre segurança", o
+alerta é registrado e a profissional é avisada. Seguir sem avisar
+ninguém diante de uma falha é inaceitável num canal onde pode haver
+risco à vida.
 
 ## 6. Segredos
 
 | Onde | O quê |
 |---|---|
-| `backend/.env` | Chaves de API, token da Meta, chave de criptografia |
+| `backend/.env` | Chaves de API, token da Meta, chave de criptografia, senha do e-mail de envio |
 | `backend/secrets/` | Chave da conta de serviço do Google |
 
 Ambos estão no `.gitignore`. Em produção, os arquivos são criados
@@ -154,8 +168,10 @@ vazaria para um terceiro.
 
 Antes de qualquer paciente real usar o sistema:
 
-- [ ] Módulo de triagem implementado e testado com os cenários que a
-      profissional listou
+- [x] Módulo de triagem implementado e testado com os cenários que a
+      profissional listou (resultado v1 em 23/09; falta conjunto de teste novo)
+- [ ] Triagem de mensagens quebradas em várias partes
+- [ ] Textos fixos de handoff aprovados por ela
 - [ ] Ela revisar os resultados, incluindo falsos positivos e negativos
 - [ ] Texto do aviso de IA aprovado por ela
 - [ ] Login protegendo as rotas de gestão

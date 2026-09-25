@@ -161,4 +161,4 @@ def test_release_after_emergency_is_audited(db, client, professional):
     conversation = db.get(models.Conversation, first["conversation_id"])
     assert conversation.state == ConversationState.ACTIVE
     [alert] = conversation.alerts
-    assert [e.event_type for e in alert.events] == [AlertEventType.BOT_RELEASED]
+    assert AlertEventType.BOT_RELEASED in [e.event_type for e in alert.events]

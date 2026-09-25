@@ -113,12 +113,13 @@ def handle_human_request(
     conversation: models.Conversation,
     user_message: models.Message,
     request: HumanRequest,
-) -> str:
-    """Responde ao pedido e devolve o texto enviado ao contato."""
+) -> tuple[str, models.SafetyAlert | None]:
+    """Responde ao pedido. Devolve o texto enviado ao contato e o alerta, se houver."""
     in_session = professional.is_in_session
+    alert = None
     if request == HumanRequest.REFUSES_BOT:
         template = BOT_REFUSED_IN_SESSION_MESSAGE if in_session else BOT_REFUSED_MESSAGE
-        conversations.raise_safety_alert(
+        alert = conversations.raise_safety_alert(
             db,
             conversation,
             user_message,
@@ -135,7 +136,7 @@ def handle_human_request(
     conversation.needs_attention = True
     reply = template.format(name=professional.name)
     conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply, sent_by=SentBy.SYSTEM)
-    return reply
+    return reply, alert
 
 
 def take_over(db: Session, conversation: models.Conversation) -> None:

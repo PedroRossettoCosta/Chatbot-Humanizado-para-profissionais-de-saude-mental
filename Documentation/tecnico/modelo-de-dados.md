@@ -51,6 +51,7 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `voice_examples` | JSON, opcional | Resposta boa e ruim para cada uma das 3 perguntas fixas (`services/guidelines.py`) |
 | `extra_never_say` | JSON, opcional | Itens de "nunca dizer" da profissional, somados aos fixos do produto |
 | `calendar_id` | texto, opcional | Agenda do Google usada no pré-agendamento |
+| `alert_email` | texto, opcional | Onde ela recebe os alertas por e-mail. Quem envia é a conta do produto (SMTP no `.env`) |
 | `in_session_since` | data, opcional | Botão "Em consulta" ligado desde. Nulo = desligado |
 | `in_session_until` | data, opcional | Fim automático do "Em consulta". Nulo com `in_session_since` preenchido = até ela desligar |
 | `created_at` | data | |
@@ -217,7 +218,7 @@ A trilha de auditoria de um alerta. Só acrescenta linhas, nunca altera.
 |---|---|---|
 | `id` | UUID | |
 | `alert_id` | UUID | |
-| `event_type` | texto | `viewed`, `reviewed`, `notified` ou `bot_released` (a profissional devolveu a conversa ao bot) |
+| `event_type` | texto | `viewed`, `reviewed`, `notified`, `notify_failed` (o e-mail do alerta não saiu; a nota diz o motivo) ou `bot_released` (a profissional devolveu a conversa ao bot) |
 | `actor` | texto | `system` ou o id da profissional |
 | `note` | texto, opcional | |
 | `created_at` | data | |

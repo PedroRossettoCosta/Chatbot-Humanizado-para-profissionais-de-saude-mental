@@ -1,12 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
-from app.services import conversations, guidelines, handoff, llm, rag, triage
+from app.services import conversations, guidelines, handoff, llm, notifications, rag, triage
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -23,7 +23,11 @@ AI_DISCLAIMER_TEMPLATE = (
 
 
 @router.post("/simulate", response_model=schemas.ChatResponse)
-def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
+def simulate_chat(
+    payload: schemas.ChatRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """Canal simulado: mesma lógica do WhatsApp, sem depender da Meta.
 
     O `session_id` faz aqui o papel que o número de telefone faz no
@@ -56,9 +60,12 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
     history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
     risk = triage.assess(payload.message, history, professional.audience_description)
     if risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK):
-        conversations.raise_safety_alert(
+        alert = conversations.raise_safety_alert(
             db, conversation, user_message, risk.level, risk.trigger, risk.excerpt
         )
+        # O e-mail sai depois da resposta ao contato: um servidor de
+        # e-mail lento não atrasa a mensagem de emergência.
+        background_tasks.add_task(notifications.notify_alert, alert.id)
     elif risk and risk.level == AlertLevel.INTENSE_SUFFERING:
         conversations.mark_needs_attention(db, conversation)
     # Na dúvida sobre segurança, a profissional é avisada e a conversa
@@ -79,7 +86,9 @@ def simulate_chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
     # modelo. Ver `services/handoff.py` (inclui o botão "Em consulta").
     request = handoff.classify_request(payload.message, professional)
     if request:
-        reply = handoff.handle_human_request(db, professional, conversation, user_message, request)
+        reply, alert = handoff.handle_human_request(db, professional, conversation, user_message, request)
+        if alert:
+            background_tasks.add_task(notifications.notify_alert, alert.id)
         return _response(session_id, conversation, reply, disclaimer)
 
     chunks, metadatas = rag.query(professional.slug, payload.message)

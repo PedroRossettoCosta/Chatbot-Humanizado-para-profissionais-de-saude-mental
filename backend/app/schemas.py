@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -11,13 +12,29 @@ class VoiceExample(BaseModel):
     bad: str = ""
 
 
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
 class _AssistantProfile(BaseModel):
     """Campos do perfil que a profissional preenche para calibrar a MarIA."""
 
+    alert_email: Optional[str] = Field(default=None, max_length=255)
     audience_description: Optional[str] = None
     service_info: Optional[str] = None
     voice_examples: Optional[dict[str, VoiceExample]] = None
     extra_never_say: Optional[list[str]] = Field(default=None, max_length=30)
+
+    @field_validator("alert_email")
+    @classmethod
+    def valid_email(cls, value):
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            return None  # campo apagado no painel
+        if not _EMAIL.match(value):
+            raise ValueError("E-mail inválido")
+        return value
 
     @field_validator("voice_examples")
     @classmethod
@@ -50,6 +67,7 @@ class ProfessionalOut(BaseModel):
     slug: str
     name: str
     voice_tone: Optional[str] = None
+    alert_email: Optional[str] = None
     audience_description: Optional[str] = None
     service_info: Optional[str] = None
     voice_examples: Optional[dict[str, VoiceExample]] = None
