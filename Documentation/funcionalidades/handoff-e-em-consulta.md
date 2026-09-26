@@ -56,6 +56,12 @@ isso.
   a MarIA responde isso sozinha.
 - Se a frase tiver as duas coisas ("não quero IA, quero falar com o
   Pedro"), vale a **recusa**.
+- A recusa tolera erro de digitação: basta "não quero" e "robô", "bot"
+  ou "máquina" a até quatro palavras de distância ("nao quero flaar co
+  um robo"). "IA" fica fora dessa regra solta porque também é verbo
+  ("não quero ir, ia chover").
+- Pedido pelo profissional **não** gera alerta nem e-mail, só a marcação
+  "necessita atenção". Só a recusa do bot gera.
 - Em todos os casos a conversa fica marcada "necessita atenção".
 - **Assumir** não tira uma conversa da espera de emergência. **Devolver
   ao bot** tira, e registra `bot_released` na trilha de cada alerta
@@ -101,8 +107,10 @@ métricas da triagem.
   WhatsApp vem com o webhook (30/09).
 - O fim automático do "Em consulta" só aparece no painel depois de
   recarregar a página.
-- As regras de detecção podem não reconhecer alguma forma de pedir.
-  Frases que falharem devem virar caso de teste.
+- As regras de detecção podem não reconhecer alguma forma de pedir,
+  principalmente com erros de digitação. Frases que falharem devem virar
+  caso de teste. Se isso se repetir, a alternativa é o modelo classificar
+  o pedido, em vez de regras fixas.
 - Não há caixa de entrada: só dá para assumir a conversa aberta no
   simulador (inbox planejado para 01/10).
 - Os textos fixos precisam da aprovação da Marília.
@@ -121,3 +129,5 @@ Manual no simulador (conversa nova em cada caso):
 
 - 24/09/2026: handoff, botão "Em consulta", recusa do bot com alerta.
 - 25/09/2026: alerta de recusa do bot passa a gerar e-mail.
+- 25/09/2026: recusa do bot reconhecida mesmo com erro de digitação
+  (caso real do teste no simulador: "eu nao quero flaar co um robo").

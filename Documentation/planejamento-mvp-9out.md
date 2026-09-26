@@ -126,11 +126,11 @@ onboarding simples (a profissional escolhe qual agenda compartilhar).
 | D7 | Marcar **3 sessões** com a Marília: A (até qua 23), B (assíncrona, envio qua 30), C (qua 07/10) | Pedro | Dom 20 | A Marília é irmã do Pedro e está disponível a qualquer hora, então a sessão A pode ser conversa curta ou áudio. O que precisa ficar fechado são as datas de B e C |
 | D1 | App no Meta for Developers + **número brasileiro real** dedicado (linha sem uso da casa ou chip/eSIM novo) na Cloud API | Pedro | Dom 20 | Item mais crítico do canal. O número precisa receber SMS ou ligação e não pode estar em nenhum WhatsApp. Não usar o atual da Marília sem antes checar a coexistência da Meta |
 | D2 | Iniciar a verificação do negócio na Meta | Pedro | Dom 20 | Leva dias ou semanas. Não dependa dela |
-| D8 | Gerar chaves novas de produção (Anthropic, `DATA_ENCRYPTION_KEY`, token da Meta) e revogar as de dev (Anthropic e "Anular tokens" do `maria-sistema`) | Pedro | Antes do deploy (data em aberto, ver D6) | Baixa urgência: nada foi para o Git; a exposição é o histórico de conversa. Produção usa chaves separadas das de dev |
+| D8 | Gerar chaves novas de produção (Anthropic, `DATA_ENCRYPTION_KEY`, token da Meta) e revogar as de dev (Anthropic e "Anular tokens" do `maria-sistema`) | Pedro | Só quando houver deploy (ver D6) | Baixa urgência: nada foi para o Git; a exposição é o histórico de conversa. Produção usa chaves separadas das de dev |
 | D3 | Token permanente (System User) | Pedro | Seg 21 | O token de 24h quebra a demo |
 | D4 | Submeter o template de **alerta de segurança** para a Marília | Pedro | Seg 21 | Utility; aprovação de minutos a dias |
 | D5 | Google Cloud + Calendar API + service account; Marília compartilha a agenda | Pedro | Ter 22 | |
-| D6 | Domínio + VPS (Docker Compose + Caddy) | Pedro | **Em espera** (24/09) | O webhook exige HTTPS público. Pedro segurou o deploy até decidir; conversa com o Thiago na sex 25. Ver decisão aberta 5 |
+| D6 | Domínio + servidor na nuvem | Pedro | **Adiado** (decisão de 25/09) | MVP segue local (plano B). O código fica pronto para a nuvem; o deploy é decidido depois. O webhook exige HTTPS público |
 
 **Pauta da sessão A (só o que falta):**
 1. Como responder à pergunta de preço (script dela)
@@ -190,24 +190,39 @@ Modelo de dados, pipeline e triagem não.
 
 ## 4. Semana 2: 28/09 a 02/10 (~18h)
 
-**Objetivo:** o sistema no ar, protegido, com WhatsApp e um painel que a
-Marília consegue operar.
+**Plano B (decidido em 25/09): sem deploy por enquanto.** O MVP roda
+local, mas o código fica pronto para ir para a nuvem quando o Pedro
+decidir (ver "Pronto para a nuvem" abaixo).
+
+**Objetivo:** um painel protegido que a Marília consegue operar, com
+inbox, alertas e o aviso por WhatsApp, tudo rodando local.
 
 | Dia | ~h | Trabalho |
 |---|---|---|
-| Seg 28 | 3,5 | Deploy: VPS, HTTPS (Caddy), Postgres, migrations, backup para fora da máquina. Esqueleto no ar |
-| Ter 29 | 3,5 | Login mínimo, todas as rotas de gestão protegidas, checagem de dono, CORS restrito, rate limit. O `/chat/simulate` público vira o simulador autenticado do painel (hoje qualquer um gasta sua chave) |
-| Qua 30 | 4 | Webhook da Meta: verificação, assinatura `X-Hub-Signature-256`, deduplicação, 200 imediato com processamento assíncrono, envio de mensagem. Alerta para a Marília por template quando aprovado. **Sessão B:** enviar resultados e transcritos da triagem para ela revisar |
-| Qui 01/10 | 4 | Painel: inbox (lista, conversa, chips de estado, "necessita atenção") + responder e assumir/soltar o bot. **Checkpoint** |
-| Sex 02 | 3,5 | Painel: tela de alertas (trecho, horário, canal, link, revisado, trilha) + polling de 10s. Fechamento |
-| Sáb/Dom | reserva | Prioridade se a semana escorregou: inbox e alertas |
+| Seg 28 | 3,5 | Login mínimo, todas as rotas de gestão protegidas, checagem de dono, rate limit. O `/chat/simulate` vira o simulador autenticado do painel |
+| Ter 29 | 3,5 | Triagem de mensagens quebradas (a triagem olha as últimas mensagens do contato juntas). Painel: inbox (lista de conversas, estado, "necessita atenção"; assumir, responder e devolver já existem) |
+| Qua 30 | 4 | Painel: tela de alertas (trecho, horário, canal, revisado, trilha) + atualização a cada 10s. **Sessão B:** enviar resultados e transcritos da triagem para a Marília revisar |
+| Qui 01/10 | 4 | Aviso de alerta por WhatsApp (template, sai do computador local; o e-mail fica como reserva). Deixar o sistema pronto para a nuvem: contêineres do backend e do painel e guia de deploy, sem subir. **Checkpoint** |
+| Sex 02 | 3,5 | Troca da lista "nunca dizer" pela da Marília; folga para atrasos. Fechamento |
+| Sáb/Dom | reserva | Prioridade se a semana escorregou: login e alertas |
 
-**Deploy em espera (24/09).** Pedro decide depois de falar com o
-Thiago na sexta 25. Se não houver deploy na segunda 28, a semana muda
-de ordem: o login sobe para segunda, inbox e alertas adiantam um dia,
-e o webhook da Meta, que exige HTTPS público, fica para quando houver
-deploy (para testar antes disso, dá para usar um túnel temporário).
-A demo não depende do deploy: roda no simulador (seção 1).
+**O que fica bloqueado sem deploy:** só **receber** mensagens reais do
+WhatsApp (o webhook exige HTTPS público). Enviar funciona do computador
+local. O código do webhook pode ser escrito e testado com um túnel
+temporário quando o Pedro quiser; a demo roda no simulador (seção 1).
+
+### Pronto para a nuvem
+
+Regras para que o deploy, quando decidido, seja só configuração:
+
+- Toda configuração vem do `.env` (banco, chaves, e-mail, URLs, CORS);
+  nada de endereço fixo no código além dos padrões de desenvolvimento.
+- Banco só muda por migração do Alembic.
+- Arquivos que precisam sobreviver (ChromaDB) ficam numa pasta
+  configurável, que vira um volume no servidor.
+- Login preparado para painel e API no mesmo domínio (cookie
+  `httpOnly`, `Secure` ligado por configuração).
+- Nenhum passo manual que só funcione no Windows do Pedro.
 
 **Checkpoint de quinta 01/10:** o número da Meta saiu? A semana está no
 prazo? Se não, a agenda passa para o modo degradado (seção 1).
@@ -379,6 +394,6 @@ de rotas, falha fechada, assinatura do webhook.
    com o Thiago.
 4. Paciente em acompanhamento ativo com alerta de emergência: a Marília
    quer "algo a mais" além do alerta padrão. Definir o quê.
-5. **Deploy (domínio + VPS):** fazer na segunda 28 ou segurar? Pedro
-   segurou em 24/09 até decidir e leva a pergunta ao Thiago na sexta 25.
-   Afeta D6, D8 e o webhook da Meta (quarta 30).
+5. **Quando fazer o deploy na nuvem.** Em 25/09 ficou decidido seguir
+   sem deploy (plano B), com o código pronto para a nuvem. Falta decidir
+   quando e onde. Afeta D6, D8 e o recebimento real pelo WhatsApp.

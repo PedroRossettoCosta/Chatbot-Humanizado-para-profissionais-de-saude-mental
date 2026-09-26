@@ -62,4 +62,8 @@ atualizados. Se algum ficou para depois, diga qual e por quê.
   de IA, handoff) são fixos no código, em forma neutra de gênero, e
   precisam da aprovação da Marília antes de uso real.
 - Nada de conteúdo de conversa em logs, e-mails ou mensagens de erro.
+- **Pronto para a nuvem:** o MVP roda local, mas toda configuração vem
+  do `.env`, nada depende de caminho ou endereço fixo da máquina do
+  Pedro, e o banco só muda por migração. Regras completas em
+  "Pronto para a nuvem" no plano do MVP.
 - Commit e push só quando o Pedro pedir.

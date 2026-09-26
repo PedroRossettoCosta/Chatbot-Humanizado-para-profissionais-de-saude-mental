@@ -66,6 +66,10 @@ _RECUSA_BOT = [
     # "não quero falar com robô", "não gosto de conversar com IA"
     r"\bnao (quero|gosto de|gostaria de|vou) (falar|conversar) com (robo|bot|maquina|ia|inteligencia artificial"
     r"|assistente virtual|computador)\b",
+    # Tolerante a erro de digitação ("nao quero flaar co um robo", "n quero
+    # fala c bot"): "não quero" e "robô" a até quatro palavras de distância.
+    # "ia" fica de fora aqui porque também é verbo ("não quero ir, ia chover").
+    r"\b(nao|n|naum) (quero|gosto|gostaria|vou|curto)\b(?: \S+){0,4} (robo|robos|robozinho|bot|bots|chatbot|maquina)\b",
     # "quero falar com uma pessoa", "prefiro alguém de verdade", "atendente humano"
     r"\b(falar|conversar|atendimento|atendido|atendida) (diretamente |direto )?(com|por) (a |o |uma |um )?"
     r"(pessoa|humano|humana|atendente|alguem de verdade|gente de verdade|pessoa de verdade|pessoa real)\b",

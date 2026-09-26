@@ -44,6 +44,9 @@ PROF = models.Professional(slug="x", name="Marília Rossetto")
         "Não quero conversar com IA, quero falar com a Marília",
         "prefiro ser atendida por uma pessoa de verdade",
         "chega de robô",
+        # Erros de digitação reais do teste no simulador (25/09).
+        "eu nao quero flaar co um robo eu quero falar com o pedro msm",
+        "n quero fala c bot",
     ],
 )
 def test_detects_bot_refusal(text):
@@ -65,7 +68,14 @@ def test_detects_request_for_professional(text):
 
 @pytest.mark.parametrize(
     "text",
-    ["você é humana?", "quanto custa a sessão?", "preciso falar sobre meu término", "falei com ela ontem"],
+    [
+        "você é humana?",
+        "quanto custa a sessão?",
+        "preciso falar sobre meu término",
+        "falei com ela ontem",
+        "não quero ir hoje, ia chover",
+        "não quero que meu namorado pense que sou um robô",
+    ],
 )
 def test_ignores_other_messages(text):
     assert handoff.classify_request(text, PROF) is None
