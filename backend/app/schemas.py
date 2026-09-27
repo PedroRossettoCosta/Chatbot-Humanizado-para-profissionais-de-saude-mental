@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -23,6 +23,8 @@ class _AssistantProfile(BaseModel):
     service_info: Optional[str] = None
     voice_examples: Optional[dict[str, VoiceExample]] = None
     extra_never_say: Optional[list[str]] = Field(default=None, max_length=30)
+    session_minutes: Optional[int] = Field(default=None, ge=15, le=240)
+    pronouns: Optional[Literal["feminine", "masculine", "neutral"]] = None
 
     @field_validator("alert_email")
     @classmethod
@@ -77,6 +79,11 @@ class ProfessionalOut(BaseModel):
     # verdadeiro = ligado até ela desligar.
     in_session: bool = Field(validation_alias="is_in_session")
     in_session_until: Optional[datetime] = None
+    session_minutes: Optional[int] = None
+    pronouns: Optional[str] = None
+    onboarding_step: Optional[int] = None
+    rules_accepted_at: Optional[datetime] = None
+    onboarding_completed_at: Optional[datetime] = None
     created_at: datetime
 
 
@@ -88,6 +95,8 @@ class InSessionStart(BaseModel):
 class ProfessionalUpdate(_AssistantProfile):
     name: Optional[str] = None
     voice_tone: Optional[str] = None
+    # Etapa do cadastro em que ela está, para continuar de onde parou.
+    onboarding_step: Optional[int] = Field(default=None, ge=1, le=7)
 
 
 class DocumentOut(BaseModel):
@@ -120,6 +129,13 @@ class ChatResponse(BaseModel):
 class VoiceQuestion(BaseModel):
     key: str
     question: str
+    example_good: Optional[str] = None
+    example_bad: Optional[str] = None
+
+
+class PronounOption(BaseModel):
+    key: str
+    label: str
 
 
 class AssistantGuidelines(BaseModel):
@@ -128,6 +144,8 @@ class AssistantGuidelines(BaseModel):
     assistant_name: str
     voice_questions: list[VoiceQuestion]
     never_say: list[str]
+    risk_behaviors: list[str]
+    pronoun_options: list[PronounOption]
 
 
 class MessageOut(BaseModel):

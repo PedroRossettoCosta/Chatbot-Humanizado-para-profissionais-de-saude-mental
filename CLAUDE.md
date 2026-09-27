@@ -61,6 +61,14 @@ atualizados. Se algum ficou para depois, diga qual e por quê.
 - Textos que o sistema envia sem passar pelo modelo (emergência, aviso
   de IA, handoff) são fixos no código, em forma neutra de gênero, e
   precisam da aprovação da Marília antes de uso real.
+- **Linguagem neutra de gênero em tudo que a profissional ou o contato
+  lê** (telas, regras, e-mails, prompt): a MarIA serve profissionais de
+  qualquer gênero. Reescreva a frase para não marcar gênero ("iguais em
+  todas as contas", "colegas", "você"), em vez de usar "o/a" ou
+  "um/uma". Comentários e documentação interna podem dizer "a
+  profissional". Quando a MarIA fala **da profissional** com o
+  paciente, segue os pronomes que ela escolheu no cadastro
+  (`guidelines.PRONOUNS`).
 - Nada de conteúdo de conversa em logs, e-mails ou mensagens de erro.
 - **Pronto para a nuvem:** o MVP roda local, mas toda configuração vem
   do `.env`, nada depende de caminho ou endereço fixo da máquina do

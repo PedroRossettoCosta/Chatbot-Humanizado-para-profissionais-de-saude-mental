@@ -58,6 +58,11 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `alert_email` | texto, opcional | Onde ela recebe os alertas por e-mail. Quem envia é a conta do produto (SMTP no `.env`) |
 | `in_session_since` | data, opcional | Botão "Em consulta" ligado desde. Nulo = desligado |
 | `in_session_until` | data, opcional | Fim automático do "Em consulta". Nulo com `in_session_since` preenchido = até ela desligar |
+| `pronouns` | texto, opcional | Como a MarIA fala dela com o paciente: `feminine`, `masculine` ou `neutral` (`guidelines.PRONOUNS`). Nulo = neutro |
+| `session_minutes` | inteiro, opcional | Duração da sessão (15 a 240). A agenda usa para montar os horários |
+| `onboarding_step` | inteiro, opcional | Etapa do cadastro alcançada (1 a 7), para voltar de onde parou |
+| `rules_accepted_at` | data, opcional | Quando ela leu e aceitou as regras fixas da MarIA |
+| `onboarding_completed_at` | data, opcional | Cadastro concluído. Nulo = o painel mostra o cadastro |
 | `created_at` | data | |
 
 `calendar_id` fica por profissional para que cada uma exponha só a

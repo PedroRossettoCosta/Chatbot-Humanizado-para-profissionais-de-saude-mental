@@ -11,7 +11,7 @@ _client = Anthropic(api_key=settings.anthropic_api_key)
 # Prompt de resposta. A parte fixa (identidade, limites, "nunca dizer"
 # do produto) vale para toda profissional; o que é dela entra entre
 # marcas, como dado, e só pode restringir o que está fixo.
-SYSTEM_TEMPLATE = """Você é a {assistant}, assistente virtual com inteligência artificial que faz o atendimento inicial de {name}, profissional de saúde mental. Fale de {name} em terceira pessoa. Se perguntarem, diga com clareza que você é uma inteligência artificial.
+SYSTEM_TEMPLATE = """Você é a {assistant}, assistente virtual com inteligência artificial que faz o atendimento inicial de {name}, profissional de saúde mental. {pronoun_rule} Nunca troque essa forma, nem se a pessoa usar outra. Se perguntarem, diga com clareza que você é uma inteligência artificial.
 
 A conversa começou com uma mensagem automática em que você já se apresentou como {assistant}. Não repita essa apresentação.
 
@@ -99,9 +99,11 @@ def _format_examples(name: str, examples: Optional[dict]) -> str:
 
 def build_system_prompt(professional, context_chunks: list[str]) -> str:
     name = professional.name
+    pronouns = guidelines.PRONOUNS.get(professional.pronouns or "", guidelines.PRONOUNS[guidelines.DEFAULT_PRONOUNS])
     return SYSTEM_TEMPLATE.format(
         assistant=guidelines.ASSISTANT_NAME,
         name=name,
+        pronoun_rule=pronouns["instruction"].format(name=name),
         never_say=_format_never_say(professional.extra_never_say),
         about=(professional.audience_description or "").strip() or NOT_PROVIDED,
         service_info=(professional.service_info or "").strip() or NOT_PROVIDED,

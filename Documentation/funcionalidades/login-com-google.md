@@ -32,10 +32,9 @@ Decisões:
 ## Como usar
 
 1. Abra o painel e clique em **Continuar com o Google**.
-2. Escolha a conta. No primeiro acesso, preencha **Nome de exibição** e
-   **E-mail para alertas** e clique em **Continuar**. O resto do perfil
-   (atendimento, tom de voz, regras) se preenche no painel; o cadastro
-   em 7 etapas substitui esta tela.
+2. Escolha a conta. No primeiro acesso, você passa pelo
+   [cadastro em etapas](cadastro-em-etapas.md); depois dele, cai direto
+   no painel.
 3. Para sair, clique em **Sair**, no topo do painel.
 
 Se aparecer **"Acesso ainda não liberado"**, o e-mail não está na lista
@@ -55,7 +54,8 @@ de convidados.
 5. Toda rota de gestão exige a sessão. Dados de outra profissional
    respondem como inexistentes (404), para não confirmar que existem.
 6. `GET /auth/me` diz ao painel quem está logado e se já tem cadastro.
-   Sem cadastro, o painel mostra a primeira etapa; `POST /professionals`
+   Sem cadastro concluído, o painel mostra o
+   [cadastro em etapas](cadastro-em-etapas.md); `POST /professionals`
    cria a profissional, gera o slug a partir do nome e liga à conta.
 
 Rotas abertas, sem login: `/health`, `/auth/config` (Client ID, que
@@ -68,7 +68,7 @@ mesmo site e o `SameSite=Lax` funciona.
 
 Arquivos: `services/auth.py`, `routers/auth.py`, `routers/professionals.py`
 (e a checagem de dono nas outras rotas), `frontend/src/pages/Login.jsx`,
-`frontend/src/pages/SignupStart.jsx`, `frontend/src/App.jsx`.
+`frontend/src/pages/Onboarding.jsx`, `frontend/src/App.jsx`.
 
 ## Textos fixos
 
@@ -113,8 +113,6 @@ URI de redirecionamento nem Client secret.
   (qualquer pessoa se cadastra e a conta fica aguardando liberação) e
   publicar o app no Google. Cadastro aberto, sem aprovação, só com
   cobrança e verificação do profissional.
-- O cadastro tem só a primeira etapa; as 7 etapas do protótipo entram
-  em seguida.
 - O limite de tentativas vale para um processo só; com mais de um, a
   contagem precisa ser compartilhada.
 - Em modo de teste do Google, só os usuários de teste conseguem entrar.
@@ -134,8 +132,8 @@ Manual:
 1. Rode `iniciar.bat` (ou suba o backend e o painel à mão e abra
    `http://localhost:5173/?sair`). O `?sair` encerra a sessão salva no
    navegador, para o teste começar pela tela de login.
-2. Entre com um e-mail convidado: primeiro acesso mostra "Vamos começar
-   pelo básico"; preencha e continue até o painel.
+2. Entre com um e-mail convidado: primeiro acesso abre o cadastro em
+   etapas; conclua e chegue ao painel.
 3. Clique em **Sair** e entre de novo: vai direto ao painel.
 4. Entre com um e-mail fora da lista: aparece "Acesso ainda não
    liberado".

@@ -10,7 +10,7 @@ const STATE_LABELS = {
 
 // Painel provisório (visual antigo): é refeito tela a tela no visual do
 // protótipo ao longo da semana 2. Recebe a profissional da conta logada.
-export default function Dashboard({ me, initialProfessional, onLogout }) {
+export default function Dashboard({ me, initialProfessional, onLogout, openSimulator }) {
   const [professional, setProfessional] = useState(null);
   const [voiceTone, setVoiceTone] = useState("");
   const [audience, setAudience] = useState("");
@@ -47,6 +47,10 @@ export default function Dashboard({ me, initialProfessional, onLogout }) {
   useEffect(() => {
     loadProfessional(initialProfessional);
   }, [initialProfessional]);
+
+  useEffect(() => {
+    if (openSimulator && professional) document.getElementById("testar-chat")?.scrollIntoView({ behavior: "smooth" });
+  }, [openSimulator, professional]);
 
   async function loadProfessional(data) {
     setMessage("");
@@ -265,7 +269,7 @@ export default function Dashboard({ me, initialProfessional, onLogout }) {
               </label>
               <p style={{ margin: "4px 0", color: "#555", fontSize: 13 }}>
                 Ajuda a MarIA a entender o que é comum no seu consultório. Não muda os critérios de
-                emergência, que são iguais para todas as profissionais.
+                emergência, que são iguais em todas as contas.
               </p>
               <textarea
                 id="audience"
@@ -332,7 +336,7 @@ export default function Dashboard({ me, initialProfessional, onLogout }) {
 
                   <h3 style={{ marginTop: 20, marginBottom: 4 }}>O que a MarIA nunca diz</h3>
                   <p style={{ margin: "4px 0", color: "#555", fontSize: 13 }}>
-                    Regras fixas, iguais para todas as profissionais:
+                    Regras fixas, iguais em todas as contas:
                   </p>
                   <ul style={{ margin: "4px 0", color: "#555", fontSize: 13 }}>
                     {guidelines.never_say.map((item) => (
@@ -348,7 +352,7 @@ export default function Dashboard({ me, initialProfessional, onLogout }) {
                     onChange={(e) => setExtraNeverSay(e.target.value)}
                     rows={3}
                     style={{ width: "100%" }}
-                    placeholder="Ex: não comentar sobre outros profissionais"
+                    placeholder="Ex: não comentar o trabalho de colegas"
                   />
                 </>
               )}
@@ -372,7 +376,7 @@ export default function Dashboard({ me, initialProfessional, onLogout }) {
               ))}
             </ul>
           </section>
-          <section style={{ marginTop: 32 }}>
+          <section id="testar-chat" style={{ marginTop: 32 }}>
             <h2>Testar o chat</h2>
             <div
               style={{

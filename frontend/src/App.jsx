@@ -3,13 +3,15 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "./api.js";
 import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
-import SignupStart from "./pages/SignupStart.jsx";
+import Onboarding from "./pages/Onboarding.jsx";
 
-// Sem login → tela de login. Logado sem cadastro → cadastro. Com
-// cadastro → painel. Quem decide é o backend, pelo `GET /auth/me`.
+// Sem login → tela de login. Logado sem cadastro concluído → cadastro em
+// etapas. Com cadastro → painel. Quem decide é o backend, pelo `GET /auth/me`.
 export default function App() {
   // undefined = ainda verificando; null = sem sessão.
   const [me, setMe] = useState(undefined);
+  // "Testar a MarIA" no fim do cadastro abre o painel já no simulador.
+  const [openSimulator, setOpenSimulator] = useState(false);
 
   const refresh = useCallback(() => {
     api
@@ -38,6 +40,19 @@ export default function App() {
 
   if (me === undefined) return null;
   if (me === null) return <Login onLogin={setMe} />;
-  if (!me.professional) return <SignupStart me={me} onCreated={refresh} onLogout={logout} />;
-  return <Dashboard me={me} initialProfessional={me.professional} onLogout={logout} />;
+  if (!me.professional?.onboarding_completed_at) {
+    return (
+      <Onboarding
+        me={me}
+        onLogout={logout}
+        onFinished={(target) => {
+          setOpenSimulator(target === "testar");
+          refresh();
+        }}
+      />
+    );
+  }
+  return (
+    <Dashboard me={me} initialProfessional={me.professional} onLogout={logout} openSimulator={openSimulator} />
+  );
 }

@@ -11,6 +11,7 @@ def _professional(**fields):
         service_info=None,
         voice_examples=None,
         extra_never_say=None,
+        pronouns=None,
     )
     base.update(fields)
     return SimpleNamespace(**base)
@@ -62,3 +63,16 @@ def test_examples_follow_the_fixed_question_order_and_skip_empty_pairs():
     assert "Como funciona o seu atendimento?" not in prompt
     assert "Resposta ruim (evite este estilo): Calma." in prompt
     assert prompt.count("Resposta ruim") == 1
+
+
+def test_pronouns_follow_the_professionals_choice():
+    feminine = llm.build_system_prompt(_professional(pronouns="feminine"), [])
+    assert "sempre no feminino: ela, dela" in feminine
+
+    masculine = llm.build_system_prompt(_professional(pronouns="masculine"), [])
+    assert "sempre no masculino: ele, dele" in masculine
+
+
+def test_without_choice_the_prompt_is_neutral():
+    prompt = llm.build_system_prompt(_professional(), [])
+    assert "sempre pelo nome: não use pronomes" in prompt

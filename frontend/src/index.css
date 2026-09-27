@@ -26,6 +26,28 @@
   --color-warning-soft: #fffbeb;
 }
 
+/*
+ * O mínimo do preflight que as telas novas precisam: borda e padding
+ * dentro da largura (sem isso, um campo `w-full` vaza do cartão e
+ * encavala no vizinho) e campos com a mesma fonte da página.
+ */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);

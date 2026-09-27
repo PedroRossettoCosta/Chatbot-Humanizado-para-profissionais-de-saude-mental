@@ -3,9 +3,11 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, detail) {
     super(message);
     this.status = status;
+    // Corpo do erro, quando é mais que uma frase (ex.: lista do que falta no cadastro).
+    this.detail = detail;
   }
 }
 
@@ -22,8 +24,9 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
 
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
-    const message = typeof detail.detail === "string" ? detail.detail : `Erro ${response.status}`;
-    throw new ApiError(message, response.status);
+    const message =
+      typeof detail.detail === "string" ? detail.detail : detail.detail?.message || `Erro ${response.status}`;
+    throw new ApiError(message, response.status, detail.detail);
   }
 
   if (response.status === 204) return null;
@@ -36,6 +39,8 @@ export const api = {
   me: () => request("/auth/me"),
   logout: () => request("/auth/logout", { method: "POST" }),
   createProfessional: (payload) => request("/professionals", { method: "POST", body: payload }),
+  acceptRules: (slug) => request(`/professionals/${slug}/accept-rules`, { method: "POST" }),
+  completeOnboarding: (slug) => request(`/professionals/${slug}/complete-onboarding`, { method: "POST" }),
   getGuidelines: () => request("/assistant/guidelines"),
   getProfessional: (slug) => request(`/professionals/${slug}`),
   updateProfessional: (slug, payload) => request(`/professionals/${slug}`, { method: "PATCH", body: payload }),

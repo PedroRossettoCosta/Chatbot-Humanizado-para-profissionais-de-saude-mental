@@ -13,6 +13,7 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 | [Perfil e regras da MarIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a MarIA nunca diz |
 | [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano; recusa do bot |
 | [Login com Google](login-com-google.md) | Funcionando, falta o Client ID | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
+| [Cadastro em etapas](cadastro-em-etapas.md) | Funcionando, WhatsApp em 05/10 | 7 etapas depois do primeiro login; o painel só abre com o cadastro concluído |
 | [Alerta por e-mail](alerta-por-email.md) | Funcionando, falta a conta de envio | Avisa a profissional fora do painel quando há alerta |
 
 ---

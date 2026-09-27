@@ -125,6 +125,8 @@ Funcionando:
 - **Login com Google**, só para e-mails convidados, com todas as rotas
   de gestão protegidas e cada profissional vendo só os próprios dados
   (falta o Client ID do Google).
+- **Cadastro em 7 etapas** no primeiro acesso, no visual do protótipo,
+  com aceite das regras da MarIA (falta conectar o WhatsApp, em 05/10).
 - **Painel web** para editar o perfil, gerenciar documentos e testar
   a conversa.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
@@ -139,7 +141,7 @@ Em construção, na ordem do
 - Triagem de mensagens quebradas em várias partes
 - Webhook do WhatsApp e envio de mensagens
 - Painel: caixa de entrada e tela de alertas
-- Cadastro em 7 etapas e o painel no visual do protótipo
+- O painel no visual do protótipo
 - Pré-agendamento no Google Calendar
 
 ## Estrutura do repositório

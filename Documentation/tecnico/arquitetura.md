@@ -107,6 +107,7 @@ alteração.
 | `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
 | `notifications.py` | E-mail de alerta para a profissional e registro do resultado na trilha |
 | `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
+| `onboarding.py` | Cadastro em etapas: o que é obrigatório, aceite das regras e conclusão |
 
 ## 4. O canal é desacoplado do núcleo
 

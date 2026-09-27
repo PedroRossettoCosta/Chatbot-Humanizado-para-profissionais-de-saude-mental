@@ -205,6 +205,19 @@ class Professional(Base):
     # ligado o dia inteiro). Ver `is_in_session`.
     in_session_since = Column(DateTime(timezone=True), nullable=True)
     in_session_until = Column(DateTime(timezone=True), nullable=True)
+    # Duração de uma sessão, em minutos. A agenda usa para montar os
+    # horários oferecidos; o texto livre de `service_info` não serve
+    # para isso.
+    session_minutes = Column(Integer, nullable=True)
+    # Cadastro em etapas: onde ela parou (1 a 7), quando aceitou as
+    # regras fixas da MarIA e quando concluiu. O painel só libera com o
+    # cadastro concluído.
+    onboarding_step = Column(Integer, nullable=True)
+    rules_accepted_at = Column(DateTime(timezone=True), nullable=True)
+    onboarding_completed_at = Column(DateTime(timezone=True), nullable=True)
+    # Como a MarIA fala dela com o paciente: "feminine", "masculine" ou
+    # "neutral" (ver `guidelines.PRONOUNS`). Nulo = neutro.
+    pronouns = Column(String(20), nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     @property

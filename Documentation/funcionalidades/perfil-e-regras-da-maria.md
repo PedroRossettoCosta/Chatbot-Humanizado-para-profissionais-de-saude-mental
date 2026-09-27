@@ -117,3 +117,15 @@ Manual no simulador:
 - 24/09/2026: regras fixas contra assuntos fora do atendimento e
   mudança de papel.
 - 25/09/2026: campo "E-mail para alertas" no mesmo formulário.
+- 27/09/2026: o perfil passa a ser preenchido no
+  [cadastro em etapas](cadastro-em-etapas.md); entram a duração da
+  sessão, exemplos ilustrativos por pergunta ("Ver um exemplo") e os
+  comportamentos em situação de risco (`RISK_BEHAVIORS`), que a
+  profissional lê e aceita.
+- 27/09/2026: linguagem neutra de gênero (Pedro): as regras fixas e as
+  telas deixam de dizer "a profissional", e o prompt manda a MarIA
+  falar da profissional sempre pelo nome, sem pronomes nem palavras com
+  gênero ("ela", "a doutora").
+- 27/09/2026: a profissional escolhe no cadastro como a MarIA fala
+  dela (feminino, masculino ou neutro); o prompt segue essa escolha e o
+  neutro vale quando não há escolha (`guidelines.PRONOUNS`).

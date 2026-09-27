@@ -13,4 +13,6 @@ def get_guidelines():
         assistant_name=guidelines.ASSISTANT_NAME,
         voice_questions=guidelines.VOICE_QUESTIONS,
         never_say=guidelines.NEVER_SAY_DEFAULTS,
+        risk_behaviors=guidelines.RISK_BEHAVIORS,
+        pronoun_options=[{"key": key, "label": item["label"]} for key, item in guidelines.PRONOUNS.items()],
     )

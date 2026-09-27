@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
-from app.services import auth, handoff
+from app.services import auth, handoff, onboarding
 
 router = APIRouter(prefix="/professionals", tags=["professionals"])
 
@@ -23,6 +23,8 @@ def create_professional(
         raise HTTPException(status_code=409, detail="Esta conta já tem um cadastro.")
     data = payload.model_dump()
     data["slug"] = data["slug"] or _unique_slug(db, payload.name)
+    # Criar a profissional conclui a etapa 1 do cadastro.
+    data["onboarding_step"] = 2
     professional = models.Professional(**data)
     db.add(professional)
     try:
@@ -51,6 +53,36 @@ def update_professional(
     professional = _get_owned(db, slug, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(professional, field, value)
+    db.commit()
+    db.refresh(professional)
+    return professional
+
+
+@router.post("/{slug}/accept-rules", response_model=schemas.ProfessionalOut)
+def accept_rules(
+    slug: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
+):
+    """Registra que ela leu e aceitou as regras fixas da MarIA (etapa 4)."""
+    professional = _get_owned(db, slug, user)
+    onboarding.accept_rules(professional)
+    db.commit()
+    db.refresh(professional)
+    return professional
+
+
+@router.post("/{slug}/complete-onboarding", response_model=schemas.ProfessionalOut)
+def complete_onboarding(
+    slug: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
+):
+    """Conclui o cadastro, se tudo o que é obrigatório estiver preenchido."""
+    professional = _get_owned(db, slug, user)
+    missing = onboarding.complete(professional)
+    if missing:
+        raise HTTPException(status_code=422, detail={"message": "Cadastro incompleto", "missing": missing})
     db.commit()
     db.refresh(professional)
     return professional
