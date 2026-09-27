@@ -22,6 +22,15 @@ na entrevista de protocolo com a profissional:
 5. Nenhum dado real de paciente entra no sistema antes de ela testar e
    aprovar.
 
+### Política de privacidade
+
+O texto público está em [politica-de-privacidade.md](../politica-de-privacidade.md)
+e publicado num repositório público separado
+(<https://github.com/PedroRossettoCosta/MarIA-Privacidade/blob/main/politica-de-privacidade.md>),
+porque este repositório é privado e tem materiais da Marília. É o link
+cadastrado na Meta para publicar o app. Mudou o tratamento de dados?
+Atualize os dois arquivos juntos.
+
 ## 2. Criptografia em repouso
 
 Cifrados no banco (Fernet, chave simétrica em `DATA_ENCRYPTION_KEY`):
