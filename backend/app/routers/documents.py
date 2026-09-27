@@ -3,23 +3,23 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
-from app.services import rag, text_extraction
+from app.services import auth, rag, text_extraction
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 
 
-def _get_professional(slug: str, db: Session) -> models.Professional:
+def _get_professional(slug: str, db: Session, user: models.User) -> models.Professional:
     professional = db.query(models.Professional).filter_by(slug=slug).first()
-    if not professional:
+    if not professional or not user.owns(professional.id):
         raise HTTPException(status_code=404, detail="Profissional não encontrado")
     return professional
 
 
 @router.get("/{slug}", response_model=list[schemas.DocumentOut])
-def list_documents(slug: str, db: Session = Depends(get_db)):
-    professional = _get_professional(slug, db)
+def list_documents(slug: str, db: Session = Depends(get_db), user: models.User = Depends(auth.current_user)):
+    professional = _get_professional(slug, db, user)
     return (
         db.query(models.Document)
         .filter_by(professional_id=professional.id)
@@ -33,8 +33,9 @@ async def upload_document(
     professional_slug: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
 ):
-    professional = _get_professional(professional_slug, db)
+    professional = _get_professional(professional_slug, db, user)
 
     extension = "." + file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
     if extension not in ALLOWED_EXTENSIONS:

@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from: str = ""
+    # Login com o Google (só identidade: nome, e-mail e foto). O Client ID
+    # não é segredo; vai para o navegador pelo `GET /auth/config`.
+    google_client_id: str = ""
+    # E-mails que podem entrar no painel, separados por vírgula. Vazio =
+    # ninguém entra (falha fechada): no MVP a MarIA é só para convidados.
+    allowed_emails: str = ""
+    session_days: int = 7
+    # Ligar em produção (HTTPS). Em desenvolvimento o painel roda em
+    # http://localhost e um cookie `Secure` não seria enviado.
+    session_cookie_secure: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

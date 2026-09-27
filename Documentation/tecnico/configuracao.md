@@ -26,6 +26,10 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `SMTP_PORT` | não | Padrão: 587 (STARTTLS) |
 | `SMTP_USER` / `SMTP_PASSWORD` | para enviar alertas | Conta que envia. No Gmail, use uma **senha de app**, nunca a senha da conta |
 | `SMTP_FROM` | não | Remetente exibido. Padrão: o `SMTP_USER` |
+| `GOOGLE_CLIENT_ID` | para o login | Client ID "Web application" do Google Cloud ([login com Google](../funcionalidades/login-com-google.md)). Não é segredo |
+| `ALLOWED_EMAILS` | para o login | E-mails convidados, separados por vírgula. Vazio = ninguém entra |
+| `SESSION_DAYS` | não | Validade da sessão do painel. Padrão: 7 |
+| `SESSION_COOKIE_SECURE` | em produção | `true` com HTTPS. Padrão: `false` (desenvolvimento em http) |
 
 Para declarar uma variável nova, adicione o campo em
 `app/config.py` **e** a linha correspondente no `.env.example`. Se a
@@ -52,7 +56,8 @@ pré-pago, sem mensalidade.
 
 | Variável | Para que serve |
 |---|---|
-| `VITE_API_URL` | Endereço da API. Padrão: `http://127.0.0.1:8000` |
+| `VITE_API_URL` | Endereço da API visto pelo navegador. Padrão: `/api`, no mesmo endereço do painel (senão o cookie do login não vai junto) |
+| `VITE_API_TARGET` | Para onde o proxy do Vite repassa `/api`. Padrão: `http://127.0.0.1:8000` |
 
 ## 3. Google Calendar
 

@@ -12,6 +12,7 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 | [Triagem de segurança](triagem-de-seguranca.md) | Funcionando | Detecta risco em cada mensagem antes do modelo responder, em duas camadas |
 | [Perfil e regras da MarIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a MarIA nunca diz |
 | [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano; recusa do bot |
+| [Login com Google](login-com-google.md) | Funcionando, falta o Client ID | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
 | [Alerta por e-mail](alerta-por-email.md) | Funcionando, falta a conta de envio | Avisa a profissional fora do painel quando há alerta |
 
 ---

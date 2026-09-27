@@ -164,7 +164,23 @@ monitoramento de erros for adotado, precisa estar configurado para
 descartar corpo de requisição — caso contrário, conversa clínica
 vazaria para um terceiro.
 
-## 7. O que ainda falta
+## 7. Acesso ao painel
+
+- **Login com Google** ([detalhes](../funcionalidades/login-com-google.md)):
+  a MarIA não guarda senha; o backend confere a assinatura do token do
+  Google e se o e-mail está verificado.
+- **Só convidados** (`ALLOWED_EMAILS`), conferido também a cada
+  requisição: tirar alguém da lista corta o acesso na hora.
+- **Sessão** em cookie `httpOnly`, `SameSite=Lax` e `Secure` em
+  produção; o banco guarda só o hash do código. Expira em 7 dias.
+- **Isolamento:** cada rota confere se o dado é da profissional logada
+  e responde 404 quando não é.
+- **Limite de tentativas de login:** 10 a cada 5 minutos por IP.
+
+Dados pessoais da conta: e-mail, nome, foto (endereço) e o
+identificador do Google.
+
+## 8. O que ainda falta
 
 Antes de qualquer paciente real usar o sistema:
 
@@ -174,7 +190,7 @@ Antes de qualquer paciente real usar o sistema:
 - [ ] Textos fixos de handoff aprovados por ela
 - [ ] Ela revisar os resultados, incluindo falsos positivos e negativos
 - [ ] Texto do aviso de IA aprovado por ela
-- [ ] Login protegendo as rotas de gestão
+- [x] Login protegendo as rotas de gestão (27/09; falta o Client ID do Google)
 - [ ] Assinatura do webhook validada (senão qualquer um injeta mensagem)
 - [ ] Limite de requisições por contato
 - [ ] Política de privacidade e termos publicados

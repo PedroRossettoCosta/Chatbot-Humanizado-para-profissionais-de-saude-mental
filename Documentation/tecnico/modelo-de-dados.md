@@ -8,6 +8,10 @@ As tabelas do MarIA, o que cada uma guarda e por quê. O código vive em
 ## Visão geral
 
 ```
+User ── UserSession                  quem entra no painel (conta Google) e suas sessões
+  │
+  └─(professional_id)─┐
+                      ▼
 Professional ──┬── Document          documentos da base de conhecimento
                │
                ├── Contact           quem fala com o bot
@@ -256,6 +260,40 @@ da profissional, no painel — o sistema nunca fecha um horário sozinho.
 
 `calendar_id` é repetido aqui, e não só em `Professional`, para o evento
 continuar rastreável se a profissional trocar de agenda depois.
+
+---
+
+## User
+
+Quem entra no painel, identificado pela conta Google. Separado de
+`Professional` porque são coisas diferentes: a conta é quem faz login;
+a profissional é o consultório que a MarIA atende. No MVP é uma para
+uma, e um dia pode haver mais de uma pessoa por consultório.
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `google_sub` | texto, único | Identificador permanente da conta no Google. O e-mail pode mudar; ele, não |
+| `email` | texto | Conferido contra a lista de convidados a cada requisição |
+| `name`, `picture_url` | texto | Vêm do Google a cada login |
+| `professional_id` | FK, único, nulo | Nulo até o cadastro ser concluído |
+| `created_at`, `last_login_at` | data | |
+
+Não há senha: quem prova a identidade é o Google.
+
+## UserSession
+
+Uma sessão de login. O navegador guarda um código aleatório num cookie
+`httpOnly`; a tabela guarda só o **hash** dele (`token_hash`), então
+quem ler o banco não consegue se passar pela profissional.
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `user_id` | FK | Apagada junto com a conta |
+| `token_hash` | texto, único | SHA-256 do código do cookie |
+| `expires_at` | data | Padrão: 7 dias depois do login (`SESSION_DAYS`) |
+
+Sair apaga a linha. Uma sessão vencida é apagada na próxima vez que
+aparece.
 
 ---
 

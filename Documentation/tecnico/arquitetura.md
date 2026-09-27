@@ -106,6 +106,7 @@ alteração.
 | `guidelines.py` | Regras fixas do produto: nome da MarIA, perguntas de tom, lista "nunca dizer" |
 | `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
 | `notifications.py` | E-mail de alerta para a profissional e registro do resultado na trilha |
+| `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
 
 ## 4. O canal é desacoplado do núcleo
 
@@ -145,9 +146,15 @@ Nenhuma consulta tem profissional fixo no código. Cada profissional tem:
   uma nunca aparece na resposta da outra;
 - seu tom de voz e sua agenda do Google.
 
-Hoje a identificação é pelo `slug` na chamada. Quando o login entrar, o
-usuário autenticado aponta para um `professional_id` e as rotas de
-gestão passam a exigir sessão — o isolamento em si não muda.
+As rotas de gestão exigem sessão (`auth.current_user`), e a conta
+logada aponta para um `professional_id`. Toda rota confere se o dado
+pedido é dessa profissional; se não for, responde 404, como se não
+existisse. O `slug` continua na URL, mas não dá acesso a nada sozinho.
+
+O painel chama a API em `/api`, no mesmo endereço dele: em
+desenvolvimento, o proxy do Vite repassa para o backend; em produção,
+o servidor web faz o mesmo. Isso mantém o cookie de sessão no mesmo
+site.
 
 ## 6. O que ainda não existe
 
@@ -158,5 +165,4 @@ Estas peças estão desenhadas mas não construídas. A ordem está no
   contato antes de avaliar.
 - **Webhook do WhatsApp**: receber com validação de assinatura,
   deduplicar reenvios e responder pela API da Meta.
-- **Login** e proteção das rotas de gestão.
 - **Agenda**: ler disponibilidade e criar evento provisório.

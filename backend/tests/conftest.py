@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.database import SessionLocal
 from app.main import app
-from app.services import llm, notifications
+from app.services import auth, llm, notifications
 
 
 @pytest.fixture(autouse=True)
@@ -32,8 +32,36 @@ def no_real_email(monkeypatch):
     return sent
 
 
+class _OwnerOfEverything:
+    """Conta de teste que é dona de qualquer profissional.
+
+    Os testes das funcionalidades (chat, triagem, handoff...) não são
+    sobre login; com ela, cada um continua criando a profissional de que
+    precisa. O login e a checagem de dono de verdade são testados em
+    `test_auth.py`, com o cliente `anon_client`.
+    """
+
+    email = "dona-de-tudo@teste.local"
+    name = "Teste"
+    picture_url = None
+    professional_id = None
+    professional = None
+
+    def owns(self, professional_id):
+        return True
+
+
 @pytest.fixture
 def client():
+    app.dependency_overrides[auth.current_user] = lambda: _OwnerOfEverything()
+    yield TestClient(app)
+    app.dependency_overrides.pop(auth.current_user, None)
+
+
+@pytest.fixture
+def anon_client():
+    """Cliente sem login: passa pela autenticação de verdade."""
+    auth.login_limiter.reset()
     return TestClient(app)
 
 

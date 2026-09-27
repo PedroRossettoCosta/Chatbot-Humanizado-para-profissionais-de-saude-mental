@@ -8,8 +8,9 @@ const STATE_LABELS = {
   emergency_hold: "🚨 Em espera após alerta de emergência (MarIA em silêncio)",
 };
 
-export default function Dashboard() {
-  const [slugInput, setSlugInput] = useState("");
+// Painel provisório (visual antigo): é refeito tela a tela no visual do
+// protótipo ao longo da semana 2. Recebe a profissional da conta logada.
+export default function Dashboard({ me, initialProfessional, onLogout }) {
   const [professional, setProfessional] = useState(null);
   const [voiceTone, setVoiceTone] = useState("");
   const [audience, setAudience] = useState("");
@@ -19,7 +20,6 @@ export default function Dashboard() {
   const [extraNeverSay, setExtraNeverSay] = useState("");
   const [guidelines, setGuidelines] = useState(null);
   const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [savingTone, setSavingTone] = useState(false);
   const [toneMessage, setToneMessage] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -44,12 +44,13 @@ export default function Dashboard() {
     setVoiceExamples((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   }
 
-  async function loadProfessional(event) {
-    event.preventDefault();
-    setLoading(true);
+  useEffect(() => {
+    loadProfessional(initialProfessional);
+  }, [initialProfessional]);
+
+  async function loadProfessional(data) {
     setMessage("");
     try {
-      const data = await api.getProfessional(slugInput.trim());
       setProfessional(data);
       setVoiceTone(data.voice_tone || "");
       setAudience(data.audience_description || "");
@@ -65,11 +66,8 @@ export default function Dashboard() {
       setConversationState(null);
       setToneMessage("");
     } catch (err) {
-      setProfessional(null);
       setDocuments([]);
       setMessage(err.message);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -181,19 +179,15 @@ export default function Dashboard() {
 
   return (
     <div style={{ maxWidth: 640, margin: "40px auto", fontFamily: "sans-serif" }}>
-      <h1>Chatbot Humanizado — Painel</h1>
-
-      <form onSubmit={loadProfessional} style={{ display: "flex", gap: 8 }}>
-        <input
-          value={slugInput}
-          onChange={(e) => setSlugInput(e.target.value)}
-          placeholder="slug do profissional (ex: marilia)"
-          style={{ flex: 1 }}
-        />
-        <button type="submit" disabled={loading || !slugInput.trim()}>
-          {loading ? "Carregando..." : "Carregar"}
-        </button>
-      </form>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <h1 style={{ margin: 0 }}>MarIA — Painel</h1>
+        <div style={{ fontSize: 14, color: "#555" }}>
+          {me.email} ·{" "}
+          <button type="button" onClick={onLogout}>
+            Sair
+          </button>
+        </div>
+      </div>
 
       {professional && (
         <>

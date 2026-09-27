@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
-from app.services import conversations, guidelines, handoff, llm, notifications, rag, triage
+from app.services import auth, conversations, guidelines, handoff, llm, notifications, rag, triage
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -27,14 +27,17 @@ def simulate_chat(
     payload: schemas.ChatRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
 ):
     """Canal simulado: mesma lógica do WhatsApp, sem depender da Meta.
 
     O `session_id` faz aqui o papel que o número de telefone faz no
     WhatsApp — é o identificador do contato dentro do canal.
     """
+    # Só a própria profissional testa a MarIA dela: o simulador gasta a
+    # chave da API e grava conversas no consultório.
     professional = db.query(models.Professional).filter_by(slug=payload.professional_slug).first()
-    if not professional:
+    if not professional or not user.owns(professional.id):
         raise HTTPException(status_code=404, detail="Profissional não encontrado")
 
     session_id = payload.session_id or str(uuid.uuid4())

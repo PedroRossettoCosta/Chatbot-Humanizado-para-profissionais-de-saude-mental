@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import assistant, chat, conversations, documents, professionals
+from app.routers import assistant, auth, chat, conversations, documents, professionals
 
 # A estrutura do banco é criada e evoluída pelo Alembic
 # (`alembic upgrade head`), não pela aplicação ao subir. Ter as duas
@@ -19,6 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(professionals.router)
 app.include_router(documents.router)
 app.include_router(chat.router)

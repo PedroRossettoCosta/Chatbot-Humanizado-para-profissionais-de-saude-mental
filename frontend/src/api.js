@@ -1,4 +1,13 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+// A API responde em /api, no mesmo endereço do painel (proxy do Vite em
+// desenvolvimento). O cookie de sessão vai junto em toda chamada.
+const API_URL = import.meta.env.VITE_API_URL || "/api";
+
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function request(path, { method = "GET", body, isFormData = false } = {}) {
   const headers = {};
@@ -8,11 +17,13 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
     method,
     headers,
     body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+    credentials: "include",
   });
 
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
-    throw new Error(detail.detail || `Erro ${response.status}`);
+    const message = typeof detail.detail === "string" ? detail.detail : `Erro ${response.status}`;
+    throw new ApiError(message, response.status);
   }
 
   if (response.status === 204) return null;
@@ -20,6 +31,11 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
 }
 
 export const api = {
+  getAuthConfig: () => request("/auth/config"),
+  loginWithGoogle: (credential) => request("/auth/google", { method: "POST", body: { credential } }),
+  me: () => request("/auth/me"),
+  logout: () => request("/auth/logout", { method: "POST" }),
+  createProfessional: (payload) => request("/professionals", { method: "POST", body: payload }),
   getGuidelines: () => request("/assistant/guidelines"),
   getProfessional: (slug) => request(`/professionals/${slug}`),
   updateProfessional: (slug, payload) => request(`/professionals/${slug}`, { method: "PATCH", body: payload }),

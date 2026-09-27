@@ -2,6 +2,8 @@
 
 Visão geral das tabelas e de como elas se ligam:
 
+    User ── UserSession  (quem entra no painel com o Google, e suas sessões)
+      │
     Professional  (a profissional dona da conta)
       ├── Document       (arquivos da base de conhecimento / RAG)
       ├── Contact        (quem fala com o bot: um lead ou paciente)
@@ -385,3 +387,61 @@ class Appointment(Base):
     created_at = Column(DateTime(timezone=True), default=_now)
 
     conversation = relationship("Conversation", back_populates="appointments")
+
+
+# ---------------------------------------------------------------------------
+# Acesso ao painel
+# ---------------------------------------------------------------------------
+
+
+class User(Base):
+    """Quem entra no painel, identificado pela conta Google.
+
+    Separado de `Professional` porque são coisas diferentes: a conta é
+    quem faz login; a profissional é o consultório que a MarIA atende.
+    No MVP é uma para uma, e `professional_id` fica nulo até o cadastro
+    ser concluído. Não há senha: quem prova a identidade é o Google.
+    """
+
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
+    # Identificador permanente da conta no Google (`sub` do token). O
+    # e-mail pode mudar; o `sub`, não.
+    google_sub = Column(String(255), unique=True, nullable=False)
+    email = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)
+    picture_url = Column(String(1024), nullable=True)
+    professional_id = Column(
+        UUID(as_uuid=False),
+        ForeignKey("professionals.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
+    )
+    created_at = Column(DateTime(timezone=True), default=_now)
+    last_login_at = Column(DateTime(timezone=True), default=_now)
+
+    professional = relationship("Professional")
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+
+    def owns(self, professional_id: str) -> bool:
+        return self.professional_id is not None and self.professional_id == professional_id
+
+
+class UserSession(Base):
+    """Sessão de login no painel, guardada no banco para poder ser encerrada.
+
+    O navegador recebe um código aleatório num cookie `httpOnly`; aqui
+    fica só o hash dele. Quem ler o banco não consegue se passar pela
+    profissional.
+    """
+
+    __tablename__ = "user_sessions"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
+    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), unique=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=_now)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+    user = relationship("User", back_populates="sessions")

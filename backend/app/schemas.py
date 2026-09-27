@@ -55,8 +55,9 @@ class _AssistantProfile(BaseModel):
 
 
 class ProfessionalCreate(_AssistantProfile):
-    slug: str = Field(min_length=3, max_length=64, pattern=r"^[a-z0-9-]+$")
-    name: str
+    # Sem `slug`, ele é gerado a partir do nome (ex.: "marilia-rossetto").
+    slug: Optional[str] = Field(default=None, min_length=3, max_length=64, pattern=r"^[a-z0-9-]+$")
+    name: str = Field(min_length=1, max_length=255)
     voice_tone: Optional[str] = None
 
 
@@ -149,3 +150,21 @@ class ConversationOut(BaseModel):
 
 class ProfessionalMessage(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
+
+
+class AuthConfig(BaseModel):
+    google_client_id: str
+
+
+class GoogleLogin(BaseModel):
+    # Token assinado que o botão do Google devolve ao navegador.
+    credential: str = Field(min_length=1, max_length=4096)
+
+
+class MeOut(BaseModel):
+    """Quem está logado e, se já concluiu o cadastro, a profissional dele."""
+
+    email: str
+    name: Optional[str] = None
+    picture_url: Optional[str] = None
+    professional: Optional[ProfessionalOut] = None

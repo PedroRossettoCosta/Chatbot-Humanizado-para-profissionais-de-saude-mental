@@ -13,3 +13,6 @@ cryptography>=43.0
 pytest>=8.0
 # Fusos horários no Windows (zoneinfo), usado no e-mail de alerta
 tzdata>=2024.1
+# Login do painel com a conta Google (só identidade)
+google-auth>=2.30
+requests>=2.31

@@ -65,11 +65,25 @@ npm install
 npm run dev
 ```
 
-O painel abre em `http://localhost:5173`.
+O painel abre em `http://localhost:5173` e chama a API em `/api`
+(o Vite repassa para `http://127.0.0.1:8000`). Para entrar, o
+`backend/.env` precisa de `GOOGLE_CLIENT_ID` e do seu e-mail em
+`ALLOWED_EMAILS`.
+
+O visual segue o protótipo (`Documentation/TCC App Design/`), com
+Tailwind e as cores dele em `src/index.css`. O "preflight" do Tailwind
+fica desligado até o painel inteiro estar no visual novo.
 
 ## 2. No dia a dia
 
-Dois terminais, a partir da raiz:
+No Windows, com o Docker Desktop aberto, dê dois cliques em
+`iniciar.bat` (na raiz). Ele sobe o banco, aplica as migrações, encerra
+servidores antigos presos nas portas 8000 e 5173, abre a API e o painel
+em duas janelas e o navegador na tela de login (`http://localhost:5173/?sair`, que
+encerra a sessão salva). Para parar,
+feche as duas janelas.
+
+À mão, são dois terminais, a partir da raiz:
 
 ```bash
 docker compose up -d
@@ -169,10 +183,16 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_reply_prompt.py` | Montagem do prompt: nome MarIA, lista fixa, regras da profissional |
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
 | `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
+| `test_auth.py` | Login com Google, convite, sessão, rotas fechadas sem login, isolamento entre profissionais, limite de tentativas |
 
 Os testes que chamariam a API da Claude usam `monkeypatch` para
 substituir a chamada, e o envio de e-mail é sempre substituído em
 `conftest.py`. Nenhum teste gasta crédito, envia e-mail ou depende de rede.
+
+O cliente `client` entra como uma conta de teste dona de qualquer
+profissional, para os testes das funcionalidades não dependerem do
+login. O login e a checagem de dono de verdade usam `anon_client`, em
+`test_auth.py`, com o token do Google substituído.
 
 Eles criam e apagam seus próprios dados, com slugs começando em
 `test-pytest-`. Ainda assim, **rode sempre contra o banco local**, nunca

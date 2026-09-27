@@ -93,6 +93,10 @@ npm install
 npm run dev
 ```
 
+Depois da primeira instalação, no Windows, basta dar dois cliques em
+`iniciar.bat` com o Docker Desktop aberto: ele sobe o banco, a API e o
+painel e abre o navegador.
+
 Painel em `http://localhost:5173`, API em `http://127.0.0.1:8000`, e a
 documentação interativa da API em `http://127.0.0.1:8000/docs`.
 
@@ -118,6 +122,9 @@ Funcionando:
   de humano, recusa do bot e botão "Em consulta".
 - **Alerta por e-mail** para a profissional, sem conteúdo da conversa
   (falta configurar a conta de envio).
+- **Login com Google**, só para e-mails convidados, com todas as rotas
+  de gestão protegidas e cada profissional vendo só os próprios dados
+  (falta o Client ID do Google).
 - **Painel web** para editar o perfil, gerenciar documentos e testar
   a conversa.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
@@ -132,7 +139,8 @@ Em construção, na ordem do
 - Triagem de mensagens quebradas em várias partes
 - Webhook do WhatsApp e envio de mensagens
 - Painel: caixa de entrada e tela de alertas
-- Login e pré-agendamento no Google Calendar
+- Cadastro em 7 etapas e o painel no visual do protótipo
+- Pré-agendamento no Google Calendar
 
 ## Estrutura do repositório
 
