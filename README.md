@@ -115,7 +115,8 @@ Funcionando:
   indexados no ChromaDB e consultados a cada mensagem.
 - **Resposta via Claude**, no tom de voz configurado pela profissional.
 - **Triagem de segurança** em duas camadas (regras fixas e modelo), com
-  quatro níveis, texto fixo de emergência e falha fechada.
+  quatro níveis, texto fixo de emergência e falha fechada, inclusive
+  para frase de risco quebrada em várias mensagens.
 - **Perfil e regras da MarIA**: tom de voz, exemplos, valores na
   primeira resposta e a lista fixa do que ela nunca diz.
 - **Handoff**: a profissional assume, responde e devolve ao bot; pedido
@@ -145,7 +146,6 @@ Funcionando:
 Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
 
-- Triagem de mensagens quebradas em várias partes
 - Webhook do WhatsApp e envio de mensagens
 - Painel: WhatsApp e Agenda
 - Pré-agendamento no Google Calendar

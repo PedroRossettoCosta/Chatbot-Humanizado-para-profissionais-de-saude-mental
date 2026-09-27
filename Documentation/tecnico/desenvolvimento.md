@@ -179,6 +179,7 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_chat_disclaimer.py` | Aviso de IA na primeira mensagem, e não nas seguintes |
 | `test_triage_rules.py` | Camada 1 da triagem: frases que disparam e as que não podem disparar |
 | `test_triage_layers.py` | Camadas 1 + 2: o modelo só sobe o nível, falha fechada |
+| `test_triage_fragments.py` | Frase de risco quebrada em várias mensagens: junta, não repete alerta, o mais grave ganha, respeita os 5 minutos |
 | `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio |
 | `test_reply_prompt.py` | Montagem do prompt: nome MarIA, lista fixa, regras da profissional |
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |

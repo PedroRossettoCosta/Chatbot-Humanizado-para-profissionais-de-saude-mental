@@ -1,6 +1,6 @@
 # Triagem de segurança
 
-> Situação: funcionando no simulador. Última atualização: 25/09/2026.
+> Situação: funcionando no simulador. Última atualização: 27/09/2026.
 
 ## O que é
 
@@ -57,6 +57,31 @@ Duas camadas, nesta ordem:
 **Falha fechada:** se a camada 2 falhar (rede, tempo, formato), a
 mensagem vira **dúvida** e a profissional é avisada.
 
+**Mensagens quebradas** (27/09/2026, pedido do Pedro): no WhatsApp a
+pessoa quebra a frase ("eu to pensando" / "em me matar"), e nenhuma
+parte casa sozinha com as regras. Por isso a camada 1 também roda no
+texto das **últimas 3 mensagens do contato que chegaram em até 5
+minutos**, juntas, mesmo com resposta da MarIA entre elas (hoje ela
+responde cada mensagem na hora, então quase nunca há duas mensagens
+seguidas sem resposta).
+- Só dispara o que a mensagem nova **completou**: o que já casava sem
+  ela já gerou alerta e não se repete.
+- Entre os níveis, o mais grave ganha ("tomei todos os" / "remédios,
+  quero morrer" é emergência, não dúvida).
+- O alerta guarda as mensagens juntas ("eu to pensando / em me
+  matar"), e a regra ganha o sufixo `:juntas` (na tela: "frase
+  quebrada em mensagens seguidas").
+- A camada 2 já lia o histórico; o prompt agora diz para ler as
+  últimas mensagens da pessoa juntas.
+- Os números (3 mensagens, 5 minutos) ficam em `routers/chat.py`
+  (`FRAGMENT_MESSAGES`, `FRAGMENT_WINDOW`).
+
+Com o webhook (02/10) entra também a espera antes de responder: a
+MarIA aguarda alguns segundos, junta o que chegar e responde uma vez
+(a API do WhatsApp não avisa quando a pessoa está digitando). A triagem
+continua rodando em cada mensagem na hora; a junção acima fica como
+segunda proteção.
+
 A triagem roda em qualquer estado da conversa, inclusive com a
 profissional no controle ou depois de um alerta: um sinal novo de risco
 sempre é registrado.
@@ -84,9 +109,9 @@ positivos). Alertas são imutáveis; mudanças viram eventos na trilha.
 
 ## Limitações e pendências
 
-- **Mensagens quebradas:** uma frase de risco dividida em várias
-  mensagens ("eu to pensando" / "em me matar") pode escapar da camada 1.
-  Proposta de 24/09: a triagem passa a olhar as últimas mensagens juntas.
+- **Mensagens quebradas:** partes que chegam com mais de 5 minutos de
+  intervalo, ou mais de 3 mensagens, não são juntadas pela camada 1
+  (a camada 2 ainda lê o histórico).
 - Resultado v1 medido em um conjunto de **desenvolvimento** (40
   mensagens, uma rotuladora). O número para o TCC precisa de um
   conjunto novo. Ver [triagem-conjunto-teste.md](../triagem-conjunto-teste.md).
@@ -96,16 +121,21 @@ positivos). Alertas são imutáveis; mudanças viram eventos na trilha.
 ## Como testar
 
 Automático: `tests/test_triage_rules.py`, `tests/test_triage_layers.py`,
-`tests/test_chat_triage.py`. Avaliação contra o conjunto rotulado:
+`tests/test_chat_triage.py`, `tests/test_triage_fragments.py`. Avaliação contra o conjunto rotulado:
 `python -m scripts.avaliar_triagem` (chama a API de verdade).
 
 Manual no simulador (cada caso numa conversa nova):
 - "to pensando em me matar" → texto de emergência e bot em silêncio.
 - "quero morrer" → a MarIA segue, sem texto de emergência; alerta gravado.
 - "to muito mal, chorando o dia todo" → a MarIA segue; conversa marcada.
+- "eu to pensando" e depois "em me matar" → texto de emergência; o
+  alerta mostra as duas mensagens juntas.
+- "quero morrer" e depois "oi?" → um alerta só.
 
 ## Histórico
 
 - 23/09/2026: camadas 1 e 2, falha fechada, nível "dúvida", resultado v1.
+- 27/09/2026: mensagens quebradas: a camada 1 junta as últimas 3
+  mensagens do contato em até 5 minutos.
 - 24/09/2026: liberar depois de emergência entra na trilha do alerta.
 - 25/09/2026: alertas passam a gerar e-mail para a profissional.

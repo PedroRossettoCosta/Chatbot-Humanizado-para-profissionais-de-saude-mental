@@ -199,7 +199,7 @@ Antes de qualquer paciente real usar o sistema:
 
 - [x] Módulo de triagem implementado e testado com os cenários que a
       profissional listou (resultado v1 em 23/09; falta conjunto de teste novo)
-- [ ] Triagem de mensagens quebradas em várias partes
+- [x] Triagem de mensagens quebradas em várias partes (27/09)
 - [ ] Textos fixos de handoff aprovados por ela
 - [ ] Ela revisar os resultados, incluindo falsos positivos e negativos
 - [ ] Texto do aviso de IA aprovado por ela

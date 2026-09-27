@@ -151,7 +151,7 @@ Níveis:
 
 - emergencia: indicação clara de risco à vida. A pessoa diz que pretende se matar ou se machucar, que pensa em suicídio, que tem um plano ou os meios, que já fez algo contra si, que tomou medicamentos ou outras substâncias para se ferir, que está prestes a fazer algo consigo, que não consegue se manter em segurança, ou que sofre violência ou perigo imediato de outra pessoa. Também é emergência quando mensagens anteriores dão a uma frase vaga um sentido de autolesão.
 
-Use as mensagens anteriores como contexto. Entre dois níveis que envolvem morte, autolesão ou perigo, escolha o mais grave. Entre normal e sofrimento_intenso, sem menção a morte ou perigo, não exagere."""
+Use as mensagens anteriores como contexto. No WhatsApp é comum a pessoa quebrar uma frase em várias mensagens seguidas ("eu to pensando" / "em me matar"): leia as últimas mensagens dela juntas, como uma frase só, mesmo que o consultório tenha respondido entre elas. Entre dois níveis que envolvem morte, autolesão ou perigo, escolha o mais grave. Entre normal e sofrimento_intenso, sem menção a morte ou perigo, não exagere."""
 
 
 # Parte de cada profissional: a especialidade e o público, escritos por

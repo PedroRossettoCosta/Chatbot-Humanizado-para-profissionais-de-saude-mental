@@ -1,4 +1,5 @@
 import uuid
+from datetime import timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -11,6 +12,11 @@ from app.services import auth, conversations, guidelines, handoff, llm, notifica
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 HISTORY_LIMIT = 12
+
+# Mensagem quebrada: a camada 1 da triagem junta a mensagem nova com as
+# até duas anteriores do contato que chegaram nos últimos 5 minutos.
+FRAGMENT_MESSAGES = 3
+FRAGMENT_WINDOW = timedelta(minutes=5)
 
 # Primeira mensagem de toda conversa, antes de qualquer resposta do
 # modelo. Diz o nome da assistente e que ela é uma IA (o aviso de IA
@@ -61,7 +67,8 @@ def simulate_chat(
     # mesmo com a profissional no controle ou com um alerta anterior, um
     # novo sinal de risco sempre é registrado.
     history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
-    risk = triage.assess(payload.message, history, professional.audience_description)
+    recent = conversations.recent_contact_texts(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
+    risk = triage.assess(payload.message, history, professional.audience_description, previous=recent[:-1])
     info = {"triage_level": risk.level if risk else "normal", "alert_created": False}
     if risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK):
         alert = conversations.raise_safety_alert(

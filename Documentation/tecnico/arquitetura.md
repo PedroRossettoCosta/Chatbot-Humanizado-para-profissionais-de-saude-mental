@@ -163,8 +163,7 @@ site.
 Estas peças estão desenhadas mas não construídas. A ordem está no
 [plano do MVP](../planejamento-mvp-9out.md).
 
-- **Triagem de mensagens quebradas**: juntar as últimas mensagens do
-  contato antes de avaliar.
 - **Webhook do WhatsApp**: receber com validação de assinatura,
-  deduplicar reenvios e responder pela API da Meta.
+  deduplicar reenvios, esperar alguns segundos para juntar mensagens
+  quebradas e responder pela API da Meta.
 - **Agenda**: ler disponibilidade e criar evento provisório.

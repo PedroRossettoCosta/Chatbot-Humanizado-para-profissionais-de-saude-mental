@@ -154,13 +154,36 @@ def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", texto).strip()
 
 
-def check_rules(text: str) -> TriageResult | None:
-    """Camada 1. Devolve o nível e a regra se houver sinal explícito de risco."""
-    normalizado = normalize(text)
+def check_rules(text: str, previous: list[str] | None = None) -> TriageResult | None:
+    """Camada 1. Devolve o nível e a regra se houver sinal explícito de risco.
+
+    `previous` são as mensagens anteriores do contato que chegaram logo
+    antes (ver `chat.FRAGMENT_WINDOW`). No WhatsApp a pessoa quebra a
+    frase: "eu to pensando" / "em me matar". Nenhuma das duas casa
+    sozinha; juntas, casam. Por isso, além da mensagem sozinha, a regra
+    roda no texto das mensagens juntas, e só vale o que a mensagem nova
+    completou: o que já casava sem ela já gerou alerta antes e não se
+    repete (trigger com o sufixo ":juntas").
+
+    Entre os níveis, o mais grave ganha, esteja o sinal na mensagem
+    sozinha ou nas mensagens juntas.
+    """
+    sozinha = normalize(text)
+    juntas = normalize(" ".join([*previous, text])) if previous else None
+    antes = normalize(" ".join(previous)) if previous else None
     for nivel, regras in _REGRAS_POR_NIVEL:
         for categoria, padroes in regras.items():
-            if any(padrao.search(normalizado) for padrao in padroes):
+            if any(padrao.search(sozinha) for padrao in padroes):
                 return TriageResult(level=nivel, trigger=f"camada1:{categoria}", excerpt=text[:500])
+        if juntas is None:
+            continue
+        for categoria, padroes in regras.items():
+            if any(padrao.search(juntas) and not padrao.search(antes) for padrao in padroes):
+                return TriageResult(
+                    level=nivel,
+                    trigger=f"camada1:{categoria}:juntas",
+                    excerpt=" / ".join([*previous, text])[:500],
+                )
     return None
 
 
@@ -179,11 +202,16 @@ _NIVEL_DA_CAMADA2 = {
 _GRAVIDADE = [None, AlertLevel.INTENSE_SUFFERING, AlertLevel.POSSIBLE_RISK, AlertLevel.EMERGENCY]
 
 
-def assess(text: str, history: list[dict], audience: str | None = None) -> TriageResult | None:
+def assess(
+    text: str, history: list[dict], audience: str | None = None, previous: list[str] | None = None
+) -> TriageResult | None:
     """Triagem completa da última mensagem. `None` quer dizer normal.
 
     - `audience` é a especialidade e o público da profissional; só chega
       à camada 2, nunca às regras da camada 1.
+    - `previous`: mensagens do contato logo antes desta, para a camada 1
+      pegar frase quebrada (ver `check_rules`). A camada 2 já lê o
+      histórico inteiro.
     - Se a camada 1 já achou emergência, o modelo nem é chamado.
     - A camada 2 só pode **subir** o nível que a camada 1 deu, nunca
       rebaixar: um erro do modelo não transforma "quero me matar" em
@@ -191,7 +219,7 @@ def assess(text: str, history: list[dict], audience: str | None = None) -> Triag
     - **Falha fechada:** se o modelo falhar (rede, tempo, recusa,
       formato), a mensagem vira dúvida e a profissional é avisada.
     """
-    regra = check_rules(text)
+    regra = check_rules(text, previous)
     if regra and regra.level == AlertLevel.EMERGENCY:
         return regra
 
