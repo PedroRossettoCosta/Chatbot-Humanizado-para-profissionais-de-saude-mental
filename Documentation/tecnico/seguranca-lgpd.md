@@ -139,6 +139,16 @@ há rota para editar nem apagar alerta. A anotação da revisão fica sem
 cifra, como as outras notas da trilha, e a tela avisa para não escrever
 dados clínicos nela.
 
+### Webhook do WhatsApp
+
+Toda chamada do webhook precisa da assinatura da Meta
+(`X-Hub-Signature-256`, HMAC do corpo com o App Secret); sem ela, ou
+sem o segredo configurado, é recusada (401) antes de gravar qualquer
+coisa. O túnel que expõe o notebook só deixa passar `/webhook/`: as
+rotas do painel respondem 404 pelo endereço público. Os logs do
+WhatsApp registram só tipos, ids e códigos de erro, nunca o texto. Ver
+[Atendimento pelo WhatsApp](../funcionalidades/atendimento-pelo-whatsapp.md).
+
 Na tela de Conversas, o número do contato aparece mascarado na lista
 (`+55 21 •••••-4444`) e completo só na conversa aberta, onde ela pode
 precisar ligar para a pessoa numa emergência. Ver
@@ -204,7 +214,7 @@ Antes de qualquer paciente real usar o sistema:
 - [ ] Ela revisar os resultados, incluindo falsos positivos e negativos
 - [ ] Texto do aviso de IA aprovado por ela
 - [x] Login protegendo as rotas de gestão (27/09)
-- [ ] Assinatura do webhook validada (senão qualquer um injeta mensagem)
+- [x] Assinatura do webhook validada (27/09; senão qualquer um injeta mensagem)
 - [ ] Limite de requisições por contato
 - [ ] Política de privacidade e termos publicados
 - [ ] Backup do banco, com restauração testada

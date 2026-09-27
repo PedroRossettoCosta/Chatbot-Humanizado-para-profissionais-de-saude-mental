@@ -63,6 +63,13 @@ Paciente escreve
    (e, se houve alerta, e-mail para a profissional em segundo plano)
 ```
 
+No código, o caminho fica em `services/pipeline.py`, dividido em dois:
+`receive` (grava e faz a triagem) e `reply` (handoff ou resposta da
+MarIA). O simulador chama os dois em seguida. No WhatsApp, `receive`
+roda assim que a mensagem chega (a emergência sai na hora) e `reply`
+só depois da espera de alguns segundos que junta mensagens quebradas
+(`services/whatsapp_inbox.py`).
+
 ### Por que a triagem roda primeiro
 
 Se a checagem de risco dependesse do modelo de linguagem decidir o que
@@ -97,6 +104,9 @@ alteração.
 
 | Módulo | Responsabilidade |
 |---|---|
+| `pipeline.py` | O caminho de uma mensagem, igual para simulador e WhatsApp: gravar e triar (`receive`), responder (`reply`) |
+| `whatsapp.py` | API da Meta: conferir a assinatura do webhook, ler o formato recebido, enviar texto e "digitando…" |
+| `whatsapp_inbox.py` | Mensagens do WhatsApp: profissional pelo número, reenvios, triagem na hora, espera antes de responder, tipos não suportados |
 | `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico, janela de 24h, número mascarado |
 | `rag.py` | Falar com o ChromaDB: indexar, buscar e apagar trechos |
 | `llm.py` | Montar o prompt de sistema e chamar a API da Claude |
@@ -136,8 +146,17 @@ Consequências práticas:
 - A mesma triagem protege todos os canais, sem duplicação.
 
 O **simulador** não é um atalho nem um protótipo separado: ele passa
-exatamente pelo mesmo caminho do WhatsApp, com o `session_id` fazendo o
-papel do número de telefone. O que funciona nele funciona no WhatsApp.
+exatamente pelo mesmo caminho do WhatsApp (`services/pipeline.py`), com
+o `session_id` fazendo o papel do número de telefone. A diferença é só
+a espera antes de responder, que o simulador não tem.
+
+O **WhatsApp** chega por `POST /webhook/whatsapp` (`routers/webhook.py`):
+assinatura conferida, "recebi" na hora e processamento em segundo
+plano. A profissional certa é a dona do número que recebeu
+(`whatsapp_phone_number_id`). Em desenvolvimento, o backend fica no
+notebook e a Meta chega nele por um túnel (ngrok com domínio fixo); um
+filtro em `main.py` só deixa passar `/webhook/` pelo endereço público.
+Ver [Atendimento pelo WhatsApp](../funcionalidades/atendimento-pelo-whatsapp.md).
 
 ## 5. Multi-tenant desde o começo
 
@@ -163,7 +182,4 @@ site.
 Estas peças estão desenhadas mas não construídas. A ordem está no
 [plano do MVP](../planejamento-mvp-9out.md).
 
-- **Webhook do WhatsApp**: receber com validação de assinatura,
-  deduplicar reenvios, esperar alguns segundos para juntar mensagens
-  quebradas e responder pela API da Meta.
 - **Agenda**: ler disponibilidade e criar evento provisório.

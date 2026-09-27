@@ -36,6 +36,10 @@ def contact_phone(contact: models.Contact) -> str | None:
     """Número completo, formatado (+55 21 95555-4444). Só no WhatsApp."""
     if contact.channel != Channel.WHATSAPP:
         return None
+    # Quem usa nome de usuário no WhatsApp chega com um id da Meta
+    # (BSUID), não com o número: aí não há telefone para mostrar.
+    if not re.fullmatch(r"\+?\d{8,15}", contact.external_id):
+        return None
     digits = re.sub(r"\D", "", contact.external_id)
     if digits.startswith("55") and len(digits) in (12, 13):
         return f"+55 {digits[2:4]} {digits[4:-4]}-{digits[-4:]}"
@@ -64,7 +68,7 @@ def contact_label(contact: models.Contact, full_phone: bool) -> tuple[str, str |
     phone = contact_phone(contact) if full_phone else masked_phone(contact)
     if contact.channel == Channel.SIMULATOR:
         return "Conversa de teste", phone
-    return contact.display_name or phone, phone
+    return contact.display_name or phone or "Contato do WhatsApp", phone
 
 
 def get_or_create_contact(

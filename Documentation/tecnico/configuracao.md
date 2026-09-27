@@ -22,6 +22,11 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `DATA_ENCRYPTION_KEY` | sim | Cifra os dados sensíveis em repouso |
 | `DATA_RETENTION_DAYS` | não | Dias até uma conversa inativa ser apagada. Padrão: 90 |
 | `WHATSAPP_ACCESS_TOKEN` | só com WhatsApp | Token permanente do usuário de sistema da Meta |
+| `WHATSAPP_APP_SECRET` | só com WhatsApp | Segredo do app (Configurações do app → Básico). Confere a assinatura de cada chamada do webhook; vazio = nada entra |
+| `WHATSAPP_VERIFY_TOKEN` | só com WhatsApp | Senha do desafio da Meta ao cadastrar o webhook. Qualquer texto longo; o mesmo vai no painel da Meta |
+| `WHATSAPP_API_VERSION` | não | Versão da Graph API. Padrão: `v25.0` |
+| `PUBLIC_WEBHOOK_HOST` | com túnel | Endereço público do túnel, sem `https://` (ex.: `algo.ngrok-free.dev`). Por ele só passa `/webhook/`. O `iniciar.bat` usa para abrir o ngrok |
+| `REPLY_DEBOUNCE_SECONDS` | não | Espera antes de responder no WhatsApp, para juntar mensagens quebradas. Padrão: 6 |
 | `SMTP_HOST` | para enviar alertas | Servidor de e-mail. Sem ele, o alerta registra `notify_failed` ([alerta por e-mail](../funcionalidades/alerta-por-email.md)) |
 | `SMTP_PORT` | não | Padrão: 587 (STARTTLS) |
 | `SMTP_USER` / `SMTP_PASSWORD` | para enviar alertas | Conta que envia. No Gmail, use uma **senha de app**, nunca a senha da conta |
@@ -141,12 +146,32 @@ não é exposto ao sistema.
   dias. Enquanto isso o número já recebe mensagens.
 - **A janela de 24h:** fora de 24h desde a última mensagem do contato,
   só é possível enviar template aprovado.
+- **Número por profissional:** o "phone number ID" do número vai em
+  `professionals.whatsapp_phone_number_id`; é por ele que o webhook
+  sabe de quem é a mensagem.
+- **App publicado:** enquanto o app estiver em desenvolvimento, a Meta
+  só entrega os testes do painel, não mensagens reais.
+
+### Webhook e túnel
+
+1. Conta gratuita no [ngrok](https://ngrok.com), com o domínio fixo de
+   desenvolvimento (**Domains**) e o authtoken instalado:
+   `ngrok config add-authtoken ...`.
+2. `PUBLIC_WEBHOOK_HOST` com esse domínio, `WHATSAPP_APP_SECRET` e
+   `WHATSAPP_VERIFY_TOKEN` no `backend/.env`.
+3. `iniciar.bat` abre o túnel (`ngrok http --domain=... 8000`).
+4. Na Meta, caso de uso do WhatsApp → Configuração da produção →
+   **Configurar webhooks**: callback `https://{PUBLIC_WEBHOOK_HOST}/webhook/whatsapp`
+   e o verify token → **Verificar e salvar** → ligar **Assinar
+   webhooks** da conta. Em Webhooks → Whatsapp Business Account, o
+   campo **messages** precisa estar assinado.
 
 ## 5. Onde cada segredo fica
 
 | Segredo | Onde | Versionado? |
 |---|---|---|
-| Chaves de API, tokens e senha do e-mail de envio | `backend/.env` | Não |
+| Chaves de API, tokens, App Secret da Meta e senha do e-mail de envio | `backend/.env` | Não |
+| Authtoken do ngrok | configuração do ngrok no usuário do Windows | Não |
 | Chave da conta de serviço do Google | `backend/secrets/*.json` | Não |
 | Valores de exemplo, em branco | `backend/.env.example` | Sim |
 

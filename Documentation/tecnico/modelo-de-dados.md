@@ -63,6 +63,7 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `onboarding_step` | inteiro, opcional | Etapa do cadastro alcançada (1 a 7), para voltar de onde parou |
 | `rules_accepted_at` | data, opcional | Quando ela leu e aceitou as regras fixas da MarIA |
 | `onboarding_completed_at` | data, opcional | Cadastro concluído. Nulo = o painel mostra o cadastro |
+| `whatsapp_phone_number_id` | texto, único, opcional | "Phone number ID" da Meta do número da MarIA desta profissional. O webhook encontra a profissional por ele |
 | `created_at` | data | |
 
 `calendar_id` fica por profissional para que cada uma exponha só a
@@ -311,9 +312,11 @@ aparece.
 
 ## O que este modelo ainda não cobre
 
-Campos específicos do WhatsApp, deixados de fora deliberadamente na
-primeira versão e a rever antes da integração:
+Campos específicos do WhatsApp, revistos em 27/09/2026 com o webhook:
 
-- Qual dos nossos números recebeu a mensagem (roteamento multi-tenant)
-- Tipo da mensagem (imagem, áudio, documento)
-- Situação de entrega (entregue, lida, falhou)
+- **Qual número recebeu:** resolvido com
+  `professionals.whatsapp_phone_number_id`.
+- **Tipo da mensagem:** sem campo próprio. O que não é texto fica
+  gravado como "[Áudio]", "[Imagem]" etc., que é o que o painel mostra.
+- **Situação de entrega** (entregue, lida, falhou): fora do MVP. Uma
+  falha de envio só vai para o log.

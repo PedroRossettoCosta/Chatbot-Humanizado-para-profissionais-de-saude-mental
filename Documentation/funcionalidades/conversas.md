@@ -1,6 +1,6 @@
 # Conversas
 
-> Situação: funcionando com as conversas do simulador; as do WhatsApp entram com o webhook (02/10). Última atualização: 27/09/2026.
+> Situação: funcionando (as do WhatsApp chegam quando o app da Meta for publicado). Última atualização: 27/09/2026.
 
 ## O que é
 
@@ -120,9 +120,10 @@ Não se aplica. O e-mail usa a mesma conta de envio e o mesmo
 
 ## Limitações e pendências
 
-- Sem WhatsApp conectado, só aparecem conversas de teste. A resposta
-  pelo painel é gravada, mas o envio pelo WhatsApp vem com o webhook
-  (02/10).
+- Conversas reais do WhatsApp só chegam com o app da Meta publicado
+  (ver [Atendimento pelo WhatsApp](atendimento-pelo-whatsapp.md)).
+- Numa conversa do WhatsApp, a resposta sai pela API da Meta e só é
+  gravada se a Meta aceitar; se recusar, a tela mostra o erro.
 - Sem tempo real: uma mensagem nova leva até 5 segundos para aparecer.
 - Sem retomar conversa fora das 24h (exigiria modelo de mensagem pago,
   trabalho futuro).
@@ -153,3 +154,4 @@ Manual:
 
 - 27/09/2026: tela de Conversas (computador e celular), situação
   "Aguardando você", e-mail de pedido, janela de 24h.
+- 27/09/2026: resposta pelo painel enviada de verdade no WhatsApp.

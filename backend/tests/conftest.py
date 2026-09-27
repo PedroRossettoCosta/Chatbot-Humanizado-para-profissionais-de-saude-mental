@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.database import SessionLocal
 from app.main import app
-from app.services import auth, llm, notifications
+from app.services import auth, llm, notifications, whatsapp
 
 
 @pytest.fixture(autouse=True)
@@ -30,6 +30,24 @@ def no_real_email(monkeypatch):
     monkeypatch.setattr(notifications, "_send", sent.append)
     monkeypatch.setattr(notifications, "sent_in_tests", sent, raising=False)
     return sent
+
+
+@pytest.fixture(autouse=True)
+def no_real_whatsapp(monkeypatch):
+    """Nenhum teste chama a API da Meta.
+
+    Cada chamada fica em `whatsapp.calls_in_tests` como (número, corpo),
+    e o envio devolve um `wamid` falso.
+    """
+    calls = []
+
+    def fake_post(phone_number_id, body):
+        calls.append((phone_number_id, body))
+        return {"messages": [{"id": f"wamid.teste.saida.{len(calls)}"}]}
+
+    monkeypatch.setattr(whatsapp, "_post", fake_post)
+    monkeypatch.setattr(whatsapp, "calls_in_tests", calls, raising=False)
+    return calls
 
 
 class _OwnerOfEverything:

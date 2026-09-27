@@ -107,8 +107,8 @@ métricas da triagem.
 
 ## Limitações e pendências
 
-- No simulador, a resposta da profissional só é gravada. O envio pelo
-  WhatsApp vem com o webhook (02/10).
+- No simulador, a resposta da profissional só é gravada; no WhatsApp,
+  sai pela API da Meta ([Atendimento pelo WhatsApp](atendimento-pelo-whatsapp.md)).
 - A resposta pelo painel só vale dentro da janela de 24h do WhatsApp
   (ver [Conversas](conversas.md)).
 - O fim automático do "Em consulta" aparece no painel em até um

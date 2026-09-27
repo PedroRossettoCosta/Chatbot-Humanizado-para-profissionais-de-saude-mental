@@ -76,11 +76,12 @@ seguidas sem resposta).
 - Os números (3 mensagens, 5 minutos) ficam em `routers/chat.py`
   (`FRAGMENT_MESSAGES`, `FRAGMENT_WINDOW`).
 
-Com o webhook (02/10) entra também a espera antes de responder: a
-MarIA aguarda alguns segundos, junta o que chegar e responde uma vez
-(a API do WhatsApp não avisa quando a pessoa está digitando). A triagem
-continua rodando em cada mensagem na hora; a junção acima fica como
-segunda proteção.
+No WhatsApp há também a espera antes de responder: a MarIA aguarda
+alguns segundos, junta o que chegar e responde uma vez (a API do
+WhatsApp não avisa quando a pessoa está digitando). A triagem continua
+rodando em cada mensagem na hora, então a espera nunca atrasa a
+mensagem de emergência; a junção acima fica como segunda proteção.
+Ver [Atendimento pelo WhatsApp](atendimento-pelo-whatsapp.md).
 
 A triagem roda em qualquer estado da conversa, inclusive com a
 profissional no controle ou depois de um alerta: um sinal novo de risco
@@ -137,5 +138,7 @@ Manual no simulador (cada caso numa conversa nova):
 - 23/09/2026: camadas 1 e 2, falha fechada, nível "dúvida", resultado v1.
 - 27/09/2026: mensagens quebradas: a camada 1 junta as últimas 3
   mensagens do contato em até 5 minutos.
+- 27/09/2026: no WhatsApp, a triagem roda assim que a mensagem chega,
+  antes da espera que junta mensagens para a resposta.
 - 24/09/2026: liberar depois de emergência entra na trilha do alerta.
 - 25/09/2026: alertas passam a gerar e-mail para a profissional.

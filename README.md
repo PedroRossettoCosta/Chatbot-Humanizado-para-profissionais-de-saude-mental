@@ -139,14 +139,18 @@ Funcionando:
   número de alertas sem revisar no menu.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
   repouso, aviso automático de que é uma IA, política de retenção.
-- **Integrações preparadas**: Google Calendar (conta de serviço,
-  conexão validada) e WhatsApp Cloud API (número verificado, token
-  permanente).
+- **WhatsApp**: webhook com assinatura conferida, triagem assim que a
+  mensagem chega, espera de alguns segundos para juntar mensagens
+  quebradas, resposta pela API da Meta, resposta do painel enviada ao
+  WhatsApp e túnel fixo (ngrok) que só deixa passar o webhook. Falta
+  publicar o app da Meta para chegarem mensagens reais.
+- **Integração preparada**: Google Calendar (conta de serviço, conexão
+  validada).
 
 Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
 
-- Webhook do WhatsApp e envio de mensagens
+- Publicação do app na Meta (política de privacidade) e teste com mensagens reais
 - Painel: WhatsApp e Agenda
 - Pré-agendamento no Google Calendar
 

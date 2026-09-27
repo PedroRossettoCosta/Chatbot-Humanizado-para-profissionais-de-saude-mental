@@ -78,10 +78,11 @@ fica desligado até o painel inteiro estar no visual novo.
 
 No Windows, com o Docker Desktop aberto, dê dois cliques em
 `iniciar.bat` (na raiz). Ele sobe o banco, aplica as migrações, encerra
-servidores antigos presos nas portas 8000 e 5173, abre a API e o painel
-em duas janelas e o navegador na tela de login (`http://localhost:5173/?sair`, que
-encerra a sessão salva). Para parar,
-feche as duas janelas.
+servidores antigos presos nas portas 8000 e 5173, abre a API, o painel
+e o túnel do WhatsApp (ngrok, se estiver instalado e com
+`PUBLIC_WEBHOOK_HOST` no `.env`) em janelas próprias, e o navegador na
+tela de login (`http://localhost:5173/?sair`, que encerra a sessão
+salva). Para parar, feche as janelas.
 
 À mão, são dois terminais, a partir da raiz:
 
@@ -179,6 +180,7 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_chat_disclaimer.py` | Aviso de IA na primeira mensagem, e não nas seguintes |
 | `test_triage_rules.py` | Camada 1 da triagem: frases que disparam e as que não podem disparar |
 | `test_triage_layers.py` | Camadas 1 + 2: o modelo só sobe o nível, falha fechada |
+| `test_webhook.py` | WhatsApp: desafio da Meta, assinatura, aviso de IA e resposta, reenvio, número sem profissional, emergência na hora, áudio, mensagens quebradas, espera recomeçada, resposta do painel pela Meta, filtro do túnel |
 | `test_triage_fragments.py` | Frase de risco quebrada em várias mensagens: junta, não repete alerta, o mais grave ganha, respeita os 5 minutos |
 | `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio |
 | `test_reply_prompt.py` | Montagem do prompt: nome MarIA, lista fixa, regras da profissional |
@@ -191,8 +193,9 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_auth.py` | Login com Google, convite, sessão, rotas fechadas sem login, isolamento entre profissionais, limite de tentativas |
 
 Os testes que chamariam a API da Claude usam `monkeypatch` para
-substituir a chamada, e o envio de e-mail é sempre substituído em
-`conftest.py`. Nenhum teste gasta crédito, envia e-mail ou depende de rede.
+substituir a chamada, e o envio de e-mail e as chamadas à API da Meta
+são sempre substituídos em `conftest.py`. Nenhum teste gasta crédito,
+envia e-mail ou mensagem, ou depende de rede.
 
 O cliente `client` entra como uma conta de teste dona de qualquer
 profissional, para os testes das funcionalidades não dependerem do

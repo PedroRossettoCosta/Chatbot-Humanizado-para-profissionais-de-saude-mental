@@ -3,13 +3,17 @@
 Todas exigem login, e só a dona da conversa enxerga ou age sobre ela.
 """
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
 from app.database import get_db
 from app.models import ConversationState
-from app.services import auth, conversations, handoff
+from app.services import auth, conversations, handoff, whatsapp
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
@@ -148,16 +152,29 @@ def send_message(
     db: Session = Depends(get_db),
     user: models.User = Depends(auth.current_user),
 ):
-    # No simulador a mensagem só é gravada; o envio pelo WhatsApp entra
-    # com o webhook (02/10).
+    # No simulador a mensagem só é gravada. No WhatsApp, ela sai pela API
+    # da Meta primeiro e só é gravada se a Meta aceitar: a conversa no
+    # painel não pode mostrar uma resposta que a pessoa não recebeu.
     conversation = _get(db, conversation_id, user)
-    try:
-        handoff.send_professional_message(db, conversation, payload.content)
-    except handoff.ReplyWindowClosed:
+    if not conversations.reply_window_open(conversation):
         raise HTTPException(
             status_code=409,
             detail="Passaram 24 horas desde a última mensagem desta pessoa. Pelas regras do WhatsApp, "
             "você só pode responder quando ela escrever de novo.",
         )
+    external_id = None
+    contact = conversation.contact
+    if contact.channel == models.Channel.WHATSAPP:
+        phone_number_id = conversation.professional.whatsapp_phone_number_id
+        try:
+            if not phone_number_id:
+                raise whatsapp.SendError("profissional sem número do WhatsApp")
+            external_id = whatsapp.send_text(phone_number_id, contact.external_id, payload.content)
+        except whatsapp.SendError as exc:
+            logger.error("falha ao enviar resposta do painel: %s", exc)
+            raise HTTPException(
+                status_code=502, detail="Não consegui enviar pelo WhatsApp agora. Tente de novo em instantes."
+            )
+    handoff.send_professional_message(db, conversation, payload.content, external_id=external_id or None)
     db.refresh(conversation)
     return _detail(conversation)

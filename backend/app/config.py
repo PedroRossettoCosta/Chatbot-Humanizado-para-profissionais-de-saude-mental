@@ -15,6 +15,19 @@ class Settings(BaseSettings):
     data_encryption_key: str = ""
     data_retention_days: int = 90
     whatsapp_access_token: str = ""
+    # Segredo do app na Meta: confere a assinatura de cada chamada do
+    # webhook. Vazio = nenhuma chamada é aceita (falha fechada).
+    whatsapp_app_secret: str = ""
+    # Senha combinada com a Meta no cadastro do webhook (o desafio GET).
+    whatsapp_verify_token: str = ""
+    whatsapp_api_version: str = "v25.0"
+    # Endereço público do túnel (ex.: algo.ngrok-free.dev). Por ele, só
+    # as rotas /webhook/ passam; o resto da API fica só na máquina.
+    public_webhook_host: str = ""
+    # Espera antes de responder no WhatsApp, recomeçada a cada mensagem
+    # nova, para juntar mensagens quebradas numa resposta só. A triagem
+    # não espera.
+    reply_debounce_seconds: float = 6.0
     # Conta de e-mail do produto que envia os alertas para as
     # profissionais (uma só para todas; cada profissional só informa o
     # endereço onde recebe). Sem `smtp_host`, o envio é registrado como

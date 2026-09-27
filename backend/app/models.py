@@ -218,6 +218,10 @@ class Professional(Base):
     # Como a MarIA fala dela com o paciente: "feminine", "masculine" ou
     # "neutral" (ver `guidelines.PRONOUNS`). Nulo = neutro.
     pronouns = Column(String(20), nullable=True)
+    # Número da MarIA desta profissional no WhatsApp (o "phone number ID"
+    # da Meta). O webhook diz para qual número a pessoa escreveu, e é
+    # assim que a mensagem chega à profissional certa.
+    whatsapp_phone_number_id = Column(String(32), nullable=True, unique=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     @property

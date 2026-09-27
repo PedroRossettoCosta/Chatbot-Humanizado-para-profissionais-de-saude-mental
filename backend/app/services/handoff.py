@@ -182,7 +182,7 @@ class ReplyWindowClosed(Exception):
 
 
 def send_professional_message(
-    db: Session, conversation: models.Conversation, content: str
+    db: Session, conversation: models.Conversation, content: str, external_id: str | None = None
 ) -> models.Message:
     """Mensagem escrita pela profissional no painel. Quem escreve, assume."""
     if not conversations.reply_window_open(conversation):
@@ -192,7 +192,7 @@ def send_professional_message(
     conversation.needs_attention = False
     conversation.awaiting_reply_since = None
     return conversations.record_message(
-        db, conversation, MessageRole.ASSISTANT, content, sent_by=SentBy.PROFESSIONAL
+        db, conversation, MessageRole.ASSISTANT, content, sent_by=SentBy.PROFESSIONAL, external_id=external_id
     )
 
 
