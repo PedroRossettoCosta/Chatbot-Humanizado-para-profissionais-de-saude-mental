@@ -47,8 +47,8 @@ Decisões:
 7. **Revisão:** confira, use "Editar" para voltar a qualquer etapa e
    clique em **Concluir cadastro**.
 
-Na tela final, "Testar a MarIA" abre o painel já no simulador; "Ir para
-o painel" abre o painel.
+Na tela final, "Testar a MarIA" abre o [painel](painel.md) já no
+simulador; "Ir para o painel" abre o painel.
 
 ## Como funciona
 
@@ -116,8 +116,6 @@ só a própria profissional mexe no cadastro dela.
   vêm junto.
 - Uma profissional cadastrada antes de 27/09 cai de novo no cadastro, a
   partir da etapa 2, até concluir.
-- O painel ainda está no visual antigo; a tela "Perfil do atendimento"
-  do protótipo substitui o formulário atual quando o painel for refeito.
 - Textos da etapa 4 e exemplos da etapa 3 sem revisão da Marília.
 
 ## Como testar

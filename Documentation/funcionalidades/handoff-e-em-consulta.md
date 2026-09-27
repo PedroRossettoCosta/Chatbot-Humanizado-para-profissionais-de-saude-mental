@@ -30,14 +30,15 @@ isso.
 
 ## Como usar
 
-**Botão "Em consulta"** (logo abaixo do nome, no painel):
-1. Escolha a duração: 50 min, 1h30 ou "até eu desligar".
-2. Clique em **Entrar em consulta**. O quadro fica verde e mostra até
-   que horas.
+**Botão "Em consulta"** (na barra do topo do painel):
+1. Clique em **Entrar em consulta** e escolha a duração: 50 minutos,
+   1h30 ou "até eu desligar".
+2. O botão vira "Em consulta até HH:MM", com **+15 min** para estender.
 3. Clique em **Encerrar** para desligar antes. Com duração, ele desliga
    sozinho no horário.
 
-**Na conversa** (caixa "Como profissional", abaixo do chat de teste):
+**Na conversa** (por enquanto no simulador "Testar a MarIA"; a tela
+Conversas vem em 30/09):
 - **Assumir conversa**: a MarIA fica em silêncio.
 - **Responder como {nome}**: a mensagem vai para o contato, marcada
   como sua. Responder já assume a conversa.
@@ -75,7 +76,8 @@ no controle), `emergency_hold` (espera depois de emergência).
 Arquivos: `services/handoff.py`, `routers/conversations.py`
 (`/conversations/{id}`, `/take-over`, `/release`, `/messages`),
 `routers/professionals.py` (`PUT`/`DELETE /professionals/{slug}/in-session`),
-`routers/chat.py`, `pages/Dashboard.jsx`.
+`routers/chat.py`, `frontend/src/panel/InSessionControl.jsx`,
+`frontend/src/panel/Simulator.jsx`.
 
 ## Textos fixos
 
@@ -101,12 +103,10 @@ métricas da triagem.
 
 ## Limitações e pendências
 
-- **Sem login:** qualquer um que chame a API consegue assumir ou
-  responder (login planejado para 29/09).
 - No simulador, a resposta da profissional só é gravada. O envio pelo
   WhatsApp vem com o webhook (30/09).
-- O fim automático do "Em consulta" só aparece no painel depois de
-  recarregar a página.
+- O fim automático do "Em consulta" aparece no painel em até um
+  minuto (o painel relê a profissional a cada minuto).
 - As regras de detecção podem não reconhecer alguma forma de pedir,
   principalmente com erros de digitação. Frases que falharem devem virar
   caso de teste. Se isso se repetir, a alternativa é o modelo classificar

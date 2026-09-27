@@ -43,3 +43,8 @@ def query(slug: str, text: str, top_k: int = 4) -> tuple[list[str], list[dict]]:
     documents = results.get("documents") or [[]]
     metadatas = results.get("metadatas") or [[]]
     return documents[0], metadatas[0]
+
+
+def delete_document(slug: str, document_id: str) -> None:
+    """Apaga do ChromaDB todos os trechos de um documento."""
+    get_collection(slug).delete(where={"document_id": document_id})

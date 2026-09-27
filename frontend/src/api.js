@@ -45,6 +45,7 @@ export const api = {
   getProfessional: (slug) => request(`/professionals/${slug}`),
   updateProfessional: (slug, payload) => request(`/professionals/${slug}`, { method: "PATCH", body: payload }),
   listDocuments: (slug) => request(`/documents/${slug}`),
+  deleteDocument: (documentId) => request(`/documents/${documentId}`, { method: "DELETE" }),
   uploadDocument: (slug, file) => {
     const formData = new FormData();
     formData.append("professional_slug", slug);

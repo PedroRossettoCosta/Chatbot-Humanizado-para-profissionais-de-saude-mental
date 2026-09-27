@@ -184,6 +184,7 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
 | `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
 | `test_onboarding.py` | Cadastro em etapas: etapa salva, duração, o que falta, aceite das regras e conclusão |
+| `test_documents_api.py` | Envio e remoção de documento da base de conhecimento |
 | `test_auth.py` | Login com Google, convite, sessão, rotas fechadas sem login, isolamento entre profissionais, limite de tentativas |
 
 Os testes que chamariam a API da Claude usam `monkeypatch` para

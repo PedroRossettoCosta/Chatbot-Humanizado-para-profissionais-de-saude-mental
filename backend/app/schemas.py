@@ -124,6 +124,12 @@ class ChatResponse(BaseModel):
     reply: Optional[str] = None
     sources: list[str] = []
     disclaimer: Optional[str] = None
+    # O que aconteceu por trás da resposta, para o simulador mostrar:
+    # nível da triagem ("normal" quando não houve risco), se um alerta
+    # foi criado e se a pessoa pediu a profissional ou recusou o bot.
+    triage_level: str = "normal"
+    alert_created: bool = False
+    handoff: Optional[str] = None
 
 
 class VoiceQuestion(BaseModel):

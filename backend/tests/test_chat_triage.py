@@ -32,9 +32,14 @@ def test_risk_message_sends_fixed_text_raises_alert_and_silences_bot(client, db,
 
     first = _send(client, "oi, queria saber como funciona")
     assert first["reply"] == "resposta do bot"
+    assert first["triage_level"] == "normal"
+    assert first["alert_created"] is False
 
     risk = _send(client, "na verdade to pensando em me matar", first["session_id"])
     assert risk["reply"] == triage.EMERGENCY_MESSAGE
+    # O simulador mostra o que aconteceu por trás da resposta.
+    assert risk["triage_level"] == "emergency"
+    assert risk["alert_created"] is True
     assert len(llm_calls) == 1  # a mensagem de risco não passou pelo modelo
 
     after = _send(client, "quanto custa a sessão?", first["session_id"])

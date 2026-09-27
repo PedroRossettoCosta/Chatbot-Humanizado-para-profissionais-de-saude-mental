@@ -25,8 +25,8 @@ Decisões:
 
 ## Como usar
 
-1. No painel, em **Perfil do atendimento**, preencha **E-mail para
-   alertas** e clique em **Salvar**.
+1. No cadastro (etapa 1) ou depois em **Perfil do atendimento**,
+   preencha **E-mail para alertas** e clique em **Salvar alterações**.
 2. Quem administra o sistema configura a conta de envio no
    `backend/.env` (ver Configuração).
 

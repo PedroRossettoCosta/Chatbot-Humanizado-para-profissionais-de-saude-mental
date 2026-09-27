@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { api } from "./api.js";
-import Dashboard from "./pages/Dashboard.jsx";
+import KnowledgeBase from "./pages/KnowledgeBase.jsx";
 import Login from "./pages/Login.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
+import Profile from "./pages/Profile.jsx";
+import PanelLayout from "./panel/PanelLayout.jsx";
 
 // Sem login → tela de login. Logado sem cadastro concluído → cadastro em
 // etapas. Com cadastro → painel. Quem decide é o backend, pelo `GET /auth/me`.
@@ -53,6 +56,15 @@ export default function App() {
     );
   }
   return (
-    <Dashboard me={me} initialProfessional={me.professional} onLogout={logout} openSimulator={openSimulator} />
+    <BrowserRouter>
+      <Routes>
+        <Route element={<PanelLayout me={me} onLogout={logout} startWithSimulator={openSimulator} />}>
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/base-de-conhecimento" element={<KnowledgeBase />} />
+          {/* Conversas ainda não existe: por enquanto o painel abre no perfil. */}
+          <Route path="*" element={<Navigate to="/perfil" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }

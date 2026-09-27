@@ -9,6 +9,8 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 
 | Funcionalidade | Situação | Resumo |
 |---|---|---|
+| [Painel](painel.md) | Funcionando, parte das telas em construção | Menu, "Em consulta" no topo, Perfil do atendimento e o simulador "Testar a MarIA" |
+| [Base de conhecimento](base-de-conhecimento.md) | Funcionando | Documentos que a MarIA usa para responder (RAG): enviar e remover |
 | [Triagem de segurança](triagem-de-seguranca.md) | Funcionando | Detecta risco em cada mensagem antes do modelo responder, em duas camadas |
 | [Perfil e regras da MarIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a MarIA nunca diz |
 | [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano; recusa do bot |

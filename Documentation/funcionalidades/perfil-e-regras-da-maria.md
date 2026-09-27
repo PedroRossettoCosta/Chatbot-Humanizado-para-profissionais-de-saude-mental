@@ -37,8 +37,8 @@ Decisões:
 
 ## Como usar
 
-No painel, carregue a profissional pelo slug e preencha **Perfil do
-atendimento**:
+O perfil é preenchido no [cadastro em etapas](cadastro-em-etapas.md) e
+editado depois em **Perfil do atendimento**, no [painel](painel.md):
 
 1. **E-mail para alertas**: ver [Alerta por e-mail](alerta-por-email.md).
 2. **Especialidade e público**: quem ela atende e com o quê.
@@ -46,10 +46,10 @@ atendimento**:
 4. **Tom de voz**: descrição livre.
 5. **Exemplos de resposta**: para cada uma das três perguntas fixas,
    uma resposta boa e uma ruim.
-6. **O que a MarIA nunca diz**: a lista fixa aparece com cadeado; ela
-   pode acrescentar regras próprias, uma por linha.
+6. **O que a MarIA nunca diz**: a lista fixa aparece em "Ver regras";
+   ela pode acrescentar regras próprias em "Regras extras".
 
-Clique em **Salvar** e teste no **Testar o chat**.
+Clique em **Salvar alterações** e teste em **Testar a MarIA**.
 
 ## Como funciona
 
@@ -67,7 +67,7 @@ prioridade sobre tudo, inclusive sobre os exemplos e documentos dela.
 
 Arquivos: `services/guidelines.py` (regras fixas), `services/llm.py`
 (prompt), `routers/assistant.py` (`GET /assistant/guidelines`, que o
-painel usa para mostrar a lista fixa), `pages/Dashboard.jsx`.
+painel usa para mostrar a lista fixa), `pages/Profile.jsx`.
 
 ## Textos fixos
 

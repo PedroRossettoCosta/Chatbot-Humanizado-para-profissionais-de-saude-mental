@@ -58,3 +58,18 @@ async def upload_document(
     rag.add_chunks(professional.slug, document.id, document.filename, chunks)
 
     return document
+
+
+@router.delete("/{document_id}", status_code=204)
+def delete_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
+):
+    """Remove o documento da base: os trechos no ChromaDB e o registro."""
+    document = db.get(models.Document, document_id)
+    if not document or not user.owns(document.professional_id):
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+    rag.delete_document(document.professional.slug, document.id)
+    db.delete(document)
+    db.commit()

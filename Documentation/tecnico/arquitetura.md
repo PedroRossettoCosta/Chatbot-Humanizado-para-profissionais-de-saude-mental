@@ -98,7 +98,7 @@ alteração.
 | Módulo | Responsabilidade |
 |---|---|
 | `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico |
-| `rag.py` | Falar com o ChromaDB: indexar e buscar trechos |
+| `rag.py` | Falar com o ChromaDB: indexar, buscar e apagar trechos |
 | `llm.py` | Montar o prompt de sistema e chamar a API da Claude |
 | `text_extraction.py` | Extrair texto de PDF/DOCX/TXT e dividir em trechos |
 | `crypto.py` | Cifrar dados sensíveis e gerar índice de busca |

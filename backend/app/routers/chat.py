@@ -62,6 +62,7 @@ def simulate_chat(
     # novo sinal de risco sempre é registrado.
     history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
     risk = triage.assess(payload.message, history, professional.audience_description)
+    info = {"triage_level": risk.level if risk else "normal", "alert_created": False}
     if risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK):
         alert = conversations.raise_safety_alert(
             db, conversation, user_message, risk.level, risk.trigger, risk.excerpt
@@ -69,6 +70,7 @@ def simulate_chat(
         # O e-mail sai depois da resposta ao contato: um servidor de
         # e-mail lento não atrasa a mensagem de emergência.
         background_tasks.add_task(notifications.notify_alert, alert.id)
+        info["alert_created"] = True
     elif risk and risk.level == AlertLevel.INTENSE_SUFFERING:
         conversations.mark_needs_attention(db, conversation)
     # Na dúvida sobre segurança, a profissional é avisada e a conversa
@@ -77,13 +79,13 @@ def simulate_chat(
         conversations.record_message(
             db, conversation, MessageRole.ASSISTANT, triage.EMERGENCY_MESSAGE, sent_by=SentBy.SYSTEM
         )
-        return _response(session_id, conversation, triage.EMERGENCY_MESSAGE, disclaimer)
+        return _response(session_id, conversation, triage.EMERGENCY_MESSAGE, disclaimer, **info)
 
     # Com a profissional no controle, ou depois de um alerta, o bot fica
     # em silêncio. Não há retomada automática: só a profissional libera o
     # bot de novo, pelo painel (decisão da Marília em 23/09).
     if conversation.state in (ConversationState.HUMAN, ConversationState.EMERGENCY_HOLD):
-        return _response(session_id, conversation, None, disclaimer)
+        return _response(session_id, conversation, None, disclaimer, **info)
 
     # Recusa do bot ou pedido para falar com a profissional: texto fixo, sem passar pelo
     # modelo. Ver `services/handoff.py` (inclui o botão "Em consulta").
@@ -92,7 +94,8 @@ def simulate_chat(
         reply, alert = handoff.handle_human_request(db, professional, conversation, user_message, request)
         if alert:
             background_tasks.add_task(notifications.notify_alert, alert.id)
-        return _response(session_id, conversation, reply, disclaimer)
+            info["alert_created"] = True
+        return _response(session_id, conversation, reply, disclaimer, handoff=request, **info)
 
     chunks, metadatas = rag.query(professional.slug, payload.message)
     system_prompt = llm.build_system_prompt(professional, chunks)
@@ -105,10 +108,12 @@ def simulate_chat(
 
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
 
-    return _response(session_id, conversation, reply, disclaimer, sources)
+    return _response(session_id, conversation, reply, disclaimer, sources, **info)
 
 
-def _response(session_id, conversation, reply, disclaimer, sources=None) -> schemas.ChatResponse:
+def _response(
+    session_id, conversation, reply, disclaimer, sources=None, triage_level="normal", alert_created=False, handoff=None
+) -> schemas.ChatResponse:
     return schemas.ChatResponse(
         session_id=session_id,
         conversation_id=conversation.id,
@@ -116,4 +121,7 @@ def _response(session_id, conversation, reply, disclaimer, sources=None) -> sche
         reply=reply,
         sources=sources or [],
         disclaimer=disclaimer,
+        triage_level=triage_level,
+        alert_created=alert_created,
+        handoff=handoff,
     )
