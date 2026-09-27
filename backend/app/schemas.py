@@ -163,12 +163,41 @@ class MessageOut(BaseModel):
     created_at: datetime
 
 
-class ConversationOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class LastMessageOut(BaseModel):
+    role: str
+    sent_by: Optional[str] = None
+    # Começo da mensagem, para a lista; a conversa inteira só abrindo.
+    preview: str
+    created_at: datetime
 
+
+class AlertBrief(BaseModel):
+    level: str
+    created_at: datetime
+
+
+class _ConversationBase(BaseModel):
     id: str
+    channel: str
+    # Nome do perfil no WhatsApp; sem ele, o número; no simulador, "Conversa de teste".
+    contact_name: str
+    # Na lista, mascarado (+55 21 •••••-4444); na conversa aberta, completo.
+    contact_phone: Optional[str] = None
     state: str
     needs_attention: bool
+    awaiting_reply_since: Optional[datetime] = None
+    last_message_at: Optional[datetime] = None
+    # Janela de 24h do WhatsApp, contada da última mensagem do contato.
+    reply_window_closes_at: Optional[datetime] = None
+    reply_window_open: bool
+
+
+class ConversationSummary(_ConversationBase):
+    last_message: Optional[LastMessageOut] = None
+
+
+class ConversationOut(_ConversationBase):
+    latest_alert: Optional[AlertBrief] = None
     messages: list[MessageOut] = []
 
 

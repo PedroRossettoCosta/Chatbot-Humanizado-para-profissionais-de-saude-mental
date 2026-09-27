@@ -1,6 +1,6 @@
 # Handoff e "Em consulta"
 
-> Situação: funcionando no simulador. Última atualização: 25/09/2026.
+> Situação: funcionando no simulador e na tela de Conversas. Última atualização: 27/09/2026.
 
 ## O que é
 
@@ -37,8 +37,8 @@ isso.
 3. Clique em **Encerrar** para desligar antes. Com duração, ele desliga
    sozinho no horário.
 
-**Na conversa** (por enquanto no simulador "Testar a MarIA"; a tela
-Conversas vem em 30/09):
+**Na conversa** (na tela [Conversas](conversas.md) ou no simulador
+"Testar a MarIA"):
 - **Assumir conversa**: a MarIA fica em silêncio.
 - **Responder como {nome}**: a mensagem vai para o contato, marcada
   como sua. Responder já assume a conversa.
@@ -61,9 +61,13 @@ Conversas vem em 30/09):
   ou "máquina" a até quatro palavras de distância ("nao quero flaar co
   um robo"). "IA" fica fora dessa regra solta porque também é verbo
   ("não quero ir, ia chover").
-- Pedido pelo profissional **não** gera alerta nem e-mail, só a marcação
-  "necessita atenção". Só a recusa do bot gera.
-- Em todos os casos a conversa fica marcada "necessita atenção".
+- Pedido pela profissional **não** gera alerta; gera um e-mail simples,
+  uma vez, até ela responder (decisão do Pedro, 27/09/2026). A recusa do
+  bot gera alerta, e o e-mail é o do alerta.
+- Nos dois casos a conversa fica **"Aguardando você"**
+  (`awaiting_reply_since`) até a profissional responder ou devolver a
+  conversa ao bot. Até 27/09/2026 isso era a marcação "necessita
+  atenção", que agora fica só para os sinais da triagem.
 - **Assumir** não tira uma conversa da espera de emergência. **Devolver
   ao bot** tira, e registra `bot_released` na trilha de cada alerta
   daquela conversa.
@@ -104,20 +108,20 @@ métricas da triagem.
 ## Limitações e pendências
 
 - No simulador, a resposta da profissional só é gravada. O envio pelo
-  WhatsApp vem com o webhook (30/09).
+  WhatsApp vem com o webhook (02/10).
+- A resposta pelo painel só vale dentro da janela de 24h do WhatsApp
+  (ver [Conversas](conversas.md)).
 - O fim automático do "Em consulta" aparece no painel em até um
   minuto (o painel relê a profissional a cada minuto).
 - As regras de detecção podem não reconhecer alguma forma de pedir,
   principalmente com erros de digitação. Frases que falharem devem virar
   caso de teste. Se isso se repetir, a alternativa é o modelo classificar
   o pedido, em vez de regras fixas.
-- Não há caixa de entrada: só dá para assumir a conversa aberta no
-  simulador (inbox planejado para 01/10).
 - Os textos fixos precisam da aprovação da Marília.
 
 ## Como testar
 
-Automático: `tests/test_handoff.py`.
+Automático: `tests/test_handoff.py`, `tests/test_inbox.py`.
 
 Manual no simulador (conversa nova em cada caso):
 1. "quero falar com o {nome}" com o botão desligado → aviso e silêncio.
@@ -131,3 +135,6 @@ Manual no simulador (conversa nova em cada caso):
 - 25/09/2026: alerta de recusa do bot passa a gerar e-mail.
 - 25/09/2026: recusa do bot reconhecida mesmo com erro de digitação
   (caso real do teste no simulador: "eu nao quero flaar co um robo").
+- 27/09/2026: pedido de humano e recusa do bot deixam a conversa
+  "Aguardando você"; pedido pela profissional passa a gerar e-mail;
+  resposta pelo painel respeita a janela de 24h.

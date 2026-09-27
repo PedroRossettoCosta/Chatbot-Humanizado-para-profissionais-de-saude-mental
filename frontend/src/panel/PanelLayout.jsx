@@ -20,7 +20,7 @@ import Simulator from "./Simulator.jsx";
 // Menu do protótipo. As telas marcadas `soon` ainda não existem: aparecem
 // para mostrar a estrutura, mas não abrem (entram nos dias do plano).
 const NAV = [
-  { label: "Conversas", icon: ChatIcon, soon: true },
+  { label: "Conversas", icon: ChatIcon, to: "/conversas" },
   { label: "Alertas", icon: BellIcon, soon: true },
   { label: "Agenda", icon: CalendarIcon, soon: true },
   { label: "Perfil do atendimento", icon: ProfileIcon, to: "/perfil" },
@@ -29,6 +29,7 @@ const NAV = [
 ];
 
 const TITLES = {
+  "/conversas": "Conversas",
   "/perfil": "Perfil do atendimento",
   "/base-de-conhecimento": "Base de conhecimento",
 };
@@ -144,7 +145,7 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
             </button>
             <p className="m-0 flex-1 text-sm text-muted">
               Painel <span className="mx-1">›</span>
-              <span className="font-semibold text-primary">{TITLES[location.pathname] || ""}</span>
+              <span className="font-semibold text-primary">{TITLES[location.pathname] || TITLES["/" + location.pathname.split("/")[1]] || ""}</span>
             </p>
             <InSessionControl />
             <div className="flex items-center gap-3 border-l border-line pl-3">

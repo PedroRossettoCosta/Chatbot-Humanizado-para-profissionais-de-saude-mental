@@ -1,4 +1,7 @@
-"""Aviso de alerta para a profissional, fora do painel (e-mail).
+"""Avisos para a profissional fora do painel (e-mail).
+
+Dois avisos: o de alerta (abaixo) e o de pedido para falar com ela
+(`notify_human_request`, no fim do arquivo).
 
 A Marília pediu para saber na hora, sem precisar estar com o painel
 aberto. O e-mail sai da conta do produto (`settings.smtp_*`) para o
@@ -58,8 +61,12 @@ _CHANNEL_TEXT = {"whatsapp": "WhatsApp", "simulator": "simulador do painel"}
 
 def build_email(alert: models.SafetyAlert, professional: models.Professional) -> EmailMessage:
     subject, explanation = _LEVEL_TEXT[alert.level]
-    when = alert.created_at.astimezone(_BRASILIA).strftime("%d/%m/%Y às %H:%M")
-    channel = _CHANNEL_TEXT.get(alert.conversation.contact.channel, alert.conversation.contact.channel)
+    return _compose(professional, subject, explanation, alert.created_at, alert.conversation.contact.channel)
+
+
+def _compose(professional, subject, explanation, when, channel) -> EmailMessage:
+    when = when.astimezone(_BRASILIA).strftime("%d/%m/%Y às %H:%M")
+    channel = _CHANNEL_TEXT.get(channel, channel)
 
     message = EmailMessage()
     message["Subject"] = subject
@@ -122,5 +129,45 @@ def notify_alert(alert_id: str) -> None:
         db.commit()
     except Exception:
         logger.exception("falha ao registrar o aviso do alerta %s", alert_id)
+    finally:
+        db.close()
+
+
+HUMAN_REQUEST_SUBJECT = "[MarIA] Uma pessoa pediu para falar com você"
+HUMAN_REQUEST_TEXT = (
+    "Uma pessoa pediu para falar com você. A MarIA avisou que você responde "
+    "por este canal, e a conversa está marcada como \"Aguardando você\" no painel."
+)
+
+
+def notify_human_request(conversation_id: str) -> None:
+    """E-mail quando a pessoa pede para falar com a profissional.
+
+    Mesmas regras do e-mail de alerta (sem conteúdo da conversa, em
+    segundo plano), mas sem trilha de auditoria: não é alerta de
+    segurança. Uma falha só vai para o log. Sai uma vez por pedido: o
+    chamador só agenda quando a conversa ainda não estava aguardando.
+    Decisão do Pedro em 27/09/2026.
+    """
+    db = SessionLocal()
+    try:
+        conversation = db.get(models.Conversation, conversation_id)
+        if conversation is None:
+            return
+        professional = conversation.professional
+        if not professional.alert_email or not settings.smtp_host:
+            logger.warning("pedido para falar com a profissional sem e-mail enviado (sem endereço ou SMTP)")
+            return
+        _send(
+            _compose(
+                professional,
+                HUMAN_REQUEST_SUBJECT,
+                HUMAN_REQUEST_TEXT,
+                conversation.awaiting_reply_since or models._now(),
+                conversation.contact.channel,
+            )
+        )
+    except Exception:
+        logger.exception("falha ao enviar o aviso de pedido da conversa %s", conversation_id)
     finally:
         db.close()

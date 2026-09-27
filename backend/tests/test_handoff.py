@@ -99,7 +99,7 @@ def test_bot_refusal_stops_bot_and_alerts_without_emergency_text(db, client, pro
     [alert] = conversation.alerts
     assert alert.level == AlertLevel.BOT_REFUSED
     assert alert.trigger == "handoff:recusa_bot"
-    assert conversation.needs_attention
+    assert conversation.awaiting_reply_since is not None
 
 
 def test_human_request_hands_over_and_silences_bot(client, professional):
@@ -122,7 +122,7 @@ def test_in_session_offers_help_and_keeps_bot(client, professional):
     assert asked["reply"] == handoff.IN_SESSION_MESSAGE.format(name="Marília Rossetto")
     assert asked["state"] == ConversationState.ACTIVE
     conversation = client.get(f"/conversations/{first['conversation_id']}").json()
-    assert conversation["needs_attention"]
+    assert conversation["awaiting_reply_since"]
 
     # O bot continua ajudando enquanto ela está em atendimento.
     assert _send(client, "quanto custa?", first["session_id"])["reply"] == "resposta do bot"

@@ -6,11 +6,52 @@ passando apenas `channel` e `external_id`. Nada aqui sabe o formato de
 payload da Meta, e nada aqui precisa mudar quando entrar um canal novo.
 """
 
+import re
+from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from app import models
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
 from app.services import crypto
+
+# Regra da Meta: fora das 24h depois da última mensagem do contato, só
+# modelo de mensagem aprovado (pago), que o MVP não usa. O simulador
+# segue a mesma regra, para o teste mostrar o que acontece no WhatsApp.
+REPLY_WINDOW = timedelta(hours=24)
+
+
+def reply_window_closes_at(conversation: models.Conversation) -> datetime | None:
+    if conversation.last_contact_message_at is None:
+        return None
+    return conversation.last_contact_message_at + REPLY_WINDOW
+
+
+def reply_window_open(conversation: models.Conversation) -> bool:
+    closes_at = reply_window_closes_at(conversation)
+    return closes_at is not None and closes_at > models._now()
+
+
+def contact_phone(contact: models.Contact) -> str | None:
+    """Número completo, formatado (+55 21 95555-4444). Só no WhatsApp."""
+    if contact.channel != Channel.WHATSAPP:
+        return None
+    digits = re.sub(r"\D", "", contact.external_id)
+    if digits.startswith("55") and len(digits) in (12, 13):
+        return f"+55 {digits[2:4]} {digits[4:-4]}-{digits[-4:]}"
+    return f"+{digits}"
+
+
+def masked_phone(contact: models.Contact) -> str | None:
+    """Número para a lista (+55 21 •••••-4444): quem olha por cima do
+    ombro da profissional não lê o número inteiro."""
+    phone = contact_phone(contact)
+    if phone is None:
+        return None
+    digits = re.sub(r"\D", "", phone)
+    if phone.startswith("+55 "):
+        return f"+55 {digits[2:4]} •••••-{digits[-4:]}"
+    return f"•••••-{digits[-4:]}"
 
 
 def get_or_create_contact(
@@ -96,7 +137,10 @@ def record_message(
         external_id=external_id,
     )
     db.add(message)
-    conversation.last_message_at = models._now()
+    now = models._now()
+    conversation.last_message_at = now
+    if role == MessageRole.USER:
+        conversation.last_contact_message_at = now
     db.commit()
     db.refresh(message)
     return message

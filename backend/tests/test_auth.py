@@ -68,6 +68,7 @@ def test_management_routes_require_login(anon_client):
     assert anon_client.get("/documents/qualquer").status_code == 401
     assert anon_client.post("/chat/simulate", json={"professional_slug": "x", "message": "oi"}).status_code == 401
     assert anon_client.get("/conversations/qualquer").status_code == 401
+    assert anon_client.get("/conversations", params={"professional_slug": "x"}).status_code == 401
 
 
 def test_public_routes_stay_open(anon_client):
@@ -140,6 +141,7 @@ def test_professional_cannot_see_another_ones_data(anon_client, db, monkeypatch)
     assert anon_client.get(f"/documents/{slug_a}").status_code == 404
     assert anon_client.post("/chat/simulate", json={"professional_slug": slug_a, "message": "oi"}).status_code == 404
     assert anon_client.get(f"/conversations/{conversation_id}").status_code == 404
+    assert anon_client.get("/conversations", params={"professional_slug": slug_a}).status_code == 404
     assert anon_client.post(f"/conversations/{conversation_id}/take-over").status_code == 404
 
 

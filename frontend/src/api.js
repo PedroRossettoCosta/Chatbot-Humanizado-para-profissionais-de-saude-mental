@@ -60,6 +60,8 @@ export const api = {
   // minutes nulo = "Em consulta" até desligar.
   startSession: (slug, minutes) => request(`/professionals/${slug}/in-session`, { method: "PUT", body: { minutes } }),
   endSession: (slug) => request(`/professionals/${slug}/in-session`, { method: "DELETE" }),
+  listConversations: (slug) => request(`/conversations?professional_slug=${encodeURIComponent(slug)}`),
+  getConversation: (conversationId) => request(`/conversations/${conversationId}`),
   takeOver: (conversationId) => request(`/conversations/${conversationId}/take-over`, { method: "POST" }),
   releaseToBot: (conversationId) => request(`/conversations/${conversationId}/release`, { method: "POST" }),
   sendProfessionalMessage: (conversationId, content) =>

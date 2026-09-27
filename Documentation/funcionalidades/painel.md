@@ -1,6 +1,6 @@
 # Painel
 
-> Situação: funcionando (estrutura, Perfil do atendimento, Base de conhecimento e simulador); Conversas, Alertas, Agenda e WhatsApp em construção. Última atualização: 27/09/2026.
+> Situação: funcionando (estrutura, Conversas, Perfil do atendimento, Base de conhecimento e simulador); Alertas, Agenda e WhatsApp em construção. Última atualização: 27/09/2026.
 
 ## O que é
 
@@ -19,9 +19,11 @@ vieram primeiro, para ele testar antes das que dependem de backend novo
 
 ## Como usar
 
-- **Menu lateral:** Perfil do atendimento, Base de conhecimento e
-  Testar o chat. Conversas, Alertas, Agenda e WhatsApp aparecem com
+- **Menu lateral:** Conversas, Perfil do atendimento, Base de
+  conhecimento e Testar o chat. Alertas, Agenda e WhatsApp aparecem com
   "Em breve" e ainda não abrem.
+- **Conversas** (`/conversas`, onde o painel abre): ver
+  [Conversas](conversas.md).
 - **Barra do topo:** o botão **Entrar em consulta** (50 minutos, 1h30
   ou até desligar). Ligado, mostra "Em consulta até HH:MM", **+15 min**
   e **Encerrar**. Ao lado, o nome, o e-mail e **Sair**.
@@ -45,8 +47,9 @@ No celular, o menu vira um botão no topo.
 
 ## Como funciona
 
-- Rotas com `react-router`: `/perfil` e `/base-de-conhecimento`;
-  qualquer outro endereço abre o perfil enquanto Conversas não existe.
+- Rotas com `react-router`: `/conversas` (e `/conversas/{id}` com a
+  conversa aberta), `/perfil` e `/base-de-conhecimento`; qualquer outro
+  endereço abre Conversas.
 - `PanelLayout` guarda a profissional logada e a entrega às telas por
   contexto (`usePanel`); quando uma tela salva, o topo se atualiza.
   A cada minuto a profissional é relida, para o "Em consulta" que
@@ -80,10 +83,11 @@ logada. O simulador grava conversas de teste como qualquer conversa
 
 ## Limitações e pendências
 
-- Conversas (30/09), Alertas (01/10), WhatsApp (05/10) e Agenda
-  (06/10) ainda não existem; o painel abre no perfil.
-- O menu no celular é o mesmo do computador, dentro de uma gaveta; as
-  telas de celular do protótipo (M1 a M5) vêm com Conversas e Alertas.
+- Alertas (01/10), WhatsApp (05/10) e Agenda (06/10) ainda não
+  existem.
+- O menu no celular é o mesmo do computador, dentro de uma gaveta.
+  Conversas já tem as telas de celular (M1 a M3); M4 e M5 vêm com
+  Alertas.
 
 ## Como testar
 
@@ -104,3 +108,4 @@ Manual:
 - 27/09/2026: estrutura do painel no visual do protótipo, Perfil do
   atendimento, Base de conhecimento e simulador em painel lateral; o
   painel provisório (`Dashboard.jsx`) saiu.
+- 27/09/2026: Conversas no menu; o painel passa a abrir nela.

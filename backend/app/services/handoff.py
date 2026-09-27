@@ -14,9 +14,13 @@ bot em silêncio):
    Pedro"), com o botão "Em consulta" desligado.
 
 Com o botão "Em consulta" ligado, o pedido do caminho 4 não muda o
-estado: a MarIA avisa que a profissional está em atendimento, oferece
-ajuda e marca a conversa como "necessita atenção". Quem recusou o bot
-não recebe essa oferta de ajuda, porque acabou de dizer que não quer.
+estado: a MarIA avisa que a profissional está em atendimento e oferece
+ajuda. Quem recusou o bot não recebe essa oferta de ajuda, porque acabou
+de dizer que não quer.
+
+Nos caminhos 3 e 4 a conversa fica "Aguardando você"
+(`awaiting_reply_since`) no inbox até a profissional responder ou
+devolver a conversa ao bot (decisão do Pedro em 27/09/2026).
 
 Só ela devolve a conversa ao bot (`release`), inclusive depois de uma
 emergência (decisão da Marília em 23/09: não há retomada automática).
@@ -137,7 +141,8 @@ def handle_human_request(
     else:
         template = HANDOFF_MESSAGE
         conversation.state = ConversationState.HUMAN
-    conversation.needs_attention = True
+    if conversation.awaiting_reply_since is None:
+        conversation.awaiting_reply_since = models._now()
     reply = template.format(name=professional.name)
     conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply, sent_by=SentBy.SYSTEM)
     return reply, alert
@@ -168,16 +173,24 @@ def release(db: Session, conversation: models.Conversation) -> None:
             )
     conversation.state = ConversationState.ACTIVE
     conversation.needs_attention = False
+    conversation.awaiting_reply_since = None
     db.commit()
+
+
+class ReplyWindowClosed(Exception):
+    """Passaram 24h desde a última mensagem do contato (regra da Meta)."""
 
 
 def send_professional_message(
     db: Session, conversation: models.Conversation, content: str
 ) -> models.Message:
     """Mensagem escrita pela profissional no painel. Quem escreve, assume."""
+    if not conversations.reply_window_open(conversation):
+        raise ReplyWindowClosed()
     if conversation.state == ConversationState.ACTIVE:
         conversation.state = ConversationState.HUMAN
     conversation.needs_attention = False
+    conversation.awaiting_reply_since = None
     return conversations.record_message(
         db, conversation, MessageRole.ASSISTANT, content, sent_by=SentBy.PROFESSIONAL
     )

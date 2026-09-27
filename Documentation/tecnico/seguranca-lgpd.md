@@ -130,6 +130,12 @@ O aviso por e-mail também entra na trilha (`notified` ou
 profissional não passe despercebido. O e-mail **não leva conteúdo da
 conversa**: sai do sistema e ficaria no provedor dela, fora da cifra e
 da retenção. Ver [alerta por e-mail](../funcionalidades/alerta-por-email.md).
+O e-mail de pedido para falar com a profissional segue a mesma regra.
+
+Na tela de Conversas, o número do contato aparece mascarado na lista
+(`+55 21 •••••-4444`) e completo só na conversa aberta, onde ela pode
+precisar ligar para a pessoa numa emergência. Ver
+[Conversas](../funcionalidades/conversas.md).
 
 Ela pediu esse registro para poder avaliar depois se o sistema
 classificou corretamente — é insumo do ajuste do protocolo, e também dos
@@ -190,7 +196,7 @@ Antes de qualquer paciente real usar o sistema:
 - [ ] Textos fixos de handoff aprovados por ela
 - [ ] Ela revisar os resultados, incluindo falsos positivos e negativos
 - [ ] Texto do aviso de IA aprovado por ela
-- [x] Login protegendo as rotas de gestão (27/09; falta o Client ID do Google)
+- [x] Login protegendo as rotas de gestão (27/09)
 - [ ] Assinatura do webhook validada (senão qualquer um injeta mensagem)
 - [ ] Limite de requisições por contato
 - [ ] Política de privacidade e termos publicados

@@ -91,10 +91,15 @@ def simulate_chat(
     # modelo. Ver `services/handoff.py` (inclui o botão "Em consulta").
     request = handoff.classify_request(payload.message, professional)
     if request:
+        already_awaiting = conversation.awaiting_reply_since is not None
         reply, alert = handoff.handle_human_request(db, professional, conversation, user_message, request)
         if alert:
             background_tasks.add_task(notifications.notify_alert, alert.id)
             info["alert_created"] = True
+        elif not already_awaiting:
+            # A recusa do bot já avisa pelo e-mail do alerta; o pedido
+            # simples avisa uma vez, até ela responder.
+            background_tasks.add_task(notifications.notify_human_request, conversation.id)
         return _response(session_id, conversation, reply, disclaimer, handoff=request, **info)
 
     chunks, metadatas = rag.query(professional.slug, payload.message)

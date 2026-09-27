@@ -99,3 +99,30 @@ export const RefreshIcon = (p) => (
     <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
   </Icon>
 );
+export const ArrowLeftIcon = (p) => (
+  <Icon {...p}>
+    <path d="M19 12H5M11 18l-6-6 6-6" />
+  </Icon>
+);
+export const SearchIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.5-3.5" />
+  </Icon>
+);
+export const HandIcon = (p) => (
+  <Icon {...p}>
+    <path d="M8 11V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.3 14a1.5 1.5 0 0 1 2.4-1.8L8 14.5V11" />
+  </Icon>
+);
+export const AlertIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3 2 20h20L12 3Z" />
+    <path d="M12 10v4M12 17h.01" />
+  </Icon>
+);
+export const HourglassIcon = (p) => (
+  <Icon {...p}>
+    <path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9" />
+  </Icon>
+);

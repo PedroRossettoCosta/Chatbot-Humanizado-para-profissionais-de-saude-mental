@@ -126,10 +126,12 @@ Uma thread de atendimento entre um contato e a profissional.
 | `professional_id` | UUID | |
 | `contact_id` | UUID | |
 | `state` | texto | `active`, `human` ou `emergency_hold` |
-| `needs_attention` | booleano | Marcação "necessita atenção da profissional" |
+| `needs_attention` | booleano | Marcação "necessita atenção da profissional" (sinal da triagem) |
+| `awaiting_reply_since` | data, opcional | "Aguardando você": a pessoa pediu a profissional ou recusou o bot, e ainda não teve resposta |
+| `last_contact_message_at` | data, opcional | Última mensagem do contato; conta a janela de 24h do WhatsApp |
 | `contact_type` | texto | `lead` ou `patient` |
 | `created_at` | data | |
-| `last_message_at` | data | Base do corte da política de retenção |
+| `last_message_at` | data | Base do corte da política de retenção e da ordem da lista de Conversas |
 
 ### Os três estados
 
@@ -144,6 +146,11 @@ o segundo nível de triagem, o sofrimento intenso: a profissional é
 avisada, mas o bot continua atendendo normalmente. Misturar isso com o
 estado faria o sistema parar de responder em situações em que a
 profissional pediu explicitamente que ele continuasse.
+
+`awaiting_reply_since` também fica fora do estado: com "Em consulta"
+ligado, a pessoa que pediu a profissional continua sendo atendida pela
+MarIA (`active`), mas está esperando por ela. É uma data, e não um
+booleano, para a tela mostrar desde quando.
 
 `contact_type` existe porque a profissional pediu retenção diferente
 para quem virou paciente e para quem ficou só como lead. Hoje a política
@@ -308,7 +315,5 @@ Campos específicos do WhatsApp, deixados de fora deliberadamente na
 primeira versão e a rever antes da integração:
 
 - Qual dos nossos números recebeu a mensagem (roteamento multi-tenant)
-- Horário da última mensagem recebida, para controlar a janela de 24h em
-  que o WhatsApp permite mensagem livre
 - Tipo da mensagem (imagem, áudio, documento)
 - Situação de entrega (entregue, lida, falhou)

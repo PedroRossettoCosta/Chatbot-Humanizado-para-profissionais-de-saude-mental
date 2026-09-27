@@ -97,7 +97,7 @@ alteração.
 
 | Módulo | Responsabilidade |
 |---|---|
-| `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico |
+| `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico, janela de 24h, número mascarado |
 | `rag.py` | Falar com o ChromaDB: indexar, buscar e apagar trechos |
 | `llm.py` | Montar o prompt de sistema e chamar a API da Claude |
 | `text_extraction.py` | Extrair texto de PDF/DOCX/TXT e dividir em trechos |
@@ -105,7 +105,7 @@ alteração.
 | `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
 | `guidelines.py` | Regras fixas do produto: nome da MarIA, perguntas de tom, lista "nunca dizer" |
 | `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
-| `notifications.py` | E-mail de alerta para a profissional e registro do resultado na trilha |
+| `notifications.py` | E-mail de alerta (com registro na trilha) e de pedido para falar com a profissional |
 | `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
 | `onboarding.py` | Cadastro em etapas: o que é obrigatório, aceite das regras e conclusão |
 

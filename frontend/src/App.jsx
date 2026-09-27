@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { api } from "./api.js";
+import Conversations from "./pages/Conversations.jsx";
 import KnowledgeBase from "./pages/KnowledgeBase.jsx";
 import Login from "./pages/Login.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
@@ -59,10 +60,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<PanelLayout me={me} onLogout={logout} startWithSimulator={openSimulator} />}>
+          <Route path="/conversas" element={<Conversations />} />
+          <Route path="/conversas/:conversationId" element={<Conversations />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/base-de-conhecimento" element={<KnowledgeBase />} />
-          {/* Conversas ainda não existe: por enquanto o painel abre no perfil. */}
-          <Route path="*" element={<Navigate to="/perfil" replace />} />
+          <Route path="*" element={<Navigate to="/conversas" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

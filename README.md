@@ -120,17 +120,19 @@ Funcionando:
   primeira resposta e a lista fixa do que ela nunca diz.
 - **Handoff**: a profissional assume, responde e devolve ao bot; pedido
   de humano, recusa do bot e botão "Em consulta".
-- **Alerta por e-mail** para a profissional, sem conteúdo da conversa
-  (falta configurar a conta de envio).
+- **Alerta por e-mail** para a profissional, sem conteúdo da conversa;
+  também quando alguém pede para falar com ela.
 - **Login com Google**, só para e-mails convidados, com todas as rotas
-  de gestão protegidas e cada profissional vendo só os próprios dados
-  (falta o Client ID do Google).
+  de gestão protegidas e cada profissional vendo só os próprios dados.
 - **Cadastro em 7 etapas** no primeiro acesso, no visual do protótipo,
   com aceite das regras da MarIA (falta conectar o WhatsApp, em 05/10).
 - **Painel** no visual do protótipo: menu, "Em consulta" no topo,
   Perfil do atendimento, Base de conhecimento (enviar e remover
   documentos) e o simulador "Testar a MarIA", com o que a triagem
   decidiu em cada resposta.
+- **Conversas** no computador e no celular: quem precisa da
+  profissional primeiro ("Aguardando você", emergência, atenção),
+  assumir, responder, devolver à MarIA e a janela de 24h do WhatsApp.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
   repouso, aviso automático de que é uma IA, política de retenção.
 - **Integrações preparadas**: Google Calendar (conta de serviço,
@@ -142,7 +144,7 @@ Em construção, na ordem do
 
 - Triagem de mensagens quebradas em várias partes
 - Webhook do WhatsApp e envio de mensagens
-- Painel: Conversas e Alertas (com as telas de celular), WhatsApp e Agenda
+- Painel: Alertas (com as telas de celular), WhatsApp e Agenda
 - Pré-agendamento no Google Calendar
 
 ## Estrutura do repositório

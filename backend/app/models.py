@@ -287,6 +287,14 @@ class Conversation(Base):
     # é emergência. Fica separado do estado porque o bot continua
     # atendendo normalmente enquanto isso.
     needs_attention = Column(Boolean, nullable=False, default=False)
+    # "Aguardando você": a pessoa pediu para falar com a profissional (ou
+    # recusou o bot) e ainda não recebeu resposta dela. Separado de
+    # `needs_attention`, que é sinal da triagem, não pedido da pessoa.
+    # Sai quando ela responde ou devolve a conversa ao bot.
+    awaiting_reply_since = Column(DateTime(timezone=True), nullable=True)
+    # Última mensagem **do contato**. Conta a janela de 24h do WhatsApp:
+    # fora dela, só modelo aprovado pela Meta, que o MVP não usa.
+    last_contact_message_at = Column(DateTime(timezone=True), nullable=True)
     contact_type = Column(String(20), nullable=False, default=ContactType.LEAD)
     created_at = Column(DateTime(timezone=True), default=_now)
     last_message_at = Column(DateTime(timezone=True), default=_now)

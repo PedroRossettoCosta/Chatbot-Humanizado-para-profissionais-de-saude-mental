@@ -10,13 +10,14 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 | Funcionalidade | Situação | Resumo |
 |---|---|---|
 | [Painel](painel.md) | Funcionando, parte das telas em construção | Menu, "Em consulta" no topo, Perfil do atendimento e o simulador "Testar a MarIA" |
+| [Conversas](conversas.md) | Funcionando com o simulador; WhatsApp em 02/10 | Caixa de entrada: quem precisa de você primeiro, assumir, responder, janela de 24h |
 | [Base de conhecimento](base-de-conhecimento.md) | Funcionando | Documentos que a MarIA usa para responder (RAG): enviar e remover |
 | [Triagem de segurança](triagem-de-seguranca.md) | Funcionando | Detecta risco em cada mensagem antes do modelo responder, em duas camadas |
 | [Perfil e regras da MarIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a MarIA nunca diz |
-| [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano; recusa do bot |
-| [Login com Google](login-com-google.md) | Funcionando, falta o Client ID | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
+| [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano ("Aguardando você"); recusa do bot |
+| [Login com Google](login-com-google.md) | Funcionando | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
 | [Cadastro em etapas](cadastro-em-etapas.md) | Funcionando, WhatsApp em 05/10 | 7 etapas depois do primeiro login; o painel só abre com o cadastro concluído |
-| [Alerta por e-mail](alerta-por-email.md) | Funcionando, falta a conta de envio | Avisa a profissional fora do painel quando há alerta |
+| [Alerta por e-mail](alerta-por-email.md) | Funcionando | Avisa a profissional fora do painel quando há alerta ou pedido para falar com ela |
 
 ---
 

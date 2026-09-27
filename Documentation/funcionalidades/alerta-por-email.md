@@ -1,12 +1,12 @@
 # Alerta por e-mail
 
-> Situação: funcionando; falta configurar a conta que envia. Última atualização: 25/09/2026.
+> Situação: funcionando. Última atualização: 27/09/2026.
 
 ## O que é
 
-Quando a triagem gera um alerta, ou quando alguém recusa falar com a
-MarIA, a profissional recebe um e-mail na hora, sem precisar estar com
-o painel aberto.
+Quando a triagem gera um alerta, quando alguém recusa falar com a
+MarIA ou quando alguém pede para falar com a profissional, ela recebe
+um e-mail na hora, sem precisar estar com o painel aberto.
 
 ## Por que existe
 
@@ -37,8 +37,14 @@ Decisões:
 | Emergência | "[MarIA] EMERGÊNCIA: possível risco à vida" |
 | Dúvida sobre segurança | "[MarIA] Alerta: dúvida sobre segurança" |
 | Recusa do bot | "[MarIA] Uma pessoa quer falar com você" |
+| Pedido para falar com a profissional | "[MarIA] Uma pessoa pediu para falar com você" |
 
 Sofrimento intenso **não** gera e-mail, só a marcação "necessita atenção".
+
+O pedido para falar com a profissional não é alerta de segurança
+(decisão do Pedro, 27/09/2026): sai uma vez por pedido, até ela
+responder, e **não entra em trilha**; se falhar, só vai para o log
+(`notify_human_request`).
 
 O corpo traz: o que aconteceu e o que a MarIA fez, horário de Brasília,
 canal e o link do painel.
@@ -57,7 +63,8 @@ Arquivos: `services/notifications.py`, `routers/chat.py`,
 
 ## Textos fixos
 
-Os três assuntos e explicações em `notifications._LEVEL_TEXT`. Não
+Os três assuntos e explicações de alerta em `notifications._LEVEL_TEXT`,
+e o do pedido em `HUMAN_REQUEST_SUBJECT` e `HUMAN_REQUEST_TEXT`. Não
 precisam da aprovação clínica (vão para a profissional, não para o
 contato), mas vale ela ler.
 
@@ -87,10 +94,8 @@ Campo da profissional: `alert_email`.
 
 ## Limitações e pendências
 
-- **Falta a conta de envio** no `.env`. Até lá, todo alerta registra
-  `notify_failed`.
-- Sem tela de alertas (02/10) e sem deploy, o link do e-mail só abre o
-  painel no computador onde o sistema roda.
+- Sem deploy, o link do e-mail só abre o painel no computador onde o
+  sistema roda. A tela de alertas vem em 01/10.
 - Não há nova tentativa automática quando o envio falha; a falha fica
   registrada.
 - Aviso por WhatsApp (template da Meta) ainda não existe.
@@ -107,3 +112,5 @@ entrada (e o spam).
 ## Histórico
 
 - 25/09/2026: e-mail de alerta, campo por profissional, trilha de envio.
+- 25/09/2026: conta de envio configurada e envio real conferido.
+- 27/09/2026: e-mail quando alguém pede para falar com a profissional.
