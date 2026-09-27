@@ -10,6 +10,7 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 | Funcionalidade | Situação | Resumo |
 |---|---|---|
 | [Painel](painel.md) | Funcionando, parte das telas em construção | Menu, "Em consulta" no topo, Perfil do atendimento e o simulador "Testar a MarIA" |
+| [Alertas](alertas.md) | Funcionando | Cada alerta com o trecho, a regra e a trilha de auditoria; marcar como revisado |
 | [Conversas](conversas.md) | Funcionando com o simulador; WhatsApp em 02/10 | Caixa de entrada: quem precisa de você primeiro, assumir, responder, janela de 24h |
 | [Base de conhecimento](base-de-conhecimento.md) | Funcionando | Documentos que a MarIA usa para responder (RAG): enviar e remover |
 | [Triagem de segurança](triagem-de-seguranca.md) | Funcionando | Detecta risco em cada mensagem antes do modelo responder, em duas camadas |

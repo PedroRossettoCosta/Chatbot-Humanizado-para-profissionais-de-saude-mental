@@ -13,27 +13,12 @@ import {
   SearchIcon,
   SendIcon,
 } from "../components/icons.jsx";
-import { Button, ErrorBox } from "../components/ui.jsx";
+import { Button, ErrorBox, Tag, dayKey, dayLabel, formatTime as time, shortWhen } from "../components/ui.jsx";
 import { usePanel } from "../panel/PanelContext.jsx";
 
 // Sem tempo real no MVP: a lista e a conversa aberta são relidas sozinhas.
 const LIST_REFRESH_MS = 10000;
 const CONVERSATION_REFRESH_MS = 5000;
-const TZ = "America/Sao_Paulo";
-
-const TONES = {
-  neutral: "bg-[#eff4ff] text-slate",
-  info: "bg-[#dce9ff] text-[#1e40af]",
-  warning: "bg-warning-soft text-[#92400e]",
-  danger: "bg-danger-soft text-danger",
-  primary: "bg-primary-soft text-primary",
-};
-
-function Tag({ tone = "neutral", children }) {
-  return (
-    <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${TONES[tone]}`}>{children}</span>
-  );
-}
 
 // Etiquetas de uma conversa: a situação principal primeiro.
 function tagsOf(c) {
@@ -57,32 +42,6 @@ const FILTERS = [
   { key: "human", label: "Com você", test: (c) => c.state === "human" },
   { key: "bot", label: "MarIA atendendo", test: (c) => c.state === "active" },
 ];
-
-function dayKey(date) {
-  return date.toLocaleDateString("en-CA", { timeZone: TZ });
-}
-
-function time(iso) {
-  return new Date(iso).toLocaleTimeString("pt-BR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
-}
-
-// "14:32" hoje, "Ontem", ou "24/09".
-function shortWhen(iso) {
-  const date = new Date(iso);
-  const today = new Date();
-  const yesterday = new Date(today.getTime() - 86400000);
-  if (dayKey(date) === dayKey(today)) return time(iso);
-  if (dayKey(date) === dayKey(yesterday)) return "Ontem";
-  return date.toLocaleDateString("pt-BR", { timeZone: TZ, day: "2-digit", month: "2-digit" });
-}
-
-function dayLabel(iso) {
-  const date = new Date(iso);
-  const today = new Date();
-  if (dayKey(date) === dayKey(today)) return "Hoje";
-  if (dayKey(date) === dayKey(new Date(today.getTime() - 86400000))) return "Ontem";
-  return date.toLocaleDateString("pt-BR", { timeZone: TZ, day: "numeric", month: "long" });
-}
 
 function timeLeft(iso) {
   const ms = new Date(iso).getTime() - Date.now();

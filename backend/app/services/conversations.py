@@ -54,6 +54,19 @@ def masked_phone(contact: models.Contact) -> str | None:
     return f"•••••-{digits[-4:]}"
 
 
+def contact_label(contact: models.Contact, full_phone: bool) -> tuple[str, str | None]:
+    """Nome e número para mostrar no painel.
+
+    Nome: o do perfil do WhatsApp; sem ele, o número; no simulador,
+    "Conversa de teste". Número mascarado nas listas, completo quando a
+    conversa ou o alerta está aberto.
+    """
+    phone = contact_phone(contact) if full_phone else masked_phone(contact)
+    if contact.channel == Channel.SIMULATOR:
+        return "Conversa de teste", phone
+    return contact.display_name or phone, phone
+
+
 def get_or_create_contact(
     db: Session,
     professional: models.Professional,
@@ -161,6 +174,28 @@ def recent_history(db: Session, conversation: models.Conversation, limit: int) -
         .all()
     )
     return [{"role": m.role, "content": m.content} for m in reversed(messages)]
+
+
+def recent_contact_texts(
+    db: Session, conversation: models.Conversation, limit: int, within: timedelta
+) -> list[str]:
+    """Últimas mensagens do contato, da mais antiga para a mais nova.
+
+    Só as que chegaram dentro de `within` antes da mais nova: a triagem
+    junta mensagens seguidas ("eu to pensando" / "em me matar"), não uma
+    frase de hoje com outra de ontem.
+    """
+    messages = (
+        db.query(models.Message)
+        .filter_by(conversation_id=conversation.id, role=MessageRole.USER)
+        .order_by(models.Message.seq.desc())
+        .limit(limit)
+        .all()
+    )
+    if not messages:
+        return []
+    newest = messages[0].created_at
+    return [m.content for m in reversed(messages) if newest - m.created_at <= within]
 
 
 def raise_safety_alert(

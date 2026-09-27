@@ -105,6 +105,7 @@ alteração.
 | `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
 | `guidelines.py` | Regras fixas do produto: nome da MarIA, perguntas de tom, lista "nunca dizer" |
 | `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
+| `alerts.py` | Tela de Alertas: trilha em linguagem da profissional, visto (uma vez) e revisado |
 | `notifications.py` | E-mail de alerta (com registro na trilha) e de pedido para falar com a profissional |
 | `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
 | `onboarding.py` | Cadastro em etapas: o que é obrigatório, aceite das regras e conclusão |

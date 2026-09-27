@@ -62,6 +62,10 @@ export const api = {
   endSession: (slug) => request(`/professionals/${slug}/in-session`, { method: "DELETE" }),
   listConversations: (slug) => request(`/conversations?professional_slug=${encodeURIComponent(slug)}`),
   getConversation: (conversationId) => request(`/conversations/${conversationId}`),
+  listAlerts: (slug) => request(`/alerts?professional_slug=${encodeURIComponent(slug)}`),
+  getAlert: (alertId) => request(`/alerts/${alertId}`),
+  viewAlert: (alertId) => request(`/alerts/${alertId}/view`, { method: "POST" }),
+  reviewAlert: (alertId, note) => request(`/alerts/${alertId}/review`, { method: "POST", body: { note: note || null } }),
   takeOver: (conversationId) => request(`/conversations/${conversationId}/take-over`, { method: "POST" }),
   releaseToBot: (conversationId) => request(`/conversations/${conversationId}/release`, { method: "POST" }),
   sendProfessionalMessage: (conversationId, content) =>

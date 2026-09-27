@@ -28,11 +28,7 @@ def _get(db: Session, conversation_id: str, user: models.User) -> models.Convers
 
 def _base(conversation: models.Conversation, full_phone: bool) -> dict:
     contact = conversation.contact
-    phone = conversations.contact_phone(contact) if full_phone else conversations.masked_phone(contact)
-    if contact.channel == models.Channel.SIMULATOR:
-        name = "Conversa de teste"
-    else:
-        name = contact.display_name or phone
+    name, phone = conversations.contact_label(contact, full_phone)
     return {
         "id": conversation.id,
         "channel": contact.channel,

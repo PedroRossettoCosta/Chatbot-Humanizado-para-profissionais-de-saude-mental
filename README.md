@@ -133,6 +133,9 @@ Funcionando:
 - **Conversas** no computador e no celular: quem precisa da
   profissional primeiro ("Aguardando você", emergência, atenção),
   assumir, responder, devolver à MarIA e a janela de 24h do WhatsApp.
+- **Alertas** com a trilha de auditoria (disparo, o que a MarIA fez,
+  e-mail, visto, revisado, liberação), sem editar nem apagar, e o
+  número de alertas sem revisar no menu.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
   repouso, aviso automático de que é uma IA, política de retenção.
 - **Integrações preparadas**: Google Calendar (conta de serviço,
@@ -144,7 +147,7 @@ Em construção, na ordem do
 
 - Triagem de mensagens quebradas em várias partes
 - Webhook do WhatsApp e envio de mensagens
-- Painel: Alertas (com as telas de celular), WhatsApp e Agenda
+- Painel: WhatsApp e Agenda
 - Pré-agendamento no Google Calendar
 
 ## Estrutura do repositório

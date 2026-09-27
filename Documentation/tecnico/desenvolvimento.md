@@ -184,6 +184,7 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
 | `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
 | `test_onboarding.py` | Cadastro em etapas: etapa salva, duração, o que falta, aceite das regras e conclusão |
+| `test_alerts_api.py` | Tela de Alertas: ordem da lista, trilha, visto e revisado uma vez só, liberação na trilha, sem rota de editar ou apagar |
 | `test_inbox.py` | Tela de Conversas: ordem da lista, "Aguardando você", e-mail de pedido uma vez só, janela de 24h, número mascarado |
 | `test_documents_api.py` | Envio e remoção de documento da base de conhecimento |
 | `test_auth.py` | Login com Google, convite, sessão, rotas fechadas sem login, isolamento entre profissionais, limite de tentativas |

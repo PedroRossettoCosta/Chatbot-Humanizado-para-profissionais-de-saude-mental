@@ -201,6 +201,40 @@ class ConversationOut(_ConversationBase):
     messages: list[MessageOut] = []
 
 
+class AlertSummary(BaseModel):
+    id: str
+    level: str
+    trigger_text: Optional[str] = None
+    # Trecho que disparou (até 500 caracteres), para entender sem abrir a conversa.
+    excerpt: Optional[str] = None
+    created_at: datetime
+    # "new" ou "reviewed", derivado da trilha.
+    status: str
+    reviewed_at: Optional[datetime] = None
+    conversation_id: str
+    conversation_state: str
+    channel: str
+    contact_name: str
+    # Mascarado na lista; completo no alerta aberto.
+    contact_phone: Optional[str] = None
+
+
+class AlertTimelineItem(BaseModel):
+    kind: str
+    title: str
+    detail: Optional[str] = None
+    at: datetime
+    actor: str
+
+
+class AlertOut(AlertSummary):
+    timeline: list[AlertTimelineItem] = []
+
+
+class AlertReview(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=1000)
+
+
 class ProfessionalMessage(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
 

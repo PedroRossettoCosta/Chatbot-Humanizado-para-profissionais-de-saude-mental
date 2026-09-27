@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { api } from "./api.js";
+import Alerts from "./pages/Alerts.jsx";
 import Conversations from "./pages/Conversations.jsx";
 import KnowledgeBase from "./pages/KnowledgeBase.jsx";
 import Login from "./pages/Login.jsx";
@@ -62,6 +63,8 @@ export default function App() {
         <Route element={<PanelLayout me={me} onLogout={logout} startWithSimulator={openSimulator} />}>
           <Route path="/conversas" element={<Conversations />} />
           <Route path="/conversas/:conversationId" element={<Conversations />} />
+          <Route path="/alertas" element={<Alerts />} />
+          <Route path="/alertas/:alertId" element={<Alerts />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/base-de-conhecimento" element={<KnowledgeBase />} />
           <Route path="*" element={<Navigate to="/conversas" replace />} />

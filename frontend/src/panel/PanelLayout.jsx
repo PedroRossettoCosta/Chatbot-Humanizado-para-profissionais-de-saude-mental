@@ -21,7 +21,7 @@ import Simulator from "./Simulator.jsx";
 // para mostrar a estrutura, mas não abrem (entram nos dias do plano).
 const NAV = [
   { label: "Conversas", icon: ChatIcon, to: "/conversas" },
-  { label: "Alertas", icon: BellIcon, soon: true },
+  { label: "Alertas", icon: BellIcon, to: "/alertas", badge: "alerts" },
   { label: "Agenda", icon: CalendarIcon, soon: true },
   { label: "Perfil do atendimento", icon: ProfileIcon, to: "/perfil" },
   { label: "WhatsApp", icon: PhoneIcon, soon: true },
@@ -30,6 +30,7 @@ const NAV = [
 
 const TITLES = {
   "/conversas": "Conversas",
+  "/alertas": "Alertas",
   "/perfil": "Perfil do atendimento",
   "/base-de-conhecimento": "Base de conhecimento",
 };
@@ -57,10 +58,25 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
     return () => clearInterval(id);
   }, [professional.slug]);
 
+  // Alertas sem revisar, no número do menu. A tela de Alertas chama
+  // `refreshAlertCount` quando um alerta é revisado.
+  const [unreviewedAlerts, setUnreviewedAlerts] = useState(0);
+  const refreshAlertCount = useCallback(() => {
+    api
+      .listAlerts(professional.slug)
+      .then((list) => setUnreviewedAlerts(list.filter((a) => a.status === "new").length))
+      .catch(() => {});
+  }, [professional.slug]);
+  useEffect(() => {
+    refreshAlertCount();
+    const id = setInterval(refreshAlertCount, 10000);
+    return () => clearInterval(id);
+  }, [refreshAlertCount]);
+
   const openSimulator = useCallback(() => setSimulatorOpen(true), []);
   const context = useMemo(
-    () => ({ me, professional, setProfessional, openSimulator, logout: onLogout }),
-    [me, professional, openSimulator, onLogout]
+    () => ({ me, professional, setProfessional, openSimulator, logout: onLogout, refreshAlertCount }),
+    [me, professional, openSimulator, onLogout, refreshAlertCount]
   );
 
   const sidebar = (
@@ -68,7 +84,7 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
       <Logo className="px-2" />
       <p className="mt-8 mb-2 px-3 text-xs font-semibold tracking-wider text-muted">NAVEGAÇÃO</p>
       <nav className="flex flex-col gap-1">
-        {NAV.map(({ label, icon: Icon, to, soon }) =>
+        {NAV.map(({ label, icon: Icon, to, soon, badge }) =>
           soon ? (
             <span
               key={label}
@@ -92,7 +108,15 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
               }
             >
               <Icon />
-              {label}
+              <span className="flex-1">{label}</span>
+              {badge === "alerts" && unreviewedAlerts > 0 && (
+                <span
+                  className="min-w-6 rounded-full bg-danger px-1.5 py-0.5 text-center text-xs font-bold text-white"
+                  title="Alertas sem revisar"
+                >
+                  {unreviewedAlerts}
+                </span>
+              )}
             </NavLink>
           )
         )}

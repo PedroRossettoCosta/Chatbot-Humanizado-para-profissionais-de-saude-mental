@@ -132,6 +132,13 @@ conversa**: sai do sistema e ficaria no provedor dela, fora da cifra e
 da retenção. Ver [alerta por e-mail](../funcionalidades/alerta-por-email.md).
 O e-mail de pedido para falar com a profissional segue a mesma regra.
 
+A tela de [Alertas](../funcionalidades/alertas.md) mostra essa trilha e
+acrescenta dois eventos: a primeira vez que a profissional abre o
+alerta (`viewed`) e a revisão (`reviewed`, com anotação opcional). Não
+há rota para editar nem apagar alerta. A anotação da revisão fica sem
+cifra, como as outras notas da trilha, e a tela avisa para não escrever
+dados clínicos nela.
+
 Na tela de Conversas, o número do contato aparece mascarado na lista
 (`+55 21 •••••-4444`) e completo só na conversa aberta, onde ela pode
 precisar ligar para a pessoa numa emergência. Ver

@@ -95,7 +95,8 @@ Campo da profissional: `alert_email`.
 ## Limitações e pendências
 
 - Sem deploy, o link do e-mail só abre o painel no computador onde o
-  sistema roda. A tela de alertas vem em 01/10.
+  sistema roda. O resultado do envio aparece na trilha, na tela de
+  [Alertas](alertas.md).
 - Não há nova tentativa automática quando o envio falha; a falha fica
   registrada.
 - Aviso por WhatsApp (template da Meta) ainda não existe.

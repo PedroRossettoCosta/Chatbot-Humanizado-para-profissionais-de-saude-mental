@@ -92,7 +92,6 @@ positivos). Alertas são imutáveis; mudanças viram eventos na trilha.
   conjunto novo. Ver [triagem-conjunto-teste.md](../triagem-conjunto-teste.md).
 - Paciente em acompanhamento ativo: a Marília quer "algo a mais" além
   do alerta padrão (a definir).
-- Ainda não há tela de alertas no painel (planejada para 02/10).
 
 ## Como testar
 
