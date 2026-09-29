@@ -55,8 +55,11 @@ Paciente escreve
 └────────┬────────┘
          ▼
 ┌─────────────────┐   Monta o prompt (papel, limites, tom de voz,
-│  Geração da     │   trechos recuperados) e chama a Claude.
-│  resposta       │
+│  Geração da     │   trechos recuperados) e chama a Claude. Com a
+│  resposta       │   agenda pronta, a Claude pode consultar os
+│                 │   horários livres e reservar um horário
+│                 │   provisório, por ferramentas, antes de
+│                 │   responder.
 └────────┬────────┘
          ▼
    Resposta gravada e devolvida pelo mesmo canal
@@ -109,7 +112,9 @@ alteração.
 | `whatsapp_inbox.py` | Mensagens do WhatsApp: profissional pelo número, reenvios, triagem na hora, espera antes de responder, tipos não suportados |
 | `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico, janela de 24h, número mascarado |
 | `rag.py` | Falar com o ChromaDB: indexar, buscar e apagar trechos |
-| `llm.py` | Montar o prompt de sistema e chamar a API da Claude |
+| `llm.py` | Montar o prompt de sistema e chamar a API da Claude (com a ferramenta de horários, quando a agenda está pronta) |
+| `calendar.py` | Google Agenda: conectar e desconectar, ler livre/ocupado, criar/alterar/apagar eventos, calcular horários livres dentro do horário de atendimento |
+| `appointments.py` | Pedidos de horário: reserva provisória com trava por profissional, confirmar, recusar e expirar em 24h |
 | `text_extraction.py` | Extrair texto de PDF/DOCX/TXT e dividir em trechos |
 | `crypto.py` | Cifrar dados sensíveis e gerar índice de busca |
 | `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
@@ -119,6 +124,14 @@ alteração.
 | `notifications.py` | E-mail de alerta (com registro na trilha) e de pedido para falar com a profissional |
 | `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
 | `onboarding.py` | Cadastro em etapas: o que é obrigatório, aceite das regras e conclusão |
+
+### Tarefas em segundo plano
+
+Além das respostas a requisições, o backend roda uma rotina a cada 5
+minutos (`main.py`, `_expiry_loop`) que expira os pedidos de horário
+provisórios com mais de 24 horas e avisa a profissional por e-mail. Com
+mais de um processo, essa rotina precisa rodar em um só (ou virar um
+agendador externo).
 
 ## 4. O canal é desacoplado do núcleo
 
@@ -182,4 +195,7 @@ site.
 Estas peças estão desenhadas mas não construídas. A ordem está no
 [plano do MVP](../planejamento-mvp-9out.md).
 
-- **Agenda**: ler disponibilidade e criar evento provisório.
+- **Agenda**: leitura de disponibilidade, reserva provisória e
+  aprovação no painel existem desde 28/09/2026
+  ([agenda](../funcionalidades/agenda.md)). Falta a pessoa desmarcar ou
+  remarcar sozinha.

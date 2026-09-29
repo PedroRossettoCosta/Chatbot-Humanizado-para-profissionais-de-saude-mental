@@ -1,16 +1,56 @@
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import alerts, assistant, auth, chat, conversations, documents, professionals, webhook
+from app.database import SessionLocal
+from app.services import appointments, notifications
+from app.routers import alerts, assistant, auth, calendar, chat, conversations, documents, professionals, webhook
 
 # A estrutura do banco é criada e evoluída pelo Alembic
 # (`alembic upgrade head`), não pela aplicação ao subir. Ter as duas
 # coisas criando tabelas levaria o banco e as migrações a divergirem.
 # Ver Documentation/tecnico/desenvolvimento.md.
 
-app = FastAPI(title="MarIA — Assistente para profissionais de saúde mental")
+logger = logging.getLogger(__name__)
+
+# De quanto em quanto tempo os pedidos de horário vencidos (24h sem
+# decisão) são liberados da agenda.
+EXPIRY_CHECK_SECONDS = 300
+
+
+def _expire_appointments() -> None:
+    db = SessionLocal()
+    try:
+        expired = appointments.expire_overdue(db)
+    finally:
+        db.close()
+    for appointment_id in expired:
+        notifications.notify_appointment_expired(appointment_id)
+
+
+async def _expiry_loop() -> None:
+    while True:
+        try:
+            await run_in_threadpool(_expire_appointments)
+        except Exception:
+            logger.exception("falha ao liberar pedidos de horário vencidos")
+        await asyncio.sleep(EXPIRY_CHECK_SECONDS)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    task = asyncio.create_task(_expiry_loop())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="MarIA — Assistente para profissionais de saúde mental", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,6 +67,7 @@ app.include_router(chat.router)
 app.include_router(assistant.router)
 app.include_router(conversations.router)
 app.include_router(alerts.router)
+app.include_router(calendar.router)
 app.include_router(webhook.router)
 
 

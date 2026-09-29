@@ -191,11 +191,15 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_inbox.py` | Tela de Conversas: ordem da lista, "Aguardando você", e-mail de pedido uma vez só, janela de 24h, número mascarado |
 | `test_documents_api.py` | Envio e remoção de documento da base de conhecimento |
 | `test_auth.py` | Login com Google, convite, sessão, rotas fechadas sem login, isolamento entre profissionais, limite de tentativas |
+| `test_appointments.py` | Pedidos de horário: reserva provisória, horário ocupado, duas pessoas ao mesmo tempo (threads e banco de verdade), índice único, troca de horário no mesmo dia, uma sessão por dia por pessoa (vários dias permitidos), pedido vencido, limite por dia, confirmar e recusar com e sem janela do WhatsApp, lista, ferramenta só com permissão de eventos, sessão e compromisso marcados pelo painel, calendário da semana |
+| `test_calendar.py` | Agenda: cálculo dos horários livres (antecedência, ocupado, duração, fim de semana), validação do horário de atendimento, conexão com o Google (permissão desmarcada, acesso cifrado, desconectar revoga), ferramenta da MarIA e falha do Google |
 
 Os testes que chamariam a API da Claude usam `monkeypatch` para
 substituir a chamada, e o envio de e-mail e as chamadas à API da Meta
 são sempre substituídos em `conftest.py`. Nenhum teste gasta crédito,
-envia e-mail ou mensagem, ou depende de rede.
+envia e-mail ou mensagem, ou depende de rede. A agenda também: a troca
+do código, o livre/ocupado, os eventos e a revogação do Google são
+substituídos em `test_calendar.py` e `test_appointments.py`.
 
 O cliente `client` entra como uma conta de teste dona de qualquer
 profissional, para os testes das funcionalidades não dependerem do
@@ -230,6 +234,16 @@ O venv não está ativado — o prompt do terminal deve começar com
 `(.venv)`. Se a ativação falhar em silêncio no PowerShell, rode
 `python -m uvicorn app.main:app --reload`, que ignora o `PATH` e usa o
 Python do venv.
+
+**A API continua com código ou `.env` antigos depois de reiniciar**
+No Windows, o `--reload` do uvicorn às vezes deixa um processo filho
+vivo depois que o principal morre, e ele continua atendendo na porta
+8000 com o que tinha carregado. O `netstat` mostra o PID do principal,
+que já não existe. O `iniciar.bat` encerra esses órfãos (desde
+28/09/2026); à mão, feche as janelas da API e procure processos
+`python.exe` com `spawn_main(parent_pid=...)` cujo pai não existe mais.
+Mudança no `.env` sempre pede reinício: o reload só observa arquivos
+`.py`.
 
 **"Extra inputs are not permitted" ao subir**
 Existe uma variável no `.env` que a aplicação não conhece. Toda

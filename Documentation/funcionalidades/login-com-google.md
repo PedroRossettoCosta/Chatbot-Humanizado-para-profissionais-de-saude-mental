@@ -18,8 +18,9 @@ Decisões:
 - **Login com Google, não senha** (Pedro, 26/09/2026). A pessoa não cria
   mais uma senha, e a MarIA não guarda nenhuma. O Google só informa
   nome, e-mail e foto: não há acesso à agenda nem ao Gmail dela, e por
-  isso o app não passa pela verificação do Google. A agenda continua
-  com a conta de serviço ([configuração](../tecnico/configuracao.md)).
+  isso o login não depende da verificação do Google. A agenda é uma
+  permissão separada, pedida só na tela Agenda (desde 28/09/2026, ver
+  [agenda](agenda.md)).
 - **Só e-mails convidados** (proposta aceita em 26/09/2026). Sem a
   lista, qualquer conta Google criaria cadastro e usaria a MarIA.
 - **Um botão só.** O protótipo tem "Entrar" e "Cadastrar" separados,
@@ -57,6 +58,11 @@ de convidados.
    Sem cadastro concluído, o painel mostra o
    [cadastro em etapas](cadastro-em-etapas.md); `POST /professionals`
    cria a profissional, gera o slug a partir do nome e liga à conta.
+7. Se qualquer chamada do painel voltar 401 (sessão encerrada em outra
+   aba, pelo `?sair` do `iniciar.bat`, ou vencida), o painel volta para a
+   tela de login (`setSessionLostHandler` em `frontend/src/api.js`). A
+   exceção é o próprio `POST /auth/google`, onde 401 é credencial
+   recusada.
 
 Rotas abertas, sem login: `/health`, `/auth/config` (Client ID, que
 não é segredo), `/auth/google` e `/assistant/guidelines` (regras fixas
@@ -137,6 +143,9 @@ Manual:
 3. Clique em **Sair** e entre de novo: vai direto ao painel.
 4. Entre com um e-mail fora da lista: aparece "Acesso ainda não
    liberado".
+5. Com o painel aberto numa aba, abra `http://localhost:5173/?sair` em
+   outra. Volte à primeira e troque de tela: ela vai para o login, sem
+   mostrar "Faça login para continuar." dentro do painel.
 
 ## Histórico
 - 27/09/2026: primeira versão (login, lista de convidados, sessões,
@@ -144,3 +153,11 @@ Manual:
 - 27/09/2026: `?sair` no endereço encerra a sessão (usado pelo
   `iniciar.bat`); por enquanto só o e-mail de teste do Pedro está
   convidado.
+- 28/09/2026: o script do Google passa a ficar em `frontend/src/google.js`,
+  usado também pela tela Agenda.
+- 28/09/2026: sessão perdida (401 em qualquer chamada) leva o painel de
+  volta ao login; antes, uma aba antiga seguia aberta mostrando "Faça
+  login para continuar." em cada tela.
+- 28/09/2026: com `?sair`, a tela de login aparece direto. Antes, em
+  desenvolvimento, o painel aparecia por um instante e depois ia para o
+  login (o React roda o efeito de abertura duas vezes).

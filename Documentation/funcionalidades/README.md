@@ -19,6 +19,7 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 | [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano ("Aguardando você"); recusa do bot |
 | [Login com Google](login-com-google.md) | Funcionando | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
 | [Cadastro em etapas](cadastro-em-etapas.md) | Funcionando, WhatsApp em 05/10 | 7 etapas depois do primeiro login; o painel só abre com o cadastro concluído |
+| [Agenda](agenda.md) | Funcionando; textos fixos sem aprovação | Conectar o Google Agenda, horário de atendimento, horários livres, reserva provisória pela MarIA e confirmar/recusar no painel |
 | [Alerta por e-mail](alerta-por-email.md) | Funcionando | Avisa a profissional fora do painel quando há alerta ou pedido para falar com ela |
 
 ---

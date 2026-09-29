@@ -4,7 +4,7 @@ from anthropic import Anthropic
 from pydantic import BaseModel
 
 from app.config import settings
-from app.services import guidelines
+from app.services import calendar, guidelines
 
 _client = Anthropic(api_key=settings.anthropic_api_key)
 
@@ -37,7 +37,11 @@ ATENDIMENTO E VALORES
 <atendimento>
 {service_info}
 </atendimento>
+{duration}
 Se a pessoa perguntar o preço, responda já na primeira resposta: o valor, como funciona e um convite leve para o próximo passo. Nunca peça que a pessoa conte a própria história antes de dizer o preço. Se o valor não estiver aqui nem nos documentos, diga que vai confirmar com {name}.
+
+HORÁRIOS
+{agenda}
 
 TOM DE VOZ
 {voice_tone}
@@ -51,6 +55,52 @@ Use as informações abaixo, extraídas dos documentos de {name}, para responder
 DEFAULT_VOICE_TONE = "Acolhedor, claro e profissional."
 NO_CONTEXT_MESSAGE = "(nenhum documento relevante encontrado na base de conhecimento)"
 NOT_PROVIDED = "(não informado)"
+
+# Seção HORÁRIOS do prompt, conforme o que a profissional configurou na
+# tela Agenda. A MarIA nunca marca nada: quem confirma é a profissional.
+AGENDA_READY = """Para saber os horários livres de {name}, use a ferramenta consultar_horarios_livres; ela também diz a data e a hora de agora. Nunca invente nem suponha um horário que a ferramenta não trouxe. Ofereça no máximo 3 opções de cada vez, de preferência em dias diferentes, e procure na lista o que a pessoa pedir (um dia, manhã ou tarde). Você não marca nada: quando a pessoa escolher, diga que vai passar o pedido para {name} confirmar. Nunca diga que o horário está reservado ou confirmado."""
+
+AGENDA_BOOKING = """Para saber os horários livres de {name}, use a ferramenta consultar_horarios_livres; ela também diz a data e a hora de agora. Nunca invente nem suponha um horário que a ferramenta não trouxe. Ofereça no máximo 3 opções de cada vez, de preferência em dias diferentes, e procure na lista o que a pessoa pedir (um dia, manhã ou tarde).
+Quando a pessoa escolher um horário da lista, confirme com ela o dia e a hora, pergunte o nome se ainda não souber e use a ferramenta pedir_agendamento com o código do horário. Cada pessoa pode ter no máximo uma sessão por dia; em dias diferentes, pode ter mais de uma (use pedir_agendamento uma vez para cada dia). Isso só reserva o horário provisoriamente: diga que o pedido foi registrado, que {name} confirma e que a confirmação chega por esta conversa. Nunca diga que a sessão está confirmada. Se a ferramenta disser que o horário não está mais livre, consulte de novo e ofereça outros."""
+
+AGENDA_HOURS_ONLY = """Dias e horários de atendimento de {name}:
+{hours}
+Você não tem acesso à agenda: não diga que um horário está livre. Informe os dias e horários de atendimento e diga que {name} confirma a disponibilidade."""
+
+AGENDA_NONE = """Você não tem acesso à agenda de {name}. Se perguntarem sobre horários, diga que vai confirmar com {name}."""
+
+AGENDA_TOOL = {
+    "name": "consultar_horarios_livres",
+    "description": (
+        "Consulta a agenda da profissional e devolve a data e a hora de agora e os horários livres "
+        "para uma sessão nos próximos dias, já dentro do horário de atendimento. Use sempre que a "
+        "pessoa quiser marcar, perguntar se há horário ou pedir um dia específico."
+    ),
+    "input_schema": {"type": "object", "properties": {}},
+}
+
+BOOKING_TOOL = {
+    "name": "pedir_agendamento",
+    "description": (
+        "Reserva provisoriamente um horário escolhido pela pessoa, para a profissional confirmar. Use só "
+        "depois que a pessoa escolheu um horário da lista de consultar_horarios_livres e disse o nome."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string",
+                "description": "Código do horário, exatamente como veio de consultar_horarios_livres (ex.: 2026-09-29T10:00).",
+            },
+            "nome": {"type": "string", "description": "Nome que a pessoa deu na conversa."},
+        },
+        "required": ["codigo", "nome"],
+    },
+}
+
+# Quantas vezes seguidas o modelo pode chamar ferramentas numa resposta.
+MAX_TOOL_ROUNDS = 3
+
 
 EXAMPLES_HEADER = """
 EXEMPLOS DE RESPOSTA
@@ -97,6 +147,30 @@ def _format_examples(name: str, examples: Optional[dict]) -> str:
 
 
 
+DURATION_TEXT = "Duração de cada sessão: {minutes} minutos. A pessoa pode chamar de sessão, consulta ou atendimento: é a mesma coisa, e você responde a duração com segurança."
+DURATION_UNKNOWN = "A duração da sessão não foi informada: se perguntarem, diga que vai confirmar com {name}."
+
+
+def _format_duration(professional) -> str:
+    """A duração vem do cadastro (`session_minutes`), não do texto livre,
+    para a MarIA nunca dizer que não sabe algo que está preenchido."""
+    if professional.session_minutes:
+        return DURATION_TEXT.format(minutes=professional.session_minutes)
+    return DURATION_UNKNOWN.format(name=professional.name)
+
+
+def _format_agenda(professional) -> str:
+    name = professional.name
+    if calendar.can_book(professional):
+        return AGENDA_BOOKING.format(name=name)
+    if calendar.is_ready(professional):
+        return AGENDA_READY.format(name=name)
+    hours = calendar.working_hours_text(professional.working_hours)
+    if hours:
+        return AGENDA_HOURS_ONLY.format(name=name, hours=hours)
+    return AGENDA_NONE.format(name=name)
+
+
 def build_system_prompt(professional, context_chunks: list[str]) -> str:
     name = professional.name
     pronouns = guidelines.PRONOUNS.get(professional.pronouns or "", guidelines.PRONOUNS[guidelines.DEFAULT_PRONOUNS])
@@ -107,19 +181,41 @@ def build_system_prompt(professional, context_chunks: list[str]) -> str:
         never_say=_format_never_say(professional.extra_never_say),
         about=(professional.audience_description or "").strip() or NOT_PROVIDED,
         service_info=(professional.service_info or "").strip() or NOT_PROVIDED,
+        duration=_format_duration(professional),
         voice_tone=(professional.voice_tone or "").strip() or DEFAULT_VOICE_TONE,
+        agenda=_format_agenda(professional),
         examples=_format_examples(name, professional.voice_examples),
         context=_format_context(context_chunks),
     )
 
 
-def generate_reply(system_prompt: str, history: list[dict]) -> str:
-    response = _client.messages.create(
-        model=settings.claude_model,
-        max_tokens=1024,
-        system=system_prompt,
-        messages=history,
-    )
+def generate_reply(system_prompt: str, history: list[dict], tools=None, run_tool=None) -> str:
+    """Resposta da MarIA. Com `tools`, o modelo pode consultar algo antes
+    de responder (ex.: horários livres); `run_tool(nome, entrada)` executa
+    e devolve o texto do resultado."""
+    messages = list(history)
+    extra = {"tools": tools} if tools else {}
+    for _ in range(MAX_TOOL_ROUNDS + 1):
+        response = _client.messages.create(
+            model=settings.claude_model,
+            max_tokens=1024,
+            system=system_prompt,
+            messages=messages,
+            **extra,
+        )
+        if response.stop_reason != "tool_use" or not run_tool:
+            break
+        messages.append({"role": "assistant", "content": response.content})
+        messages.append(
+            {
+                "role": "user",
+                "content": [
+                    {"type": "tool_result", "tool_use_id": block.id, "content": run_tool(block.name, block.input)}
+                    for block in response.content
+                    if block.type == "tool_use"
+                ],
+            }
+        )
     return "".join(block.text for block in response.content if block.type == "text")
 
 

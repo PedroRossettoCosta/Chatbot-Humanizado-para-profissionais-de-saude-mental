@@ -40,6 +40,13 @@ class Settings(BaseSettings):
     # Login com o Google (só identidade: nome, e-mail e foto). O Client ID
     # não é segredo; vai para o navegador pelo `GET /auth/config`.
     google_client_id: str = ""
+    # Segredo do mesmo cliente OAuth. Só a agenda usa: trocar o código da
+    # janela de permissão por um acesso que a MarIA guarda. O login não
+    # precisa dele. Vazio = o botão "Sincronizar" fica desligado.
+    google_client_secret: str = ""
+    # Fuso em que o horário de atendimento é lido e os horários são
+    # oferecidos.
+    agenda_timezone: str = "America/Sao_Paulo"
     # E-mails que podem entrar no painel, separados por vírgula. Vazio =
     # ninguém entra (falha fechada): no MVP a MarIA é só para convidados.
     allowed_emails: str = ""

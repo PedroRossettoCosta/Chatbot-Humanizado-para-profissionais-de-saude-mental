@@ -1,6 +1,6 @@
 # Painel
 
-> Situação: funcionando (estrutura, Conversas, Alertas, Perfil do atendimento, Base de conhecimento e simulador); Agenda e WhatsApp em construção. Última atualização: 27/09/2026.
+> Situação: funcionando (estrutura, Conversas, Alertas, Agenda, Perfil do atendimento, Base de conhecimento e simulador); WhatsApp em construção. Última atualização: 28/09/2026.
 
 ## O que é
 
@@ -21,7 +21,8 @@ vieram primeiro, para ele testar antes das que dependem de backend novo
 
 - **Menu lateral:** Conversas, Alertas (com o número de alertas sem
   revisar), Perfil do atendimento, Base de conhecimento e Testar o
-  chat. Agenda e WhatsApp aparecem com "Em breve" e ainda não abrem.
+  chat. WhatsApp aparece com "Em breve" e ainda não abre. A
+  [Agenda](agenda.md) abre desde 28/09/2026.
 - **Alertas** (`/alertas`): ver [Alertas](alertas.md).
 - **Conversas** (`/conversas`, onde o painel abre): ver
   [Conversas](conversas.md).
@@ -85,7 +86,8 @@ logada. O simulador grava conversas de teste como qualquer conversa
 
 ## Limitações e pendências
 
-- WhatsApp (05/10) e Agenda (06/10) ainda não existem.
+- WhatsApp (05/10) ainda não existe. Na Agenda, falta a aprovação de
+  horários (06/10).
 - O menu no celular é o mesmo do computador, dentro de uma gaveta.
   Conversas e Alertas têm as telas de celular do protótipo (M1 a M5).
 
@@ -110,3 +112,4 @@ Manual:
   painel provisório (`Dashboard.jsx`) saiu.
 - 27/09/2026: Conversas no menu; o painel passa a abrir nela.
 - 27/09/2026: Alertas no menu, com o número de alertas sem revisar.
+- 28/09/2026: Agenda sai do "Em breve" e abre a tela nova ([agenda](agenda.md)).

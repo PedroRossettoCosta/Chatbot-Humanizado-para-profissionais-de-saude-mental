@@ -18,8 +18,13 @@ echo [2/5] Encerrando servidores antigos nas portas 8000 e 5173...
 rem O --reload do uvicorn as vezes deixa um processo antigo preso na
 rem porta 8000, servindo codigo velho. Melhor comecar do zero.
 for %%P in (8000 5173) do (
-  for /f "tokens=5" %%I in ('netstat -ano ^| findstr /r /c:":%%P .*LISTENING"') do taskkill /PID %%I /F >nul 2>&1
+  for /f "tokens=5" %%I in ('netstat -ano ^| findstr /r /c:":%%P .*LISTENING"') do taskkill /PID %%I /T /F >nul 2>&1
 )
+rem Quando o processo principal do uvicorn ja morreu, o netstat ainda
+rem mostra o PID dele, e o processo filho (o que atende de verdade)
+rem continua preso na porta. Encerra os uvicorn antigos e depois os
+rem filhos cujo processo pai nao existe mais.
+powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn app.main' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { $_.CommandLine -match 'spawn_main\(parent_pid=(\d+)' -and -not (Get-Process -Id $Matches[1] -ErrorAction SilentlyContinue) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 taskkill /IM ngrok.exe /F >nul 2>&1
 
 echo [3/5] API (http://127.0.0.1:8000)...

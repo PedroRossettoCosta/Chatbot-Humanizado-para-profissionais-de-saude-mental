@@ -47,6 +47,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -161,8 +162,15 @@ class AlertEventType(StrEnum):
 
 class AppointmentStatus(StrEnum):
     TENTATIVE = "tentative"  # criado pelo bot, aguardando aprovação
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
+    CONFIRMED = "confirmed"  # a profissional aprovou
+    REJECTED = "rejected"  # a profissional recusou
+    EXPIRED = "expired"  # ninguém decidiu a tempo; o horário foi liberado
+    CANCELLED = "cancelled"  # a mesma pessoa pediu outro horário
+
+
+# Pedidos que ocupam o horário. Dois deles nunca podem ter o mesmo início
+# para a mesma profissional (índice `uq_appointment_active_slot`).
+ACTIVE_APPOINTMENT_STATUSES = (AppointmentStatus.TENTATIVE, AppointmentStatus.CONFIRMED)
 
 
 # ---------------------------------------------------------------------------
@@ -209,6 +217,14 @@ class Professional(Base):
     # horários oferecidos; o texto livre de `service_info` não serve
     # para isso.
     session_minutes = Column(Integer, nullable=True)
+    # Dias e horários em que ela atende, no fuso `settings.agenda_timezone`.
+    # A MarIA só oferece horário livre dentro disto. Formato:
+    # {"mon": [{"start": "10:00", "end": "16:00"}], ...}; dia ausente ou
+    # lista vazia = não atende (ver `services/calendar.WEEKDAYS`).
+    working_hours = Column(JSON, nullable=True)
+    # Quantas sessões por dia a MarIA pode deixar marcadas (pedidos
+    # aguardando + confirmados + as marcadas pelo painel). Nulo = sem limite.
+    max_sessions_per_day = Column(Integer, nullable=True)
     # Cadastro em etapas: onde ela parou (1 a 7), quando aceitou as
     # regras fixas da MarIA e quando concluiu. O painel só libera com o
     # cadastro concluído.
@@ -233,6 +249,33 @@ class Professional(Base):
     documents = relationship("Document", back_populates="professional", cascade="all, delete-orphan")
     contacts = relationship("Contact", back_populates="professional", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="professional", cascade="all, delete-orphan")
+    calendar_connection = relationship(
+        "CalendarConnection", back_populates="professional", uselist=False, cascade="all, delete-orphan"
+    )
+    appointments = relationship("Appointment", back_populates="professional", cascade="all, delete-orphan")
+
+
+class CalendarConnection(Base):
+    """Acesso ao Google Agenda que a profissional deu pelo painel.
+
+    Só a disponibilidade (livre/ocupado) da agenda principal: com esse
+    acesso, a MarIA não vê título, descrição nem convidados dos eventos,
+    que podem ter nome de paciente. Ver `services/calendar.py`.
+    """
+
+    __tablename__ = "calendar_connections"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
+    professional_id = Column(UUID(as_uuid=False), ForeignKey("professionals.id"), nullable=False, unique=True)
+    # Conta Google da agenda. Pode ser diferente da que entra no painel.
+    google_email = Column(String(255), nullable=False)
+    # Código de longa duração que o Google devolve na permissão. Dá acesso
+    # à agenda sem ela estar no painel, por isso vai cifrado.
+    refresh_token = Column(EncryptedText, nullable=False)
+    scopes = Column(Text, nullable=False)
+    connected_at = Column(DateTime(timezone=True), default=_now)
+
+    professional = relationship("Professional", back_populates="calendar_connection")
 
 
 class Document(Base):
@@ -395,13 +438,32 @@ class SafetyAlertEvent(Base):
 
 
 class Appointment(Base):
-    """Pré-agendamento criado pelo bot, espelhado no Google Calendar."""
+    """Pré-agendamento criado pelo bot, espelhado no Google Calendar.
+
+    Nasce provisório (`tentative`), com evento "(a confirmar)" na agenda,
+    e a profissional confirma ou recusa no painel. Sem decisão até
+    `expires_at`, expira e o evento sai da agenda.
+    """
 
     __tablename__ = "appointments"
+    __table_args__ = (
+        # Rede de segurança contra duas pessoas no mesmo horário: a regra
+        # principal é a trava em `services/appointments.request`.
+        Index(
+            "uq_appointment_active_slot",
+            "professional_id",
+            "starts_at",
+            unique=True,
+            postgresql_where=text("status IN ('tentative', 'confirmed')"),
+        ),
+    )
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     professional_id = Column(UUID(as_uuid=False), ForeignKey("professionals.id"), nullable=False, index=True)
-    conversation_id = Column(UUID(as_uuid=False), ForeignKey("conversations.id"), nullable=False)
+    # Nulo quando a própria profissional marcou pelo painel.
+    conversation_id = Column(UUID(as_uuid=False), ForeignKey("conversations.id"), nullable=True)
+    # "maria" (pedido feito na conversa) ou "panel" (marcado pela profissional).
+    source = Column(String(20), nullable=False, default="maria", server_default="maria")
     # Guardados aqui para que o evento continue rastreável mesmo se a
     # profissional trocar de agenda depois.
     calendar_id = Column(String(255), nullable=True)
@@ -409,9 +471,17 @@ class Appointment(Base):
     starts_at = Column(DateTime(timezone=True), nullable=False)
     ends_at = Column(DateTime(timezone=True), nullable=False)
     status = Column(String(20), nullable=False, default=AppointmentStatus.TENTATIVE)
+    # Nome que a pessoa deu na conversa (vai também no evento da agenda).
+    patient_name = Column(EncryptedText, nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    decided_at = Column(DateTime(timezone=True), nullable=True)
+    # Se a mensagem de confirmação ou recusa chegou à pessoa. Falso quando
+    # a janela de 24h do WhatsApp já fechou ou o envio falhou.
+    contact_notified = Column(Boolean, nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     conversation = relationship("Conversation", back_populates="appointments")
+    professional = relationship("Professional", back_populates="appointments")
 
 
 # ---------------------------------------------------------------------------

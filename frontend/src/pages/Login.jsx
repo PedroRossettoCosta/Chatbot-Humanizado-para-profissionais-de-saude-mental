@@ -2,22 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { api } from "../api.js";
 import Logo from "../components/Logo.jsx";
+import { loadGoogle } from "../google.js";
 
-const GOOGLE_SCRIPT = "https://accounts.google.com/gsi/client";
-
-// Carrega o script do botão do Google uma vez só.
-let googleScript;
-function loadGoogle() {
-  googleScript ||= new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = GOOGLE_SCRIPT;
-    script.async = true;
-    script.onload = () => resolve(window.google);
-    script.onerror = () => reject(new Error("Não foi possível carregar o login do Google."));
-    document.head.appendChild(script);
-  });
-  return googleScript;
-}
 
 // Tela de login (protótipo: login_e_acesso_maria). Um botão só: quem
 // entra pela primeira vez cai no cadastro; quem já tem conta, no painel.

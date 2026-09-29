@@ -47,6 +47,8 @@ def simulate_chat(
         info["alert_created"] = True
     if answer.notify_request:
         background_tasks.add_task(notifications.notify_human_request, conversation.id)
+    if answer.appointment_id:
+        background_tasks.add_task(notifications.notify_appointment_request, answer.appointment_id)
     return _response(
         session_id, conversation, answer.text, received.disclaimer, answer.sources, handoff=answer.handoff, **info
     )

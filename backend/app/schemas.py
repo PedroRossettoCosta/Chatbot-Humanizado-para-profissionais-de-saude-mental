@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.services import guidelines
 
@@ -13,6 +13,21 @@ class VoiceExample(BaseModel):
 
 
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+Weekday = Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+class TimeRange(BaseModel):
+    """Um intervalo de atendimento num dia, ex.: 10:00 às 16:00."""
+
+    start: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+
+    @model_validator(mode="after")
+    def start_before_end(self):
+        if self.start >= self.end:
+            raise ValueError("O horário de início precisa ser antes do fim")
+        return self
 
 
 class _AssistantProfile(BaseModel):
@@ -25,6 +40,24 @@ class _AssistantProfile(BaseModel):
     extra_never_say: Optional[list[str]] = Field(default=None, max_length=30)
     session_minutes: Optional[int] = Field(default=None, ge=15, le=240)
     pronouns: Optional[Literal["feminine", "masculine", "neutral"]] = None
+    # Dias e horários em que atende. Até 3 intervalos por dia (ex.: manhã
+    # e tarde, com almoço no meio).
+    working_hours: Optional[dict[Weekday, list[TimeRange]]] = None
+    # Limite de sessões por dia que a MarIA pode marcar. Nulo = sem limite.
+    max_sessions_per_day: Optional[int] = Field(default=None, ge=1, le=20)
+
+    @field_validator("working_hours")
+    @classmethod
+    def no_overlapping_ranges(cls, value):
+        if value is None:
+            return value
+        for ranges in value.values():
+            if len(ranges) > 3:
+                raise ValueError("No máximo 3 intervalos por dia")
+            ordered = sorted(ranges, key=lambda r: r.start)
+            if any(a.end > b.start for a, b in zip(ordered, ordered[1:])):
+                raise ValueError("Os intervalos de um mesmo dia não podem se sobrepor")
+        return value
 
     @field_validator("alert_email")
     @classmethod
@@ -80,6 +113,8 @@ class ProfessionalOut(BaseModel):
     in_session: bool = Field(validation_alias="is_in_session")
     in_session_until: Optional[datetime] = None
     session_minutes: Optional[int] = None
+    working_hours: Optional[dict[str, list[TimeRange]]] = None
+    max_sessions_per_day: Optional[int] = None
     pronouns: Optional[str] = None
     onboarding_step: Optional[int] = None
     rules_accepted_at: Optional[datetime] = None
@@ -243,6 +278,55 @@ class AuthConfig(BaseModel):
     google_client_id: str
 
 
+class CalendarStatus(BaseModel):
+    # Falso = falta `GOOGLE_CLIENT_SECRET` no servidor; o botão fica desligado.
+    configured: bool
+    connected: bool
+    google_email: Optional[str] = None
+    connected_at: Optional[datetime] = None
+    timezone: str
+    # Permissões pedidas na janela do Google (só livre/ocupado).
+    requested_scopes: str
+    # Conectada, com duração da sessão e horário de atendimento: a MarIA
+    # já consulta a agenda nas conversas.
+    ready: bool
+    # A conexão tem a permissão de criar eventos.
+    events_permission: bool
+    # Pronta e com permissão de criar eventos: a MarIA reserva horários.
+    can_book: bool
+
+
+class CalendarConnect(BaseModel):
+    # Código de uso único que a janela de permissão do Google devolve.
+    code: str = Field(min_length=1, max_length=2048)
+
+
+class FreeSlot(BaseModel):
+    starts_at: datetime
+    label: str
+
+
+class AppointmentOut(BaseModel):
+    id: str
+    # tentative, confirmed, rejected, expired ou cancelled.
+    status: str
+    starts_at: datetime
+    ends_at: datetime
+    label: str
+    patient_name: Optional[str] = None
+    # "maria" (pedido na conversa) ou "panel" (marcado pela profissional).
+    source: str
+    # whatsapp, simulator, ou nulo quando marcado pelo painel.
+    channel: Optional[str] = None
+    # Mascarado, como nas listas.
+    contact_phone: Optional[str] = None
+    conversation_id: Optional[str] = None
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+    decided_at: Optional[datetime] = None
+    contact_notified: Optional[bool] = None
+
+
 class GoogleLogin(BaseModel):
     # Token assinado que o botão do Google devolve ao navegador.
     credential: str = Field(min_length=1, max_length=4096)
@@ -255,3 +339,28 @@ class MeOut(BaseModel):
     name: Optional[str] = None
     picture_url: Optional[str] = None
     professional: Optional[ProfessionalOut] = None
+
+
+class CalendarEvent(BaseModel):
+    """Um evento da semana no calendário do painel. O título só vai para
+    a tela da profissional; não é gravado nem passa pela MarIA."""
+
+    id: str
+    title: str
+    starts_at: datetime
+    ends_at: datetime
+    all_day: bool = False
+    # "maria_tentative", "maria_confirmed" (sessões da MarIA ou do painel)
+    # ou "google" (qualquer outro evento da agenda).
+    kind: str
+    appointment_id: Optional[str] = None
+
+
+class CalendarEventCreate(BaseModel):
+    # "session": sessão com uma pessoa (conta no limite por dia);
+    # "block": outro compromisso ou horário bloqueado.
+    kind: Literal["session", "block"]
+    title: str = Field(min_length=1, max_length=120)
+    # Data e hora locais (fuso da agenda), ex.: 2026-09-29T10:00.
+    starts_at: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$")
+    minutes: int = Field(ge=5, le=720)

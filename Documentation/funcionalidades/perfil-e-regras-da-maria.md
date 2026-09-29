@@ -129,3 +129,6 @@ Manual no simulador:
 - 27/09/2026: a profissional escolhe no cadastro como a MarIA fala
   dela (feminino, masculino ou neutro); o prompt segue essa escolha e o
   neutro vale quando não há escolha (`guidelines.PRONOUNS`).
+- 28/09/2026: a duração da sessão (`session_minutes`) vai sempre no
+  prompt, valendo para "sessão", "consulta" ou "atendimento". No teste
+  pelo WhatsApp, a MarIA dizia não saber quanto dura uma consulta.

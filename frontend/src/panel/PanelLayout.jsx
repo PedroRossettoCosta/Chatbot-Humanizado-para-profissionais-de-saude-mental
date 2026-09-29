@@ -22,7 +22,7 @@ import Simulator from "./Simulator.jsx";
 const NAV = [
   { label: "Conversas", icon: ChatIcon, to: "/conversas" },
   { label: "Alertas", icon: BellIcon, to: "/alertas", badge: "alerts" },
-  { label: "Agenda", icon: CalendarIcon, soon: true },
+  { label: "Agenda", icon: CalendarIcon, to: "/agenda", badge: "appointments" },
   { label: "Perfil do atendimento", icon: ProfileIcon, to: "/perfil" },
   { label: "WhatsApp", icon: PhoneIcon, soon: true },
   { label: "Base de conhecimento", icon: BookIcon, to: "/base-de-conhecimento" },
@@ -31,6 +31,7 @@ const NAV = [
 const TITLES = {
   "/conversas": "Conversas",
   "/alertas": "Alertas",
+  "/agenda": "Agenda",
   "/perfil": "Perfil do atendimento",
   "/base-de-conhecimento": "Base de conhecimento",
 };
@@ -73,10 +74,25 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
     return () => clearInterval(id);
   }, [refreshAlertCount]);
 
+  // Pedidos de horário aguardando confirmação, no número do menu. A tela
+  // Agenda chama `refreshAppointmentCount` ao confirmar ou recusar.
+  const [pendingAppointments, setPendingAppointments] = useState(0);
+  const refreshAppointmentCount = useCallback(() => {
+    api
+      .listAppointments(professional.slug)
+      .then((list) => setPendingAppointments(list.filter((a) => a.status === "tentative").length))
+      .catch(() => {});
+  }, [professional.slug]);
+  useEffect(() => {
+    refreshAppointmentCount();
+    const id = setInterval(refreshAppointmentCount, 30000);
+    return () => clearInterval(id);
+  }, [refreshAppointmentCount]);
+
   const openSimulator = useCallback(() => setSimulatorOpen(true), []);
   const context = useMemo(
-    () => ({ me, professional, setProfessional, openSimulator, logout: onLogout, refreshAlertCount }),
-    [me, professional, openSimulator, onLogout, refreshAlertCount]
+    () => ({ me, professional, setProfessional, openSimulator, logout: onLogout, refreshAlertCount, refreshAppointmentCount }),
+    [me, professional, openSimulator, onLogout, refreshAlertCount, refreshAppointmentCount]
   );
 
   const sidebar = (
@@ -109,6 +125,14 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
             >
               <Icon />
               <span className="flex-1">{label}</span>
+              {badge === "appointments" && pendingAppointments > 0 && (
+                <span
+                  className="min-w-6 rounded-full bg-warning-soft px-1.5 py-0.5 text-center text-xs font-bold text-[#92400e]"
+                  title="Horários aguardando sua confirmação"
+                >
+                  {pendingAppointments}
+                </span>
+              )}
               {badge === "alerts" && unreviewedAlerts > 0 && (
                 <span
                   className="min-w-6 rounded-full bg-danger px-1.5 py-0.5 text-center text-xs font-bold text-white"

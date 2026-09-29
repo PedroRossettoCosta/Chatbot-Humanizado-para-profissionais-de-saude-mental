@@ -11,6 +11,14 @@ export class ApiError extends Error {
   }
 }
 
+// Sessão encerrada fora desta aba (Sair em outra aba, `?sair` do
+// iniciar.bat, validade vencida): o App volta para a tela de login em vez
+// de deixar o painel aberto respondendo "Faça login" em cada tela.
+let onSessionLost = () => {};
+export function setSessionLostHandler(handler) {
+  onSessionLost = handler;
+}
+
 async function request(path, { method = "GET", body, isFormData = false } = {}) {
   const headers = {};
   if (body && !isFormData) headers["Content-Type"] = "application/json";
@@ -21,6 +29,9 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
     body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     credentials: "include",
   });
+
+  // No login com o Google, 401 é credencial recusada, não sessão perdida.
+  if (response.status === 401 && path !== "/auth/google") onSessionLost();
 
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
@@ -68,6 +79,15 @@ export const api = {
   reviewAlert: (alertId, note) => request(`/alerts/${alertId}/review`, { method: "POST", body: { note: note || null } }),
   takeOver: (conversationId) => request(`/conversations/${conversationId}/take-over`, { method: "POST" }),
   releaseToBot: (conversationId) => request(`/conversations/${conversationId}/release`, { method: "POST" }),
+  getCalendar: (slug) => request(`/calendar/${slug}`),
+  connectCalendar: (slug, code) => request(`/calendar/${slug}/connect`, { method: "POST", body: { code } }),
+  disconnectCalendar: (slug) => request(`/calendar/${slug}/connect`, { method: "DELETE" }),
+  getFreeSlots: (slug) => request(`/calendar/${slug}/free-slots`),
+  listAppointments: (slug) => request(`/calendar/${slug}/appointments`),
+  getEvents: (slug, start) => request(`/calendar/${slug}/events?start=${start}`),
+  createEvent: (slug, payload) => request(`/calendar/${slug}/events`, { method: "POST", body: payload }),
+  approveAppointment: (id) => request(`/calendar/appointments/${id}/approve`, { method: "POST" }),
+  rejectAppointment: (id) => request(`/calendar/appointments/${id}/reject`, { method: "POST" }),
   sendProfessionalMessage: (conversationId, content) =>
     request(`/conversations/${conversationId}/messages`, { method: "POST", body: { content } }),
 };

@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
-from app.services import conversations, guidelines, handoff, llm, rag, triage
+from app.services import appointments, calendar, conversations, guidelines, handoff, llm, rag, triage
 
 HISTORY_LIMIT = 12
 
@@ -61,6 +61,9 @@ class Reply:
     alert_id: str | None = None
     # Mandar o e-mail "uma pessoa pediu para falar com você".
     notify_request: bool = False
+    # Pedido de horário que a MarIA reservou nesta resposta (e-mail para
+    # a profissional confirmar).
+    appointment_id: str | None = None
     sources: list[str] = field(default_factory=list)
 
 
@@ -157,7 +160,27 @@ def reply(
     chunks, metadatas = rag.query(professional.slug, text)
     system_prompt = llm.build_system_prompt(professional, chunks)
     history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
-    reply_text = llm.generate_reply(system_prompt, history)
+    # A agenda só entra como ferramenta quando está pronta; assim o Google
+    # só é consultado se a conversa pedir horário.
+    booked = []
+    tools = {}
+    if calendar.is_ready(professional):
+
+        def run_tool(name, tool_input):
+            if name == llm.BOOKING_TOOL["name"]:
+                booking = appointments.request(
+                    db, professional, conversation, tool_input.get("codigo", ""), tool_input.get("nome", "")
+                )
+                if booking.appointment_id:
+                    booked.append(booking.appointment_id)
+                return booking.text
+            return calendar.describe_for_assistant(
+                professional, pending=appointments.pending_note(db, conversation)
+            )
+
+        agenda_tools = [llm.AGENDA_TOOL] + ([llm.BOOKING_TOOL] if calendar.can_book(professional) else [])
+        tools = dict(tools=agenda_tools, run_tool=run_tool)
+    reply_text = llm.generate_reply(system_prompt, history, **tools)
     conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply_text, sent_by=SentBy.BOT)
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
-    return Reply(text=reply_text, sources=sources)
+    return Reply(text=reply_text, sources=sources, appointment_id=booked[-1] if booked else None)

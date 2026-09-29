@@ -54,12 +54,14 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `service_info` | texto, opcional | Atendimento e valores. Sempre no prompt, porque o preço é respondido na primeira pergunta |
 | `voice_examples` | JSON, opcional | Resposta boa e ruim para cada uma das 3 perguntas fixas (`services/guidelines.py`) |
 | `extra_never_say` | JSON, opcional | Itens de "nunca dizer" da profissional, somados aos fixos do produto |
-| `calendar_id` | texto, opcional | Agenda do Google usada no pré-agendamento |
+| `calendar_id` | texto, opcional | Reservado para o pré-agendamento. Hoje a MarIA lê a agenda principal da conta conectada (ver `CalendarConnection`) |
 | `alert_email` | texto, opcional | Onde ela recebe os alertas por e-mail. Quem envia é a conta do produto (SMTP no `.env`) |
 | `in_session_since` | data, opcional | Botão "Em consulta" ligado desde. Nulo = desligado |
 | `in_session_until` | data, opcional | Fim automático do "Em consulta". Nulo com `in_session_since` preenchido = até ela desligar |
 | `pronouns` | texto, opcional | Como a MarIA fala dela com o paciente: `feminine`, `masculine` ou `neutral` (`guidelines.PRONOUNS`). Nulo = neutro |
 | `session_minutes` | inteiro, opcional | Duração da sessão (15 a 240). A agenda usa para montar os horários |
+| `max_sessions_per_day` | inteiro, opcional | Quantas sessões por dia a MarIA pode deixar marcadas (1 a 20). Nulo = sem limite |
+| `working_hours` | JSON, opcional | Dias e horários em que atende, no fuso `AGENDA_TIMEZONE`: `{"mon": [{"start": "10:00", "end": "16:00"}], ...}`, até 3 intervalos por dia. Dia ausente ou vazio = não atende |
 | `onboarding_step` | inteiro, opcional | Etapa do cadastro alcançada (1 a 7), para voltar de onde parou |
 | `rules_accepted_at` | data, opcional | Quando ela leu e aceitou as regras fixas da MarIA |
 | `onboarding_completed_at` | data, opcional | Cadastro concluído. Nulo = o painel mostra o cadastro |
@@ -255,24 +257,51 @@ depois se o sistema classificou certo.
 
 ## Appointment
 
-Um pré-agendamento criado pelo bot e espelhado no Google Calendar.
+Um pedido de horário reservado pela MarIA e espelhado no Google Agenda
+([agenda](../funcionalidades/agenda.md)).
 
 | Campo | Tipo | Observação |
 |---|---|---|
 | `id` | UUID | |
 | `professional_id` | UUID | |
-| `conversation_id` | UUID | |
-| `calendar_id` | texto, opcional | Agenda onde o evento foi criado |
-| `calendar_event_id` | texto, opcional | Id do evento no Google |
+| `conversation_id` | UUID, opcional | Nulo quando a profissional marcou pelo painel |
+| `source` | texto | `maria` (pedido na conversa) ou `panel` (marcado pela profissional no calendário) |
+| `calendar_id` | texto, opcional | Agenda onde o evento foi criado (hoje sempre `primary`) |
+| `calendar_event_id` | texto, opcional | Id do evento no Google. A MarIA só altera ou apaga eventos com id aqui |
 | `starts_at` / `ends_at` | data | |
-| `status` | texto | `tentative`, `confirmed` ou `cancelled` |
+| `status` | texto | `tentative` (aguardando), `confirmed`, `rejected`, `expired` (24h sem decisão) ou `cancelled` (a mesma pessoa escolheu outro horário) |
+| `patient_name` | texto **cifrado**, opcional | Nome que a pessoa deu na conversa |
+| `expires_at` | data, opcional | Fim da reserva provisória (24h depois do pedido) |
+| `decided_at` | data, opcional | Quando foi confirmado, recusado, expirou ou foi cancelado |
+| `contact_notified` | booleano, opcional | Se o texto fixo da decisão chegou à pessoa (falso com a janela do WhatsApp fechada) |
 | `created_at` | data | |
+
+O índice único parcial `uq_appointment_active_slot` (`professional_id`,
+`starts_at`, só com `status` provisório ou confirmado) impede dois
+pedidos ativos no mesmo horário da mesma profissional.
 
 O bot cria sempre como `tentative` (provisório). A confirmação é um ato
 da profissional, no painel — o sistema nunca fecha um horário sozinho.
 
 `calendar_id` é repetido aqui, e não só em `Professional`, para o evento
 continuar rastreável se a profissional trocar de agenda depois.
+
+## CalendarConnection
+
+O acesso ao Google Agenda que a profissional deu na tela Agenda. Uma
+por profissional; apagada junto com ela ou ao desconectar.
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `professional_id` | FK, único | |
+| `google_email` | texto | Conta Google da agenda. Pode ser outra que a do login |
+| `refresh_token` | texto **cifrado** | Acesso de longa duração devolvido pelo Google. Permite ler a agenda com ela fora do painel |
+| `scopes` | texto | Permissões concedidas. Hoje só livre/ocupado (`calendar.freebusy`) |
+| `connected_at` | data | |
+
+A permissão é só livre/ocupado: nenhum título ou participante de
+evento, que pode ter nome de paciente, chega ao sistema. Nada disso é
+guardado: os horários ocupados são lidos a cada consulta e descartados.
 
 ---
 

@@ -31,6 +31,7 @@ from app import models
 from app.config import settings
 from app.database import SessionLocal
 from app.models import AlertEventType, AlertLevel
+from app.services import calendar
 
 logger = logging.getLogger(__name__)
 
@@ -171,3 +172,51 @@ def notify_human_request(conversation_id: str) -> None:
         logger.exception("falha ao enviar o aviso de pedido da conversa %s", conversation_id)
     finally:
         db.close()
+
+
+APPOINTMENT_REQUEST_SUBJECT = "[MarIA] Um horário aguarda sua confirmação"
+APPOINTMENT_REQUEST_TEXT = (
+    "Uma pessoa pediu uma sessão e a MarIA reservou o horário provisoriamente na "
+    "sua agenda: {slot}. Confirme ou recuse na tela Agenda do painel. Sem decisão "
+    "em 24 horas, o horário é liberado."
+)
+APPOINTMENT_EXPIRED_SUBJECT = "[MarIA] Um horário provisório foi liberado"
+APPOINTMENT_EXPIRED_TEXT = (
+    "O pedido de sessão para {slot} ficou 24 horas sem confirmação, e a MarIA tirou "
+    "o horário provisório da sua agenda. A pessoa não foi avisada; a conversa está no painel."
+)
+
+
+def _notify_appointment(appointment_id: str, subject: str, text: str, when_field: str) -> None:
+    """E-mail sobre um pedido de horário. Leva o dia e a hora pedidos, mas
+    não o nome da pessoa nem o conteúdo da conversa. Falha só vai para o log."""
+    db = SessionLocal()
+    try:
+        appointment = db.get(models.Appointment, appointment_id)
+        if appointment is None:
+            return
+        professional = appointment.professional
+        if not professional.alert_email or not settings.smtp_host:
+            logger.warning("aviso de pedido de horário sem e-mail enviado (sem endereço ou SMTP)")
+            return
+        _send(
+            _compose(
+                professional,
+                subject,
+                text.format(slot=calendar.format_slot(appointment.starts_at)),
+                getattr(appointment, when_field) or models._now(),
+                appointment.conversation.contact.channel,
+            )
+        )
+    except Exception:
+        logger.exception("falha ao enviar o aviso do pedido de horário %s", appointment_id)
+    finally:
+        db.close()
+
+
+def notify_appointment_request(appointment_id: str) -> None:
+    _notify_appointment(appointment_id, APPOINTMENT_REQUEST_SUBJECT, APPOINTMENT_REQUEST_TEXT, "created_at")
+
+
+def notify_appointment_expired(appointment_id: str) -> None:
+    _notify_appointment(appointment_id, APPOINTMENT_EXPIRED_SUBJECT, APPOINTMENT_EXPIRED_TEXT, "decided_at")

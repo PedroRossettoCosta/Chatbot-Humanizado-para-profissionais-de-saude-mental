@@ -12,6 +12,9 @@ def _professional(**fields):
         voice_examples=None,
         extra_never_say=None,
         pronouns=None,
+        working_hours=None,
+        session_minutes=None,
+        calendar_connection=None,
     )
     base.update(fields)
     return SimpleNamespace(**base)
@@ -76,3 +79,11 @@ def test_pronouns_follow_the_professionals_choice():
 def test_without_choice_the_prompt_is_neutral():
     prompt = llm.build_system_prompt(_professional(), [])
     assert "sempre pelo nome: não use pronomes" in prompt
+
+
+def test_prompt_states_the_session_length_for_any_name():
+    prompt = llm.build_system_prompt(_professional(session_minutes=50), [])
+    assert "Duração de cada sessão: 50 minutos" in prompt
+    assert "sessão, consulta ou atendimento" in prompt
+    unknown = llm.build_system_prompt(_professional(), [])
+    assert "A duração da sessão não foi informada" in unknown

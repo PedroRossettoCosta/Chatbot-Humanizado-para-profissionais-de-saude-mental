@@ -32,6 +32,8 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `SMTP_USER` / `SMTP_PASSWORD` | para enviar alertas | Conta que envia. No Gmail, use uma **senha de app**, nunca a senha da conta |
 | `SMTP_FROM` | não | Remetente exibido. Padrão: o `SMTP_USER` |
 | `GOOGLE_CLIENT_ID` | para o login | Client ID "Web application" do Google Cloud ([login com Google](../funcionalidades/login-com-google.md)). Não é segredo |
+| `GOOGLE_CLIENT_SECRET` | para a agenda | Segredo do mesmo cliente OAuth. Troca o código da janela de permissão pelo acesso à agenda ([agenda](../funcionalidades/agenda.md)). Vazio = botão "Sincronizar" desligado |
+| `AGENDA_TIMEZONE` | não | Fuso do horário de atendimento e dos horários oferecidos. Padrão: `America/Sao_Paulo` |
 | `ALLOWED_EMAILS` | para o login | E-mails convidados, separados por vírgula. Vazio = ninguém entra |
 | `SESSION_DAYS` | não | Validade da sessão do painel. Padrão: 7 |
 | `SESSION_COOKIE_SECURE` | em produção | `true` com HTTPS. Padrão: `false` (desenvolvimento em http) |
@@ -64,48 +66,53 @@ pré-pago, sem mensalidade.
 | `VITE_API_URL` | Endereço da API visto pelo navegador. Padrão: `/api`, no mesmo endereço do painel (senão o cookie do login não vai junto) |
 | `VITE_API_TARGET` | Para onde o proxy do Vite repassa `/api`. Padrão: `http://127.0.0.1:8000` |
 
-## 3. Google Calendar
+## 3. Google Agenda
 
-Usado para consultar disponibilidade e criar pré-agendamentos.
+A MarIA consulta a disponibilidade da agenda para oferecer horários
+livres ([agenda](../funcionalidades/agenda.md)).
 
-A autenticação é por **conta de serviço**: uma identidade que pertence à
-aplicação, não a uma pessoa. A profissional compartilha a agenda dela
-com o e-mail dessa conta, como faria com um colega.
+A profissional dá a permissão pelo próprio painel: na tela **Agenda**,
+"Sincronizar com o Google Agenda" abre a janela do Google, e ela escolhe
+a conta. São pedidas duas permissões: **livre/ocupado**
+(`calendar.freebusy`), para ler sem ver título, descrição ou
+participantes dos eventos, e **eventos** (`calendar.events`), para a
+MarIA criar e atualizar os eventos "Sessão (a confirmar)" que ela
+reserva.
 
-A alternativa seria o login com Google de cada profissional (OAuth).
-Isso será necessário quando o produto for aberto para muitas
-profissionais, mas exige passar pela verificação do Google e lidar com
-um token que expira. Para o MVP, a conta de serviço entrega o mesmo
-resultado sem nada disso.
+Até 28/09/2026 o plano era uma **conta de serviço** com a agenda
+compartilhada à mão. Trocamos pela permissão no painel (decisão do
+Pedro em 28/09/2026) porque a profissional faz tudo sozinha, sem copiar
+ID de agenda nem mexer no compartilhamento do Google.
 
 ### Configuração, uma vez por projeto
 
-1. Em [console.cloud.google.com](https://console.cloud.google.com), crie
-   um projeto. Não é preciso ativar faturamento.
-2. Em **APIs e serviços → Biblioteca**, ative a **Google Calendar API**.
-3. Em **IAM e administrador → Contas de serviço**, crie uma conta. Não
-   precisa atribuir papéis.
-4. Nela, aba **Chaves → Adicionar chave → JSON**. O arquivo é baixado.
-5. Mova o arquivo para `backend/secrets/` (pasta ignorada pelo Git).
-6. Copie o e-mail da conta de serviço, algo como
-   `nome@projeto.iam.gserviceaccount.com`.
+Usa o mesmo cliente OAuth do [login](../funcionalidades/login-com-google.md)
+("MarIA painel (dev)"), no mesmo projeto do Google Cloud:
+
+1. Em **APIs e serviços → Biblioteca**, ative a **Google Calendar API**.
+2. Em **Google Auth Platform → Acesso a dados** (ou "Tela de
+   consentimento OAuth → Escopos"), adicione os escopos
+   `.../auth/calendar.freebusy` e `.../auth/calendar.events` (se não
+   aparecerem na lista, cole o endereço completo em "Manually add
+   scopes"). Clique em **Save**.
+3. Em **Clientes**, abra "MarIA painel (dev)" e copie o **Chave secreta
+   do cliente** (crie uma, se não houver) para `GOOGLE_CLIENT_SECRET`
+   no `backend/.env`. Reinicie o backend.
+4. Não é preciso URI de redirecionamento: a janela do Google devolve o
+   código direto ao painel (`redirect_uri=postmessage`), e a origem
+   `http://localhost:5173` já está cadastrada para o login.
+
+Com o app em modo **teste** no Google, só os usuários de teste
+conseguem dar a permissão, e o Google mostra o aviso "app não
+verificado". O Google classifica `calendar.freebusy` como **não
+sensível** (conferido em 28/09/2026), mas `calendar.events` é
+**sensível**: com a reserva, abrir a MarIA a mais pessoas exige a
+verificação do app pelo Google.
 
 ### Configuração, uma vez por profissional
 
-No Google Agenda dela:
-
-1. Crie uma agenda dedicada (ex.: "Atendimentos"), para não expor a
-   agenda pessoal inteira.
-2. Nas configurações dessa agenda, em **Compartilhar com pessoas
-   específicas**, adicione o e-mail da conta de serviço com a permissão
-   **"Fazer alterações (ver eventos privados como livre/ocupado)"**.
-3. Em **Integrar agenda**, copie o **ID da agenda** e guarde no campo
-   `calendar_id` da profissional.
-
-A permissão escolhida é deliberada: permite criar e editar eventos, mas
-mostra os compromissos existentes apenas como "ocupado", sem título.
-Para calcular disponibilidade isso basta, e o conteúdo clínico da agenda
-não é exposto ao sistema.
+Nenhuma fora do painel: sincronizar a agenda e preencher o horário de
+atendimento na tela **Agenda**.
 
 ## 4. WhatsApp (Meta Cloud API)
 
@@ -172,7 +179,8 @@ não é exposto ao sistema.
 |---|---|---|
 | Chaves de API, tokens, App Secret da Meta e senha do e-mail de envio | `backend/.env` | Não |
 | Authtoken do ngrok | configuração do ngrok no usuário do Windows | Não |
-| Chave da conta de serviço do Google | `backend/secrets/*.json` | Não |
+| Segredo do cliente OAuth do Google | `backend/.env` (`GOOGLE_CLIENT_SECRET`) | Não |
+| Acesso de longa duração à agenda de cada profissional | banco, cifrado (`calendar_connections.refresh_token`) | Não |
 | Valores de exemplo, em branco | `backend/.env.example` | Sim |
 
 Em produção, o `.env` é criado direto no servidor, com permissão de

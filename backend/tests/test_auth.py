@@ -30,7 +30,7 @@ def _claims(email, sub, verified=True):
 def google_fake(monkeypatch, db):
     """Tokens de mentira: o `credential` é "email|sub|verificado"."""
 
-    def verify(credential, request, audience):
+    def verify(credential, request, audience, **kwargs):
         if credential == "invalido":
             raise ValueError("assinatura inválida")
         email, sub, verified = credential.split("|")

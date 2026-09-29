@@ -78,6 +78,7 @@ class _Outcome:
     alert_ids: list[str] = field(default_factory=list)
     wants_reply: bool = False
     notify_request: bool = False
+    appointment_id: str | None = None
 
 
 def _deliver(phone_number_id: str, to: str, text: str) -> None:
@@ -168,6 +169,7 @@ def reply_now(key: tuple[str, str], conversation_id: str) -> _Outcome | None:
                 conversation_id=conversation.id,
                 alert_ids=[answer.alert_id] if answer.alert_id else [],
                 notify_request=answer.notify_request,
+                appointment_id=answer.appointment_id,
             )
         finally:
             db.close()
@@ -178,6 +180,8 @@ async def _notify(outcome: _Outcome) -> None:
         await run_in_threadpool(notifications.notify_alert, alert_id)
     if outcome.notify_request:
         await run_in_threadpool(notifications.notify_human_request, outcome.conversation_id)
+    if outcome.appointment_id:
+        await run_in_threadpool(notifications.notify_appointment_request, outcome.appointment_id)
 
 
 async def _reply(key: tuple[str, str], conversation_id: str) -> None:

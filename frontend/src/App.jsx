@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { api } from "./api.js";
+import { api, setSessionLostHandler } from "./api.js";
+import Agenda from "./pages/Agenda.jsx";
 import Alerts from "./pages/Alerts.jsx";
 import Conversations from "./pages/Conversations.jsx";
 import KnowledgeBase from "./pages/KnowledgeBase.jsx";
@@ -10,11 +11,19 @@ import Onboarding from "./pages/Onboarding.jsx";
 import Profile from "./pages/Profile.jsx";
 import PanelLayout from "./panel/PanelLayout.jsx";
 
+// `?sair` no endereço encerra a sessão e mostra o login (o iniciar.bat
+// abre o painel assim, para cada teste começar pela tela de login). É
+// lido uma vez, ao carregar: em desenvolvimento o React roda o efeito
+// de abertura duas vezes, e a segunda, já sem o `?sair`, perguntava
+// "quem está logado?" antes do logout terminar e mostrava o painel por
+// um instante.
+const START_LOGGED_OUT = new URLSearchParams(window.location.search).has("sair");
+
 // Sem login → tela de login. Logado sem cadastro concluído → cadastro em
 // etapas. Com cadastro → painel. Quem decide é o backend, pelo `GET /auth/me`.
 export default function App() {
   // undefined = ainda verificando; null = sem sessão.
-  const [me, setMe] = useState(undefined);
+  const [me, setMe] = useState(START_LOGGED_OUT ? null : undefined);
   // "Testar a MarIA" no fim do cadastro abre o painel já no simulador.
   const [openSimulator, setOpenSimulator] = useState(false);
 
@@ -31,11 +40,12 @@ export default function App() {
     setMe(null);
   }, []);
 
-  // `?sair` no endereço encerra a sessão e mostra o login. O iniciar.bat
-  // abre o painel assim, para cada teste começar pela tela de login.
+  // Qualquer chamada que volte 401 (sessão encerrada em outra aba ou
+  // vencida) leva para o login.
+  useEffect(() => setSessionLostHandler(() => setMe(null)), []);
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("sair")) {
+    if (START_LOGGED_OUT) {
       window.history.replaceState(null, "", window.location.pathname);
       logout();
     } else {
@@ -65,6 +75,7 @@ export default function App() {
           <Route path="/conversas/:conversationId" element={<Conversations />} />
           <Route path="/alertas" element={<Alerts />} />
           <Route path="/alertas/:alertId" element={<Alerts />} />
+          <Route path="/agenda" element={<Agenda />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/base-de-conhecimento" element={<KnowledgeBase />} />
           <Route path="*" element={<Navigate to="/conversas" replace />} />

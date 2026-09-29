@@ -144,15 +144,18 @@ Funcionando:
   quebradas, resposta pela API da Meta, resposta do painel enviada ao
   WhatsApp e túnel fixo (ngrok) que só deixa passar o webhook. Falta
   publicar o app da Meta para chegarem mensagens reais.
-- **Integração preparada**: Google Calendar (conta de serviço, conexão
-  validada).
+- **Agenda**: a profissional conecta o Google Agenda pelo painel e
+  informa o horário de atendimento; a MarIA oferece até 3 horários
+  livres e reserva provisoriamente o que a pessoa escolher; a
+  profissional confirma ou recusa no painel (24h de validade), e a
+  pessoa recebe a resposta pela conversa.
 
 Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
 
 - Publicação do app na Meta (política de privacidade) e teste com mensagens reais
-- Painel: WhatsApp e Agenda
-- Pré-agendamento no Google Calendar
+- Painel: WhatsApp
+- Textos fixos da agenda aprovados pela Marília
 
 ## Estrutura do repositório
 

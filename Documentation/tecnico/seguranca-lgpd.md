@@ -39,6 +39,9 @@ Cifrados no banco (Fernet, chave simétrica em `DATA_ENCRYPTION_KEY`):
 - identificador do contato (telefone, no WhatsApp)
 - nome de perfil do contato
 - trecho que disparou um alerta
+- acesso de longa duração ao Google Agenda de cada profissional
+  (`calendar_connections.refresh_token`)
+- nome que a pessoa deu ao pedir horário (`appointments.patient_name`)
 
 Quem olha o PostgreSQL direto vê apenas cifras. A aplicação decifra de
 forma transparente, pelo tipo `EncryptedText`.
@@ -180,10 +183,10 @@ risco à vida.
 
 | Onde | O quê |
 |---|---|
-| `backend/.env` | Chaves de API, token da Meta, chave de criptografia, senha do e-mail de envio |
-| `backend/secrets/` | Chave da conta de serviço do Google |
+| `backend/.env` | Chaves de API, token da Meta, chave de criptografia, senha do e-mail de envio, segredo do cliente OAuth do Google |
+| Banco, cifrado | Acesso de cada profissional ao Google Agenda |
 
-Ambos estão no `.gitignore`. Em produção, os arquivos são criados
+O `.env` está no `.gitignore`. Em produção, os arquivos são criados
 direto no servidor, com leitura restrita ao usuário do serviço.
 
 Se um segredo vazar: gerar um novo e revogar o antigo (na Anthropic, no
@@ -211,6 +214,29 @@ vazaria para um terceiro.
 
 Dados pessoais da conta: e-mail, nome, foto (endereço) e o
 identificador do Google.
+
+### Google Agenda
+
+- **Leitura mínima:** só livre/ocupado (`calendar.freebusy`). Título,
+  descrição e participantes dos eventos (que podem ter nome de
+  paciente) não chegam ao sistema, nem ao modelo.
+- **Escrita só nos eventos da MarIA:** com `calendar.events`, o código
+  só cria, altera e apaga eventos cujo id está em
+  `appointments.calendar_event_id`.
+- **Nome e telefone do paciente no Google** (decisão do Pedro,
+  28/09/2026): o evento do pedido de horário leva o nome dado na
+  conversa e o telefone. Esses dados ficam no Google Agenda da
+  profissional, fora da retenção da MarIA; precisa constar na política
+  de privacidade.
+- **Duas pessoas no mesmo horário:** trava por profissional no banco e
+  índice único; ver [agenda](../funcionalidades/agenda.md).
+- **Calendário do painel:** mostra à profissional os títulos dos
+  eventos dela, lidos do Google a cada abertura; nada é gravado, logado
+  ou enviado à MarIA.
+- O acesso de longa duração fica **cifrado** no banco. Desconectar
+  revoga a permissão no Google e apaga a linha.
+- Para a Claude vão só horários livres, calculados no backend. Os
+  intervalos ocupados não são gravados.
 
 ## 8. O que ainda falta
 

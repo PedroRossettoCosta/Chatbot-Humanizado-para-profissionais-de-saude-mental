@@ -56,7 +56,11 @@ def verify_google_credential(credential: str) -> GoogleIdentity:
         raise AuthError("Login com Google não configurado (GOOGLE_CLIENT_ID).")
     try:
         claims = id_token.verify_oauth2_token(
-            credential, google_requests.Request(), settings.google_client_id
+            credential,
+            google_requests.Request(),
+            settings.google_client_id,
+            # Relógio desta máquina alguns segundos atrás do Google.
+            clock_skew_in_seconds=30,
         )
     except ValueError:
         # Assinatura inválida, token vencido ou emitido para outro app.
