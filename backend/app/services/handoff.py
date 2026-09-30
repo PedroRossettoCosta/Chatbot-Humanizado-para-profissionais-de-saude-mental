@@ -77,6 +77,10 @@ _RECUSA_BOT = [
     # "quero falar com uma pessoa", "prefiro alguém de verdade", "atendente humano"
     r"\b(falar|conversar|atendimento|atendido|atendida) (diretamente |direto )?(com|por) (a |o |uma |um )?"
     r"(pessoa|humano|humana|atendente|alguem de verdade|gente de verdade|pessoa de verdade|pessoa real)\b",
+    # "quero falar com ele, não um robô", "quero a Marília, não uma IA".
+    # O artigo logo depois do "não" é o que separa da pergunta "você não é
+    # um robô?" e deixa "ia" entrar sem confundir com o verbo.
+    r"\bnao (um|uma) (robo|bot|chatbot|maquina|ia|inteligencia artificial|assistente virtual)\b",
     r"\b(odeio|detesto|chega de|cansei de) (falar com )?(robo|bot|maquina|ia)\b",
     r"\b(me passa|me transfere|me encaminha) (pra|para) (uma pessoa|alguem|um humano|um atendente)\b",
 ]

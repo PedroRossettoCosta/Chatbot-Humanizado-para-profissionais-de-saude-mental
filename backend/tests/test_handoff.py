@@ -47,6 +47,10 @@ PROF = models.Professional(slug="x", name="Marília Rossetto")
         # Erros de digitação reais do teste no simulador (25/09).
         "eu nao quero flaar co um robo eu quero falar com o pedro msm",
         "n quero fala c bot",
+        # Caso real do teste pelo WhatsApp (30/09): pede a pessoa e
+        # recusa o bot na mesma frase, sem o verbo "não quero".
+        "Eu quero falar com ele não um robô ou ia",
+        "quero a Marília, não uma IA",
     ],
 )
 def test_detects_bot_refusal(text):
@@ -75,6 +79,8 @@ def test_detects_request_for_professional(text):
         "falei com ela ontem",
         "não quero ir hoje, ia chover",
         "não quero que meu namorado pense que sou um robô",
+        "você não é um robô, né?",
+        "me sinto como se não fosse uma pessoa, mas um robô",
     ],
 )
 def test_ignores_other_messages(text):

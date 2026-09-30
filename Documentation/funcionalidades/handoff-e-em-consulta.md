@@ -61,6 +61,10 @@ isso.
   ou "máquina" a até quatro palavras de distância ("nao quero flaar co
   um robo"). "IA" fica fora dessa regra solta porque também é verbo
   ("não quero ir, ia chover").
+- Também é recusa o "não" seguido de "um/uma" e robô, bot, máquina ou
+  IA, mesmo sem "não quero": "quero falar com ele, não um robô ou IA".
+  O artigo é o que separa isso da pergunta "você não é um robô?", que a
+  MarIA responde sozinha.
 - Pedido pela profissional **não** gera alerta; gera um e-mail simples,
   uma vez, até ela responder (decisão do Pedro, 27/09/2026). A recusa do
   bot gera alerta, e o e-mail é o do alerta.
@@ -138,3 +142,7 @@ Manual no simulador (conversa nova em cada caso):
 - 27/09/2026: pedido de humano e recusa do bot deixam a conversa
   "Aguardando você"; pedido pela profissional passa a gerar e-mail;
   resposta pelo painel respeita a janela de 24h.
+- 30/09/2026: "não um robô / não uma IA" passa a ser recusa do bot, com
+  alerta (caso real do teste pelo WhatsApp: "Eu quero falar com ele não
+  um robô ou ia" era tratado como simples pedido pela profissional, sem
+  alerta; decisão do Pedro).
