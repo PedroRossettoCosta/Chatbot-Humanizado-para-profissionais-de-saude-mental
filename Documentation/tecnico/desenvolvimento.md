@@ -47,8 +47,12 @@ alembic upgrade head
 E rode a API:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
 ```
+
+O `--reload-dir app` é obrigatório: sem ele o reload observa o
+`backend/` inteiro e reinicia a API sem parar (ver "A MarIA não
+responde no WhatsApp" em Problemas comuns).
 
 Deve aparecer `Application startup complete`. A API fica em
 `http://127.0.0.1:8000` e a documentação interativa em
@@ -102,7 +106,7 @@ salva). Para parar, feche as janelas.
 docker compose up -d
 cd backend
 .venv\Scripts\activate
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
 ```
 
 ```bash
@@ -194,7 +198,7 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_triage_layers.py` | Camadas 1 + 2: o modelo só sobe o nível, falha fechada |
 | `test_webhook.py` | WhatsApp: desafio da Meta, assinatura, aviso de IA e resposta, reenvio, número sem profissional, emergência na hora, áudio, mensagens quebradas, espera recomeçada, resposta do painel pela Meta, filtro do túnel |
 | `test_triage_fragments.py` | Frase de risco quebrada em várias mensagens: junta, não repete alerta, o mais grave ganha, respeita os 5 minutos |
-| `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio |
+| `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio; a camada 2 só recebe as últimas 3 mensagens em até 5 minutos; a resposta esquece risco com mais de 5 minutos |
 | `test_reply_prompt.py` | Montagem do prompt: nome MarIA, lista fixa, regras da profissional |
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
 | `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
@@ -244,8 +248,25 @@ contêiner do PostgreSQL. Se não listar, rode `docker compose up -d`.
 **`ModuleNotFoundError` ou versão errada do Python**
 O venv não está ativado — o prompt do terminal deve começar com
 `(.venv)`. Se a ativação falhar em silêncio no PowerShell, rode
-`python -m uvicorn app.main:app --reload`, que ignora o `PATH` e usa o
-Python do venv.
+`python -m uvicorn app.main:app --reload --reload-dir app`, que ignora
+o `PATH` e usa o Python do venv.
+
+**`No module named 'psycopg'` ao aplicar as migrações**
+O SQLAlchemy 2.1 passou a escolher o driver `psycopg` (versão 3) para
+uma `DATABASE_URL` que começa só com `postgresql://`, e o projeto
+instala o `psycopg2`. A URL precisa dizer o driver:
+`postgresql+psycopg2://...`, como no `.env.example` desde 30/09/2026.
+Em um `.env` antigo, troque o começo da linha à mão.
+
+**A MarIA não responde no WhatsApp (mas o simulador responde)**
+Confira se a API está reiniciando sozinha: na janela "MarIA - API",
+aparece `WatchFiles detected changes` e `Started server process` de
+poucos em poucos segundos. Cada início da API abre o ChromaDB, que
+grava em `backend/chroma_data/`; se o reload observa o `backend/`
+inteiro, essa gravação reinicia a API, que abre o ChromaDB de novo, e
+assim sem parar. A resposta do WhatsApp espera 6 segundos para juntar
+mensagens quebradas e se perde a cada reinício. O `iniciar.bat` usa
+`--reload-dir app` desde 30/09/2026; à mão, use o mesmo.
 
 **A API continua com código ou `.env` antigos depois de reiniciar**
 No Windows, o `--reload` do uvicorn às vezes deixa um processo filho
@@ -254,8 +275,8 @@ vivo depois que o principal morre, e ele continua atendendo na porta
 que já não existe. O `iniciar.bat` encerra esses órfãos (desde
 28/09/2026); à mão, feche as janelas da API e procure processos
 `python.exe` com `spawn_main(parent_pid=...)` cujo pai não existe mais.
-Mudança no `.env` sempre pede reinício: o reload só observa arquivos
-`.py`.
+Mudança no `.env` sempre pede reinício: o reload só observa a pasta
+`app/`.
 
 **"Extra inputs are not permitted" ao subir**
 Existe uma variável no `.env` que a aplicação não conhece. Toda

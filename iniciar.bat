@@ -132,7 +132,10 @@ taskkill /IM ngrok.exe /F >nul 2>&1
 
 echo [8/8] Subindo API, painel e tunel...
 echo     API    http://127.0.0.1:8000
-start "MarIA - API" cmd /k "cd /d backend && .venv\Scripts\python.exe -m alembic upgrade head && .venv\Scripts\python.exe -m uvicorn app.main:app --reload"
+rem O --reload observa so a pasta app\: o ChromaDB grava em chroma_data\
+rem a cada inicio da API, e observando o backend inteiro isso reiniciava
+rem a API sem parar (e a resposta do WhatsApp, que espera 6 s, nunca saia).
+start "MarIA - API" cmd /k "cd /d backend && .venv\Scripts\python.exe -m alembic upgrade head && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --reload-dir app"
 echo     Painel http://localhost:5173
 start "MarIA - Painel" cmd /k "cd /d frontend && npm run dev"
 

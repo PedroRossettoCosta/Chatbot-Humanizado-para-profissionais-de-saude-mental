@@ -84,7 +84,7 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 alembic upgrade head          # cria as tabelas
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
 
 # 3. Front-end (em outro terminal, a partir da raiz)
 cd frontend
