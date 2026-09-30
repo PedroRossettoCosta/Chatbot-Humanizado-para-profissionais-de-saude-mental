@@ -180,6 +180,29 @@ def recent_history(db: Session, conversation: models.Conversation, limit: int) -
     return [{"role": m.role, "content": m.content} for m in reversed(messages)]
 
 
+def recent_history_within(
+    db: Session, conversation: models.Conversation, limit: int, within: timedelta
+) -> list[dict]:
+    """Como `recent_history`, mas só o que chegou dentro de `within`
+    antes da mensagem mais nova.
+
+    É o contexto da camada 2 da triagem: o bastante para ler uma frase
+    quebrada em mensagens seguidas, sem que um assunto de meia hora atrás
+    mude a leitura da mensagem de agora.
+    """
+    messages = (
+        db.query(models.Message)
+        .filter_by(conversation_id=conversation.id)
+        .order_by(models.Message.seq.desc())
+        .limit(limit)
+        .all()
+    )
+    if not messages:
+        return []
+    newest = messages[0].created_at
+    return [{"role": m.role, "content": m.content} for m in reversed(messages) if newest - m.created_at <= within]
+
+
 def recent_contact_texts(
     db: Session, conversation: models.Conversation, limit: int, within: timedelta
 ) -> list[str]:

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from app import models
 from app.models import AlertLevel, ConversationState
 from app.services import llm, triage
@@ -99,6 +101,99 @@ def test_intense_suffering_marks_attention_without_alert(client, db, monkeypatch
     assert conversation.needs_attention is True
     assert conversation.alerts == []
 
+    _cleanup(db)
+
+
+def _capture_layer2(monkeypatch):
+    seen = []
+
+    def fake(history, audience=None):
+        seen.append([m["content"] for m in history])
+        return llm.RiskClassification(nivel="normal", justificativa="teste")
+
+    monkeypatch.setattr(llm, "classify_risk", fake)
+    return seen
+
+
+def test_layer2_ignores_messages_older_than_five_minutes(client, db, monkeypatch):
+    # Caso real (30/09): uma emergência testada às 17:50 fazia o pedido de
+    # horário das 18:15 virar emergência, porque o modelo lia o histórico
+    # inteiro, sem horário.
+    _cleanup(db)
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta do bot")
+    seen = _capture_layer2(monkeypatch)
+    db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
+    db.commit()
+
+    first = _send(client, "mensagem antiga")
+    professional = db.query(models.Professional).filter_by(slug=TEST_SLUG).one()
+    for message in professional.conversations[0].messages:
+        message.created_at -= timedelta(minutes=30)
+    db.commit()
+
+    _send(client, "quero marcar uma sessão amanhã às 15:30", first["session_id"])
+    assert seen[-1] == ["quero marcar uma sessão amanhã às 15:30"]
+
+    _cleanup(db)
+
+
+def test_layer2_reads_the_last_three_messages_together(client, db, monkeypatch):
+    _cleanup(db)
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "ok")
+    seen = _capture_layer2(monkeypatch)
+    db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
+    db.commit()
+
+    first = _send(client, "um")
+    _send(client, "dois", first["session_id"])
+    _send(client, "três", first["session_id"])
+    # Três últimas da conversa, com a resposta do consultório no meio.
+    assert seen[-1] == ["dois", "ok", "três"]
+
+    _cleanup(db)
+
+
+def _emergency_then_release(client, db, monkeypatch, minutes_ago):
+    """Emergência, a profissional libera, e a pessoa volta a escrever."""
+    from app.services import handoff
+
+    _cleanup(db)
+    histories = []
+    monkeypatch.setattr(
+        llm, "generate_reply", lambda system_prompt, history: histories.append(history) or "resposta do bot"
+    )
+    _capture_layer2(monkeypatch)
+    db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
+    db.commit()
+
+    first = _send(client, "oi, meu nome é Ana")
+    _send(client, "to pensando em me matar", first["session_id"])
+    professional = db.query(models.Professional).filter_by(slug=TEST_SLUG).one()
+    conversation = professional.conversations[0]
+    handoff.release(db, conversation)
+    for message in conversation.messages:
+        message.created_at -= timedelta(minutes=minutes_ago)
+    db.commit()
+
+    _send(client, "quero marcar uma sessão", first["session_id"])
+    return [m["content"] for m in histories[-1]]
+
+
+def test_reply_forgets_risk_older_than_five_minutes(client, db, monkeypatch):
+    # Caso real (30/09): 36 minutos depois de uma emergência de teste, a
+    # resposta a um pedido de horário ainda falava em "querer se matar".
+    seen = _emergency_then_release(client, db, monkeypatch, minutes_ago=30)
+    assert "to pensando em me matar" not in seen
+    assert triage.EMERGENCY_MESSAGE not in seen
+    # O resto da conversa continua: a MarIA não perde a memória toda.
+    assert "oi, meu nome é Ana" in seen
+    assert seen[-1] == "quero marcar uma sessão"
+    _cleanup(db)
+
+
+def test_reply_keeps_recent_risk_in_context(client, db, monkeypatch):
+    seen = _emergency_then_release(client, db, monkeypatch, minutes_ago=0)
+    assert "to pensando em me matar" in seen
     _cleanup(db)
 
 

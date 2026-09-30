@@ -102,7 +102,11 @@ def receive(
     if not run_triage:
         return result
 
-    history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
+    # A camada 2 lê só as últimas mensagens da conversa dentro da mesma
+    # janela da camada 1: com o histórico inteiro, uma emergência de meia
+    # hora antes fazia um pedido de horário virar emergência (caso real,
+    # 30/09/2026, decisão do Pedro).
+    history = conversations.recent_history_within(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
     recent = conversations.recent_contact_texts(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
     risk = triage.assess(text, history, professional.audience_description, previous=recent[:-1])
     if risk:
@@ -120,6 +124,42 @@ def receive(
         )
         result.immediate.append(triage.EMERGENCY_MESSAGE)
     return result
+
+
+def _reply_history(db: Session, conversation: models.Conversation) -> list[dict]:
+    """Histórico da resposta normal, sem risco antigo.
+
+    A resposta lê as últimas mensagens para não perder o fio da conversa
+    (nome, o que já foi perguntado). Mas a mensagem de risco e o texto de
+    emergência de mais de `FRAGMENT_WINDOW` atrás ficam de fora: a
+    triagem já tratou disso, e com eles a MarIA voltava a falar em
+    suicídio num pedido de horário meia hora depois (caso real,
+    30/09/2026, decisão do Pedro). Dentro da janela, ficam.
+    """
+    messages = (
+        db.query(models.Message)
+        .filter_by(conversation_id=conversation.id)
+        .order_by(models.Message.seq.desc())
+        .limit(HISTORY_LIMIT)
+        .all()
+    )
+    if not messages:
+        return []
+    cutoff = messages[0].created_at - FRAGMENT_WINDOW
+    risk_ids = {
+        alert.message_id
+        for alert in conversation.alerts
+        if alert.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK)
+    }
+
+    def is_old_risk(message: models.Message) -> bool:
+        if message.created_at >= cutoff:
+            return False
+        return message.id in risk_ids or (
+            message.sent_by == SentBy.SYSTEM and message.content == triage.EMERGENCY_MESSAGE
+        )
+
+    return [{"role": m.role, "content": m.content} for m in reversed(messages) if not is_old_risk(m)]
 
 
 def reply(
@@ -159,7 +199,7 @@ def reply(
 
     chunks, metadatas = rag.query(professional.slug, text)
     system_prompt = llm.build_system_prompt(professional, chunks)
-    history = conversations.recent_history(db, conversation, HISTORY_LIMIT)
+    history = _reply_history(db, conversation)
     # A agenda só entra como ferramenta quando está pronta; assim o Google
     # só é consultado se a conversa pedir horário.
     booked = []
