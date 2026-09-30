@@ -76,8 +76,20 @@ fica desligado até o painel inteiro estar no visual novo.
 
 ## 2. No dia a dia
 
-No Windows, com o Docker Desktop aberto, dê dois cliques em
-`iniciar.bat` (na raiz). Ele sobe o banco, aplica as migrações, encerra
+No Windows, dê dois cliques em `iniciar.bat` (na raiz). Ele também
+serve para uma máquina nova (ex.: o notebook), desde que Docker
+Desktop, Python 3.12 e Node.js estejam instalados: cria o
+`backend\.venv`, instala os pacotes do Python e do Node (e reinstala
+sozinho quando `requirements.txt` ou `package-lock.json` mudam, depois
+de um `git pull`), copia os `.env.example` e gera uma
+`DATA_ENCRYPTION_KEY` nova. As outras chaves do `backend\.env` não
+estão no Git: copie o `.env` da outra máquina ou preencha pelo menos
+`ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_ID` e `ALLOWED_EMAILS` (o script
+abre o arquivo no Bloco de Notas). O domínio fixo do ngrok só funciona
+em uma máquina por vez.
+
+Em toda execução, ele abre o Docker Desktop se estiver fechado, sobe o
+banco e espera ele ficar pronto, aplica as migrações, encerra
 servidores antigos presos nas portas 8000 e 5173, abre a API, o painel
 e o túnel do WhatsApp (ngrok, se estiver instalado e com
 `PUBLIC_WEBHOOK_HOST` no `.env`) em janelas próprias, e o navegador na

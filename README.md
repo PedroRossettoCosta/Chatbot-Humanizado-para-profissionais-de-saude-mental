@@ -93,9 +93,11 @@ npm install
 npm run dev
 ```
 
-Depois da primeira instalação, no Windows, basta dar dois cliques em
-`iniciar.bat` com o Docker Desktop aberto: ele sobe o banco, a API e o
-painel e abre o navegador.
+No Windows, dá para pular tudo isso: com Docker Desktop, Python 3.12 e
+Node.js instalados, dê dois cliques em `iniciar.bat`. Na primeira vez
+ele cria o venv, instala os pacotes e o `.env`; em toda vez, abre o
+Docker Desktop se estiver fechado, sobe o banco, a API e o painel e
+abre o navegador.
 
 Painel em `http://localhost:5173`, API em `http://127.0.0.1:8000`, e a
 documentação interativa da API em `http://127.0.0.1:8000/docs`.
