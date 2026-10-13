@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Literal, Optional
 
 from anthropic import Anthropic
@@ -7,6 +9,38 @@ from app.config import settings
 from app.services import calendar, guidelines
 
 _client = Anthropic(api_key=settings.anthropic_api_key)
+
+# Tokens de cada chamada, para medir o custo real (feedback de 30/09).
+# Quem chama abre `collect_usage()` e grava o que veio
+# (`services/usage.py`); fora dele, nada é anotado. Só números, nunca o
+# texto da conversa.
+_usage_sink: ContextVar[Optional[list]] = ContextVar("llm_usage_sink", default=None)
+
+
+@contextmanager
+def collect_usage():
+    sink: list[dict] = []
+    token = _usage_sink.set(sink)
+    try:
+        yield sink
+    finally:
+        _usage_sink.reset(token)
+
+
+def _note_usage(purpose: str, model: str, usage) -> None:
+    sink = _usage_sink.get()
+    if sink is None or usage is None:
+        return
+    sink.append(
+        {
+            "purpose": purpose,
+            "model": model,
+            "input_tokens": usage.input_tokens or 0,
+            "output_tokens": usage.output_tokens or 0,
+            "cache_read_tokens": getattr(usage, "cache_read_input_tokens", None) or 0,
+            "cache_write_tokens": getattr(usage, "cache_creation_input_tokens", None) or 0,
+        }
+    )
 
 # Prompt de resposta. A parte fixa (identidade, limites, "nunca dizer"
 # do produto) vale para toda profissional; o que é dela entra entre
@@ -46,22 +80,28 @@ HORÁRIOS
 TOM DE VOZ
 {voice_tone}
 {examples}
-CONTEXTO DA BASE DE CONHECIMENTO
+{context_header}
 Use as informações abaixo, extraídas dos documentos de {name}, para responder com precisão. Se o contexto não cobrir a pergunta, diga que não tem certeza.
 
 {context}
 """
+
+# Tudo antes deste título é igual de uma mensagem para outra da mesma
+# profissional e vai para o cache do prompt; os trechos do RAG, que
+# mudam a cada pergunta, vêm depois dele.
+CONTEXT_HEADER = "CONTEXTO DA BASE DE CONHECIMENTO"
 
 DEFAULT_VOICE_TONE = "Acolhedor, claro e profissional."
 NO_CONTEXT_MESSAGE = "(nenhum documento relevante encontrado na base de conhecimento)"
 NOT_PROVIDED = "(não informado)"
 
 # Seção HORÁRIOS do prompt, conforme o que a profissional configurou na
-# tela Agenda. A MarIA nunca marca nada: quem confirma é a profissional.
+# tela Agenda. A SelenIA nunca marca nada: quem confirma é a profissional.
 AGENDA_READY = """Para saber os horários livres de {name}, use a ferramenta consultar_horarios_livres; ela também diz a data e a hora de agora. Nunca invente nem suponha um horário que a ferramenta não trouxe. Ofereça no máximo 3 opções de cada vez, de preferência em dias diferentes, e procure na lista o que a pessoa pedir (um dia, manhã ou tarde). Você não marca nada: quando a pessoa escolher, diga que vai passar o pedido para {name} confirmar. Nunca diga que o horário está reservado ou confirmado."""
 
 AGENDA_BOOKING = """Para saber os horários livres de {name}, use a ferramenta consultar_horarios_livres; ela também diz a data e a hora de agora. Nunca invente nem suponha um horário que a ferramenta não trouxe. Ofereça no máximo 3 opções de cada vez, de preferência em dias diferentes, e procure na lista o que a pessoa pedir (um dia, manhã ou tarde).
-Quando a pessoa escolher um horário da lista, confirme com ela o dia e a hora, pergunte o nome se ainda não souber e use a ferramenta pedir_agendamento com o código do horário. Cada pessoa pode ter no máximo uma sessão por dia; em dias diferentes, pode ter mais de uma (use pedir_agendamento uma vez para cada dia). Isso só reserva o horário provisoriamente: diga que o pedido foi registrado, que {name} confirma e que a confirmação chega por esta conversa. Nunca diga que a sessão está confirmada. Se a ferramenta disser que o horário não está mais livre, consulte de novo e ofereça outros."""
+Quando a pessoa escolher um horário da lista, confirme com ela o dia e a hora, pergunte o nome se ainda não souber e use a ferramenta pedir_agendamento com o código do horário. Cada pessoa pode ter no máximo uma sessão por dia; em dias diferentes, pode ter mais de uma (use pedir_agendamento uma vez para cada dia), com no máximo {max_pending} pedidos aguardando confirmação ao mesmo tempo. Isso só reserva o horário provisoriamente: diga que o pedido foi registrado, que {name} confirma e que a confirmação chega por esta conversa. Nunca diga que a sessão está confirmada. Se a ferramenta disser que o horário não está mais livre, consulte de novo e ofereça outros.
+Para remarcar ou cancelar uma sessão que a pessoa já tem, consulte os horários primeiro: a resposta lista as sessões dela, cada uma com o código. Para remarcar, combine o novo horário da lista e use pedir_remarcacao com o código da sessão atual e o do novo horário. Para cancelar, confirme com a pessoa qual sessão e use pedir_cancelamento. Troca e cancelamento de sessão confirmada só valem quando {name} confirmar: até lá, a sessão continua marcada. Nunca diga que a troca ou o cancelamento já foram feitos."""
 
 AGENDA_HOURS_ONLY = """Dias e horários de atendimento de {name}:
 {hours}
@@ -95,6 +135,48 @@ BOOKING_TOOL = {
             "nome": {"type": "string", "description": "Nome que a pessoa deu na conversa."},
         },
         "required": ["codigo", "nome"],
+    },
+}
+
+RESCHEDULE_TOOL = {
+    "name": "pedir_remarcacao",
+    "description": (
+        "Pede a troca de uma sessão que a pessoa já tem por outro horário livre. O horário novo fica "
+        "reservado e a sessão antiga só sai quando a profissional confirmar. Use depois de consultar os "
+        "horários e de a pessoa escolher o novo."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "sessao_atual": {
+                "type": "string",
+                "description": "Código da sessão que a pessoa já tem, como aparece em 'Esta pessoa já tem'.",
+            },
+            "novo_codigo": {
+                "type": "string",
+                "description": "Código do novo horário, exatamente como veio de consultar_horarios_livres.",
+            },
+        },
+        "required": ["sessao_atual", "novo_codigo"],
+    },
+}
+
+CANCEL_TOOL = {
+    "name": "pedir_cancelamento",
+    "description": (
+        "Pede o cancelamento de uma sessão que a pessoa já tem. Sessão confirmada continua marcada até a "
+        "profissional confirmar o cancelamento; pedido ainda sem confirmação é desfeito na hora. Use só "
+        "depois de confirmar com a pessoa qual sessão."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "sessao": {
+                "type": "string",
+                "description": "Código da sessão, como aparece em 'Esta pessoa já tem'.",
+            },
+        },
+        "required": ["sessao"],
     },
 }
 
@@ -153,7 +235,7 @@ DURATION_UNKNOWN = "A duração da sessão não foi informada: se perguntarem, d
 
 def _format_duration(professional) -> str:
     """A duração vem do cadastro (`session_minutes`), não do texto livre,
-    para a MarIA nunca dizer que não sabe algo que está preenchido."""
+    para a SelenIA nunca dizer que não sabe algo que está preenchido."""
     if professional.session_minutes:
         return DURATION_TEXT.format(minutes=professional.session_minutes)
     return DURATION_UNKNOWN.format(name=professional.name)
@@ -162,7 +244,7 @@ def _format_duration(professional) -> str:
 def _format_agenda(professional) -> str:
     name = professional.name
     if calendar.can_book(professional):
-        return AGENDA_BOOKING.format(name=name)
+        return AGENDA_BOOKING.format(name=name, max_pending=settings.max_pending_requests)
     if calendar.is_ready(professional):
         return AGENDA_READY.format(name=name)
     hours = calendar.working_hours_text(professional.working_hours)
@@ -185,12 +267,29 @@ def build_system_prompt(professional, context_chunks: list[str]) -> str:
         voice_tone=(professional.voice_tone or "").strip() or DEFAULT_VOICE_TONE,
         agenda=_format_agenda(professional),
         examples=_format_examples(name, professional.voice_examples),
+        context_header=CONTEXT_HEADER,
         context=_format_context(context_chunks),
     )
 
 
+def _system_blocks(system_prompt: str):
+    """Divide o prompt em parte fixa (com cache) e trechos do RAG.
+
+    O cache cobra 10% pela parte fixa nas chamadas seguintes, enquanto
+    ela não muda. Ferramentas vêm antes do sistema na ordem do cache e
+    também são fixas, então entram junto.
+    """
+    fixed, header, context = system_prompt.partition(CONTEXT_HEADER)
+    if not header:
+        return system_prompt
+    return [
+        {"type": "text", "text": fixed, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": header + context},
+    ]
+
+
 def generate_reply(system_prompt: str, history: list[dict], tools=None, run_tool=None) -> str:
-    """Resposta da MarIA. Com `tools`, o modelo pode consultar algo antes
+    """Resposta da SelenIA. Com `tools`, o modelo pode consultar algo antes
     de responder (ex.: horários livres); `run_tool(nome, entrada)` executa
     e devolve o texto do resultado."""
     messages = list(history)
@@ -199,10 +298,11 @@ def generate_reply(system_prompt: str, history: list[dict], tools=None, run_tool
         response = _client.messages.create(
             model=settings.claude_model,
             max_tokens=1024,
-            system=system_prompt,
+            system=_system_blocks(system_prompt),
             messages=messages,
             **extra,
         )
+        _note_usage("reply", settings.claude_model, response.usage)
         if response.stop_reason != "tool_use" or not run_tool:
             break
         messages.append({"role": "assistant", "content": response.content})
@@ -298,6 +398,7 @@ def classify_risk(history: list[dict], audience: Optional[str] = None) -> RiskCl
         output_config={"effort": "low"},
         output_format=RiskClassification,
     )
+    _note_usage("triage", settings.triage_model, response.usage)
     if response.stop_reason != "end_turn" or response.parsed_output is None:
         raise ValueError(f"classificação incompleta (stop_reason={response.stop_reason})")
     return response.parsed_output

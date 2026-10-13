@@ -4,13 +4,13 @@
 
 ## O que é
 
-**Handoff** é passar a conversa da MarIA para a profissional e de
-volta. Enquanto a profissional está no controle, a MarIA fica em
+**Handoff** é passar a conversa da SelenIA para a profissional e de
+volta. Enquanto a profissional está no controle, a SelenIA fica em
 silêncio naquela conversa.
 
 **"Em consulta"** é um botão do painel que avisa que a profissional
 está atendendo. Com ele ligado, quem pedir para falar com ela fica
-sabendo que ela está em atendimento, e a MarIA oferece ajuda enquanto
+sabendo que ela está em atendimento, e a SelenIA oferece ajuda enquanto
 isso.
 
 ## Por que existe
@@ -24,7 +24,7 @@ isso.
   aparece quando a pessoa pede para falar com ela, não na abertura da
   conversa (decisão do Pedro, 24/09/2026).
 - **Recusa do bot** também foi decisão do Pedro (24/09/2026): tem gente
-  que não quer conversar com um bot. Nesse caso a MarIA mostra
+  que não quer conversar com um bot. Nesse caso a SelenIA mostra
   compreensão, para e avisa a profissional, sem números de emergência,
   porque não é risco.
 
@@ -38,11 +38,11 @@ isso.
    sozinho no horário.
 
 **Na conversa** (na tela [Conversas](conversas.md) ou no simulador
-"Testar a MarIA"):
-- **Assumir conversa**: a MarIA fica em silêncio.
+"Testar a SelenIA"):
+- **Assumir conversa**: a SelenIA fica em silêncio.
 - **Responder como {nome}**: a mensagem vai para o contato, marcada
   como sua. Responder já assume a conversa.
-- **Devolver ao bot**: a MarIA volta a responder. Também libera depois
+- **Devolver ao bot**: a SelenIA volta a responder. Também libera depois
   de uma emergência.
 
 ## Como funciona
@@ -54,7 +54,7 @@ isso.
 
 - A detecção usa **regras fixas** (`handoff.classify_request`), não o
   modelo: é previsível e barata. "Você é humana?" não conta como pedido;
-  a MarIA responde isso sozinha.
+  a SelenIA responde isso sozinha.
 - Se a frase tiver as duas coisas ("não quero IA, quero falar com o
   Pedro"), vale a **recusa**.
 - A recusa tolera erro de digitação: basta "não quero" e "robô", "bot"
@@ -64,7 +64,7 @@ isso.
 - Também é recusa o "não" seguido de "um/uma" e robô, bot, máquina ou
   IA, mesmo sem "não quero": "quero falar com ele, não um robô ou IA".
   O artigo é o que separa isso da pergunta "você não é um robô?", que a
-  MarIA responde sozinha.
+  SelenIA responde sozinha.
 - Pedido pela profissional **não** gera alerta; gera um e-mail simples,
   uma vez, até ela responder (decisão do Pedro, 27/09/2026). A recusa do
   bot gera alerta, e o e-mail é o do alerta.
@@ -78,7 +78,7 @@ isso.
 - A triagem de segurança continua rodando com a profissional no
   controle.
 
-Estados da conversa: `active` (MarIA responde), `human` (profissional
+Estados da conversa: `active` (SelenIA responde), `human` (profissional
 no controle), `emergency_hold` (espera depois de emergência).
 
 Arquivos: `services/handoff.py`, `routers/conversations.py`
@@ -131,7 +131,7 @@ Manual no simulador (conversa nova em cada caso):
 1. "quero falar com o {nome}" com o botão desligado → aviso e silêncio.
 2. O mesmo com "Em consulta" ligado → aviso de atendimento; o bot segue.
 3. "não quero falar com robô" → compreensão, silêncio, alerta gravado.
-4. Responder pela caixa verde, depois "Devolver ao bot" → a MarIA volta.
+4. Responder pela caixa verde, depois "Devolver ao bot" → a SelenIA volta.
 
 ## Histórico
 

@@ -1,7 +1,7 @@
 """Alertas no painel: listar, abrir (registra o visto) e marcar como revisado.
 
 Não há rota para editar nem apagar alerta: a trilha só cresce (RNF05).
-Liberar a MarIA depois de uma emergência é a rota da conversa
+Liberar a SelenIA depois de uma emergência é a rota da conversa
 (`POST /conversations/{id}/release`), que também entra na trilha.
 """
 

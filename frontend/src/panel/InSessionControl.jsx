@@ -19,7 +19,7 @@ function formatTime(iso) {
 
 // Botão "Em consulta" da barra do topo (protótipo: Conversas). Enquanto
 // ligado, quem pedir para falar com a profissional recebe um aviso fixo
-// e a MarIA segue ajudando. Ver funcionalidades/handoff-e-em-consulta.md.
+// e a SelenIA segue ajudando. Ver funcionalidades/handoff-e-em-consulta.md.
 export default function InSessionControl() {
   const { professional, setProfessional } = usePanel();
   const [open, setOpen] = useState(false);
@@ -109,7 +109,7 @@ export default function InSessionControl() {
             </button>
           ))}
           <p className="m-0 mt-2 border-t border-line px-2 pt-2 text-xs leading-relaxed text-muted">
-            Quem pedir para falar com você recebe um aviso de que você está em atendimento, e a MarIA segue ajudando.
+            Quem pedir para falar com você recebe um aviso de que você está em atendimento, e a SelenIA segue ajudando.
             Emergências continuam gerando alerta na hora.
           </p>
           {error && <p className="m-0 mt-2 px-2 text-xs text-danger">{error}</p>}

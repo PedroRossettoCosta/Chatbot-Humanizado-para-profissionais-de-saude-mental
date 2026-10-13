@@ -20,7 +20,7 @@ function TypeBadge({ filename }) {
 }
 
 // Base de conhecimento (protótipo: base_de_conhecimento_maria). Os
-// documentos alimentam as respostas da MarIA (RAG); a triagem de risco
+// documentos alimentam as respostas da SelenIA (RAG); a triagem de risco
 // não depende deles.
 export default function KnowledgeBase() {
   const { professional, openSimulator } = usePanel();
@@ -84,12 +84,12 @@ export default function KnowledgeBase() {
           <p className="m-0 text-xs font-semibold tracking-wider text-primary">MATERIAL DO ATENDIMENTO</p>
           <h1 className="m-0 mt-2 text-4xl font-bold tracking-tight text-ink">Base de conhecimento</h1>
           <p className="m-0 mt-2 max-w-2xl text-muted">
-            A MarIA usa estes documentos para responder dúvidas sobre o seu trabalho. Envie textos sobre sua abordagem,
+            A SelenIA usa estes documentos para responder dúvidas sobre o seu trabalho. Envie textos sobre sua abordagem,
             perguntas frequentes e informações práticas.
           </p>
         </div>
         <Button variant="soft" onClick={openSimulator}>
-          Testar a MarIA
+          Testar a SelenIA
         </Button>
       </div>
 

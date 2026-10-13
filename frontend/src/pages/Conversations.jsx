@@ -27,7 +27,7 @@ function tagsOf(c) {
   if (c.awaiting_reply_since) tags.push({ text: "Aguardando você", tone: "warning" });
   if (c.needs_attention && c.state !== "emergency_hold") tags.push({ text: "Necessita atenção", tone: "warning" });
   if (c.state === "human") tags.push({ text: "Você assumiu", tone: "info" });
-  if (c.state === "active" && !c.awaiting_reply_since) tags.push({ text: "MarIA atendendo", tone: "primary" });
+  if (c.state === "active" && !c.awaiting_reply_since) tags.push({ text: "SelenIA atendendo", tone: "primary" });
   if (c.channel === "simulator") tags.push({ text: "Teste", tone: "neutral" });
   return tags;
 }
@@ -40,7 +40,7 @@ const FILTERS = [
   { key: "emergency", label: "Emergência", test: (c) => c.state === "emergency_hold" },
   { key: "awaiting", label: "Aguardando você", test: (c) => Boolean(c.awaiting_reply_since) },
   { key: "human", label: "Com você", test: (c) => c.state === "human" },
-  { key: "bot", label: "MarIA atendendo", test: (c) => c.state === "active" },
+  { key: "bot", label: "SelenIA atendendo", test: (c) => c.state === "active" },
 ];
 
 function timeLeft(iso) {
@@ -53,7 +53,7 @@ function timeLeft(iso) {
 function preview(last) {
   if (!last) return "";
   if (last.role === "user") return `"${last.preview}"`;
-  return `${last.sent_by === "professional" ? "Você" : "MarIA"}: ${last.preview}`;
+  return `${last.sent_by === "professional" ? "Você" : "SelenIA"}: ${last.preview}`;
 }
 
 function Avatar({ conversation, size = "h-11 w-11" }) {
@@ -163,10 +163,10 @@ export default function Conversations() {
               <p className="m-0 mt-3 font-semibold text-ink">Nenhuma conversa ainda</p>
               <p className="m-0 mt-1 text-sm text-muted">
                 Quando alguém escrever para o seu WhatsApp, a conversa aparece aqui. Para ver como fica, converse com a
-                MarIA no teste.
+                SelenIA no teste.
               </p>
               <Button variant="soft" className="mt-4" onClick={openSimulator}>
-                Testar a MarIA
+                Testar a SelenIA
               </Button>
             </li>
           )}
@@ -235,8 +235,8 @@ function Bubble({ message }) {
     : message.sent_by === "professional"
       ? "Você"
       : message.sent_by === "system"
-        ? "MarIA · mensagem fixa"
-        : "MarIA";
+        ? "SelenIA · mensagem fixa"
+        : "SelenIA";
   const style = incoming
     ? "rounded-tl-md border border-line bg-white"
     : message.sent_by === "professional"
@@ -250,7 +250,14 @@ function Bubble({ message }) {
       <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed text-ink ${style}`}>
         {message.content}
       </div>
-      <span className="mt-1 text-xs text-muted">{time(message.created_at)}</span>
+      <span className="mt-1 text-xs text-muted">
+        {time(message.created_at)}
+        {message.delivery_failed && (
+          <span className="ml-2 font-semibold text-danger" title="A Meta recusou o envio. A pessoa não recebeu esta mensagem.">
+            · Não entregue
+          </span>
+        )}
+      </span>
     </div>
   );
 }
@@ -360,13 +367,13 @@ function ConversationView({ conversationId, onChanged }) {
           )}
           {c.state === "human" && (
             <Button variant="soft" className="!px-4 !py-2 text-sm" disabled={busy} onClick={() => act(() => api.releaseToBot(conversationId))}>
-              Devolver à MarIA
+              Devolver à SelenIA
             </Button>
           )}
           {c.state === "emergency_hold" &&
             (confirmRelease ? (
               <span className="flex flex-wrap items-center justify-end gap-2 text-sm text-slate">
-                A MarIA volta a responder aqui. Liberar?
+                A SelenIA volta a responder aqui. Liberar?
                 <Button className="!px-3 !py-1.5 text-sm" disabled={busy} onClick={() => act(() => api.releaseToBot(conversationId))}>
                   Sim
                 </Button>
@@ -376,7 +383,7 @@ function ConversationView({ conversationId, onChanged }) {
               </span>
             ) : (
               <Button variant="soft" className="!px-4 !py-2 text-sm" onClick={() => setConfirmRelease(true)}>
-                Liberar a MarIA
+                Liberar a SelenIA
               </Button>
             ))}
         </div>
@@ -388,7 +395,7 @@ function ConversationView({ conversationId, onChanged }) {
           <AlertIcon size={20} className="mt-0.5 shrink-0" />
           <p className="m-0">
             <strong>Emergência{c.latest_alert ? ` às ${time(c.latest_alert.created_at)}` : ""}.</strong> A pessoa
-            recebeu a mensagem fixa (SAMU 192, CVV 188) e a MarIA está pausada nesta conversa até você liberar. Você
+            recebeu a mensagem fixa (SAMU 192, CVV 188) e a SelenIA está pausada nesta conversa até você liberar. Você
             pode escrever para a pessoa normalmente.
           </p>
         </div>
@@ -398,7 +405,7 @@ function ConversationView({ conversationId, onChanged }) {
           <HandIcon size={20} className="mt-0.5 shrink-0" />
           <p className="m-0">
             <strong>Aguardando você desde {shortWhen(c.awaiting_reply_since)}.</strong> A pessoa pediu para falar com
-            você{c.state === "human" ? " e a MarIA parou de responder." : "; a MarIA avisou que você responde por aqui."}
+            você{c.state === "human" ? " e a SelenIA parou de responder." : "; a SelenIA avisou que você responde por aqui."}
           </p>
         </div>
       )}
@@ -406,7 +413,7 @@ function ConversationView({ conversationId, onChanged }) {
         <div className="flex gap-3 border-b border-[#fde68a] bg-warning-soft px-5 py-3 text-sm text-[#92400e]">
           <AlertIcon size={20} className="mt-0.5 shrink-0" />
           <p className="m-0">
-            A triagem marcou esta conversa para sua atenção (sofrimento intenso ou dúvida sobre segurança). A MarIA
+            A triagem marcou esta conversa para sua atenção (sofrimento intenso ou dúvida sobre segurança). A SelenIA
             continua respondendo.
           </p>
         </div>
@@ -442,7 +449,7 @@ function ConversationView({ conversationId, onChanged }) {
           <form onSubmit={send}>
             <p className="m-0 mb-2 text-xs text-muted">
               {c.state === "active"
-                ? "Ao enviar, você assume a conversa e a MarIA para de responder. "
+                ? "Ao enviar, você assume a conversa e a SelenIA para de responder. "
                 : c.state === "human"
                   ? "Você está no comando desta conversa. "
                   : ""}

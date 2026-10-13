@@ -1,9 +1,9 @@
-"""Pedidos de horário: a MarIA reserva, a profissional decide.
+"""Pedidos de horário: a SelenIA reserva, a profissional decide.
 
 Fluxo (decisão do Pedro em 28/09/2026):
 
 1. Na conversa, a pessoa escolhe um dos horários livres e diz o nome. A
-   MarIA chama `pedir_agendamento`, que cai em `request`: cria um evento
+   SelenIA chama `pedir_agendamento`, que cai em `request`: cria um evento
    "Sessão (a confirmar) · nome" na agenda da profissional e um
    `Appointment` provisório, válido por 24 horas. A profissional recebe
    um e-mail.
@@ -20,6 +20,19 @@ pessoa pode ter sessões em dias diferentes, mas não duas no mesmo dia.
 Um pedido novo no dia de um pedido ainda aguardando substitui o
 anterior (ela mudou o horário); no dia de uma sessão confirmada, é
 recusado. A conta é pelo contato, não pela conversa.
+
+Remarcar e cancelar (decisão do Pedro em 12/10/2026, a partir do
+feedback de 30/09: alguém com o celular da pessoa não pode desmarcar
+sozinho):
+
+- **Remarcar** (`request_reschedule`): o horário novo fica reservado
+  como pedido ligado à sessão antiga (`replaces_id`). Quando a
+  profissional confirma, a sessão antiga é cancelada e sai do Google; se
+  recusar, a antiga continua.
+- **Cancelar** (`request_cancel`): sessão confirmada ganha
+  `cancel_requested_at` e continua de pé até a profissional confirmar o
+  cancelamento. Pedido ainda não confirmado a pessoa pode desistir na
+  hora, porque nada estava marcado.
 
 Duas pessoas no mesmo horário: `request` roda com uma trava por
 profissional no Postgres (`pg_advisory_xact_lock`), então dois pedidos
@@ -54,6 +67,16 @@ REJECTED_MESSAGE = (
     "{name} não vai conseguir atender em {when}. "
     "Se quiser, posso ver outros horários com você."
 )
+RESCHEDULE_CONFIRMED_MESSAGE = "{name} confirmou a troca: sua sessão passou de {old} para {when}. Até lá!"
+RESCHEDULE_REJECTED_MESSAGE = (
+    "{name} não vai conseguir atender em {when}. Sua sessão de {old} continua marcada. "
+    "Se quiser, posso ver outros horários com você."
+)
+CANCEL_CONFIRMED_MESSAGE = "{name} confirmou o cancelamento da sua sessão de {when}."
+CANCEL_REJECTED_MESSAGE = (
+    "{name} não confirmou o cancelamento: sua sessão de {when} continua marcada. "
+    "Se precisar, fale direto com {name} por aqui."
+)
 
 TENTATIVE_TITLE = "Sessão (a confirmar) · {patient}"
 CONFIRMED_TITLE = "Sessão · {patient}"
@@ -71,7 +94,7 @@ class AppointmentError(Exception):
 
 @dataclass
 class Booking:
-    """Resultado de `request`: o texto para a MarIA e o pedido criado."""
+    """Resultado de `request`: o texto para a SelenIA e o pedido criado."""
 
     text: str
     appointment_id: str | None = None
@@ -79,7 +102,7 @@ class Booking:
 
 def _event_description(appointment: models.Appointment) -> str:
     if appointment.conversation is None:
-        return "Marcado pelo painel da MarIA."
+        return "Marcado pelo painel da SelenIA."
     contact = appointment.conversation.contact
     if contact.channel == Channel.SIMULATOR:
         origin = "Pedido feito no simulador do painel (teste)."
@@ -87,7 +110,7 @@ def _event_description(appointment: models.Appointment) -> str:
         phone = conversations.contact_phone(contact) or "número não informado pelo WhatsApp"
         origin = f"Pedido feito pelo WhatsApp.\nTelefone: {phone}"
     return (
-        f"{origin}\n\nMarcado pela MarIA. Confirme ou recuse no painel: {settings.frontend_url}/agenda\n"
+        f"{origin}\n\nMarcado pela SelenIA. Confirme ou recuse no painel: {settings.frontend_url}/agenda\n"
         "Sem decisão em 24 horas, este horário é liberado."
     )
 
@@ -129,20 +152,26 @@ def _local_day(moment: datetime):
     return moment.astimezone(ZoneInfo(settings.agenda_timezone)).date()
 
 
-def pending_note(db: Session, conversation: models.Conversation) -> str | None:
-    """Linhas para a MarIA saber o que esta pessoa já tem marcado."""
-    current = active_for_contact(db, conversation)
+def pending_note(db: Session, conversation: models.Conversation, now: datetime | None = None) -> str | None:
+    """Linhas para a SelenIA saber o que esta pessoa já tem marcado."""
+    current = active_for_contact(db, conversation, now)
     if not current:
         return None
     lines = []
     for a in current:
         when = calendar.format_slot(a.starts_at)
-        state = "confirmada" if a.status == AppointmentStatus.CONFIRMED else "aguardando confirmação"
-        lines.append(f"- {when} ({state})")
+        if a.status == AppointmentStatus.CONFIRMED:
+            state = "confirmada, cancelamento pedido" if a.cancel_requested_at else "confirmada"
+        elif a.replaces is not None:
+            state = f"aguardando confirmação, troca da sessão de {calendar.format_slot(a.replaces.starts_at)}"
+        else:
+            state = "aguardando confirmação"
+        lines.append(f"- {when} ({state}) [código {calendar.slot_code(a.starts_at)}]")
     return (
         "Esta pessoa já tem:\n" + "\n".join(lines) + "\n"
         "Ela pode ter uma sessão por dia: um pedido novo num dia que ainda aguarda confirmação troca o "
-        "horário daquele dia; num dia com sessão confirmada, não dá para marcar outra."
+        "horário daquele dia; num dia com sessão confirmada, não dá para marcar outra. Ela pode ter no "
+        f"máximo {settings.max_pending_requests} pedidos aguardando confirmação ao mesmo tempo."
     )
 
 
@@ -168,9 +197,9 @@ def request(
     patient_name: str,
     now: datetime | None = None,
 ) -> Booking:
-    """Reserva provisória pedida pela MarIA. Devolve o texto da ferramenta.
+    """Reserva provisória pedida pela SelenIA. Devolve o texto da ferramenta.
 
-    Nunca levanta exceção: qualquer recusa volta como texto para a MarIA
+    Nunca levanta exceção: qualquer recusa volta como texto para a SelenIA
     explicar à pessoa.
     """
     name = (patient_name or "").strip()[:80]
@@ -204,6 +233,25 @@ def request(
     if previous and previous.starts_at == start:
         db.rollback()
         return Booking(f"Este horário já está pedido por esta pessoa e aguarda {professional.name} confirmar.")
+
+    # Teto de pedidos aguardando confirmação: sem ele, uma pessoa pedia um
+    # horário em cada dia e segurava a agenda por 24h. Trocar o horário
+    # de um dia que já tem pedido não aumenta a conta.
+    if previous is None:
+        # Pedido de troca não conta: ele substitui uma sessão, não soma.
+        waiting = [
+            a
+            for a in active_for_contact(db, conversation, now)
+            if a.status == AppointmentStatus.TENTATIVE and a.replaces_id is None
+        ]
+        if len(waiting) >= settings.max_pending_requests:
+            db.rollback()
+            return Booking(
+                f"Esta pessoa já tem {len(waiting)} pedidos aguardando {professional.name} confirmar, o máximo "
+                f"ao mesmo tempo. Não peça outro horário agora: diga que, assim que {professional.name} "
+                f"responder aos pedidos, a pessoa pode pedir mais. Ainda dá para trocar o horário de um dia que "
+                f"já tem pedido."
+            )
 
     taken = TAKEN_MESSAGE
     if _overlaps(db, professional, start, end, now):
@@ -272,8 +320,8 @@ def create_by_professional(
     """A profissional marca pelo calendário do painel.
 
     Sessão: evento "Sessão · nome" e um `Appointment` confirmado, que conta
-    no limite por dia e ocupa o horário para a MarIA. Outro compromisso:
-    só o evento no Google (a MarIA já o vê como ocupado). Levanta
+    no limite por dia e ocupa o horário para a SelenIA. Outro compromisso:
+    só o evento no Google (a SelenIA já o vê como ocupado). Levanta
     `AppointmentError` se o horário da sessão já estiver ocupado.
     """
     start = calendar.parse_slot_code(code)
@@ -360,9 +408,26 @@ def _pending(db: Session, appointment: models.Appointment) -> None:
         raise AppointmentError("Este pedido passou de 24 horas e o horário foi liberado.")
 
 
+def _awaiting_cancel(appointment: models.Appointment) -> bool:
+    return appointment.status == AppointmentStatus.CONFIRMED and appointment.cancel_requested_at is not None
+
+
 def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
-    _pending(db, appointment)
+    """Confirma o que está pendente: horário novo, troca ou cancelamento."""
+    db.refresh(appointment)
     professional = appointment.professional
+    if _awaiting_cancel(appointment):
+        _delete_event_quietly(professional.calendar_connection, appointment.calendar_event_id)
+        appointment.status = AppointmentStatus.CANCELLED
+        appointment.decided_at = models._now()
+        db.commit()
+        when = calendar.format_slot(appointment.starts_at)
+        message = CANCEL_CONFIRMED_MESSAGE.format(name=professional.name, when=when)
+        appointment.contact_notified = _tell_contact(db, appointment, message)
+        db.commit()
+        return appointment
+
+    _pending(db, appointment)
     connection = professional.calendar_connection
     if connection is None:
         raise AppointmentError("Reconecte o Google Agenda para confirmar.")
@@ -370,26 +435,195 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
         calendar.update_event(connection, appointment.calendar_event_id, _event_body(appointment, confirmed=True))
     except calendar.CalendarError as err:
         raise AppointmentError(str(err))
+    now = models._now()
     appointment.status = AppointmentStatus.CONFIRMED
-    appointment.decided_at = models._now()
+    appointment.decided_at = now
+    old = appointment.replaces
+    if old is not None and old.status in (AppointmentStatus.CONFIRMED, AppointmentStatus.TENTATIVE):
+        # Troca confirmada: a data antiga sai do banco e do Google.
+        _delete_event_quietly(connection, old.calendar_event_id)
+        old.status = AppointmentStatus.CANCELLED
+        old.decided_at = now
     db.commit()
     when = calendar.format_slot(appointment.starts_at)
-    appointment.contact_notified = _tell_contact(db, appointment, CONFIRMED_MESSAGE.format(name=professional.name, when=when))
+    if old is not None:
+        message = RESCHEDULE_CONFIRMED_MESSAGE.format(
+            name=professional.name, old=calendar.format_slot(old.starts_at), when=when
+        )
+    else:
+        message = CONFIRMED_MESSAGE.format(name=professional.name, when=when)
+    appointment.contact_notified = _tell_contact(db, appointment, message)
     db.commit()
     return appointment
 
 
 def reject(db: Session, appointment: models.Appointment) -> models.Appointment:
-    _pending(db, appointment)
+    """Recusa o que está pendente. Numa troca ou num cancelamento, a
+    sessão que já existia continua marcada."""
+    db.refresh(appointment)
     professional = appointment.professional
+    when = calendar.format_slot(appointment.starts_at)
+    if _awaiting_cancel(appointment):
+        appointment.cancel_requested_at = None
+        db.commit()
+        message = CANCEL_REJECTED_MESSAGE.format(name=professional.name, when=when)
+        appointment.contact_notified = _tell_contact(db, appointment, message)
+        db.commit()
+        return appointment
+
+    _pending(db, appointment)
     _delete_event_quietly(professional.calendar_connection, appointment.calendar_event_id)
     appointment.status = AppointmentStatus.REJECTED
     appointment.decided_at = models._now()
     db.commit()
-    when = calendar.format_slot(appointment.starts_at)
-    appointment.contact_notified = _tell_contact(db, appointment, REJECTED_MESSAGE.format(name=professional.name, when=when))
+    old = appointment.replaces
+    if old is not None:
+        message = RESCHEDULE_REJECTED_MESSAGE.format(
+            name=professional.name, old=calendar.format_slot(old.starts_at), when=when
+        )
+    else:
+        message = REJECTED_MESSAGE.format(name=professional.name, when=when)
+    appointment.contact_notified = _tell_contact(db, appointment, message)
     db.commit()
     return appointment
+
+
+# ---------------------------------------------------------------------------
+# Remarcar e cancelar, pedidos pela pessoa na conversa
+# ---------------------------------------------------------------------------
+
+NOT_FOUND = (
+    "Não há sessão desta pessoa nesse horário. Use o código da sessão que aparece na lista de "
+    "consultar_horarios_livres, em 'Esta pessoa já tem'."
+)
+
+
+def _find_session(db: Session, conversation: models.Conversation, code: str, now: datetime):
+    start = calendar.parse_slot_code(code)
+    if start is None:
+        return None
+    return next((a for a in active_for_contact(db, conversation, now) if a.starts_at == start), None)
+
+
+def request_reschedule(
+    db: Session,
+    professional: models.Professional,
+    conversation: models.Conversation,
+    current_code: str,
+    new_code: str,
+    now: datetime | None = None,
+) -> Booking:
+    """A pessoa quer trocar uma sessão por outro horário. Reserva o novo
+    como pedido; a antiga só sai quando a profissional confirmar."""
+    now = now or models._now()
+    current = _find_session(db, conversation, current_code, now)
+    if current is None:
+        return Booking(NOT_FOUND)
+    if current.status == AppointmentStatus.TENTATIVE:
+        return Booking(
+            "Essa sessão ainda é um pedido sem confirmação. Para mudar, use pedir_agendamento com o novo "
+            "horário (no mesmo dia, ele substitui o pedido) ou pedir_cancelamento para desistir dele."
+        )
+    if current.cancel_requested_at:
+        return Booking(f"Já há um pedido de cancelamento dessa sessão aguardando {professional.name}.")
+    if any(a.replaces_id == current.id for a in active_for_contact(db, conversation, now)):
+        return Booking(f"Já há um pedido de troca dessa sessão aguardando {professional.name} confirmar.")
+
+    start = calendar.parse_slot_code(new_code)
+    if start is None:
+        return Booking("Código de horário inválido. Use um código da lista de consultar_horarios_livres.")
+    if not calendar.can_book(professional):
+        return Booking(f"A troca não está disponível. Diga que vai passar o pedido para {professional.name}.")
+    end = start + timedelta(minutes=professional.session_minutes)
+    connection = professional.calendar_connection
+
+    db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:key))"), {"key": f"agenda:{professional.id}"})
+    others = [a for a in active_for_contact(db, conversation, now) if a.id != current.id]
+    if any(_local_day(a.starts_at) == start.date() for a in others):
+        db.rollback()
+        return Booking(
+            "Esta pessoa já tem outra sessão ou pedido nesse dia, e só pode ter uma por dia. Ofereça outro dia."
+        )
+    if _overlaps(db, professional, start, end, now):
+        db.rollback()
+        return Booking(TAKEN_MESSAGE)
+    try:
+        free = calendar.available_slots(professional, now)
+    except calendar.CalendarError:
+        db.rollback()
+        return Booking(f"Não foi possível consultar a agenda agora. Diga que vai confirmar com {professional.name}.")
+    if start not in free:
+        db.rollback()
+        return Booking(TAKEN_MESSAGE)
+
+    appointment = models.Appointment(
+        professional_id=professional.id,
+        conversation_id=conversation.id,
+        calendar_id="primary",
+        starts_at=start,
+        ends_at=end,
+        status=AppointmentStatus.TENTATIVE,
+        patient_name=current.patient_name,
+        expires_at=now + HOLD,
+        replaces_id=current.id,
+    )
+    appointment.conversation = conversation
+    appointment.replaces = current
+    try:
+        appointment.calendar_event_id = calendar.create_event(connection, _event_body(appointment, confirmed=False))
+    except calendar.CalendarError:
+        db.rollback()
+        return Booking(f"Não foi possível reservar na agenda agora. Diga que vai passar o pedido para {professional.name}.")
+    db.add(appointment)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        _delete_event_quietly(connection, appointment.calendar_event_id)
+        return Booking(TAKEN_MESSAGE)
+    old = calendar.format_slot(current.starts_at)
+    return Booking(
+        f"Pedido de troca registrado: de {old} para {calendar.format_slot(start)}. Está aguardando "
+        f"{professional.name} confirmar; até lá, a sessão de {old} continua marcada, e a pessoa recebe a "
+        "resposta por aqui. Nunca diga que a troca já foi feita.",
+        appointment_id=appointment.id,
+    )
+
+
+def request_cancel(
+    db: Session,
+    professional: models.Professional,
+    conversation: models.Conversation,
+    code: str,
+    now: datetime | None = None,
+) -> Booking:
+    """A pessoa quer cancelar. Sessão confirmada vira pedido para a
+    profissional; pedido ainda sem confirmação é desfeito na hora."""
+    now = now or models._now()
+    current = _find_session(db, conversation, code, now)
+    if current is None:
+        return Booking(NOT_FOUND)
+    when = calendar.format_slot(current.starts_at)
+    if current.status == AppointmentStatus.TENTATIVE:
+        _delete_event_quietly(professional.calendar_connection, current.calendar_event_id)
+        current.status = AppointmentStatus.CANCELLED
+        current.decided_at = now
+        db.commit()
+        if current.replaces is not None:
+            kept = calendar.format_slot(current.replaces.starts_at)
+            return Booking(f"Pedido de troca desfeito. A sessão de {kept} continua marcada.")
+        return Booking(f"Pedido de {when} desfeito: o horário foi liberado.")
+    if current.cancel_requested_at:
+        return Booking(f"O cancelamento dessa sessão já está aguardando {professional.name} confirmar.")
+    current.cancel_requested_at = now
+    # A resposta da profissional vai para a conversa em que a pessoa pediu.
+    current.conversation_id = conversation.id
+    db.commit()
+    return Booking(
+        f"Pedido de cancelamento registrado para {when}. Está aguardando {professional.name} confirmar; até "
+        "lá, a sessão continua marcada, e a pessoa recebe a resposta por aqui. Nunca diga que já está cancelada.",
+        appointment_id=current.id,
+    )
 
 
 # ---------------------------------------------------------------------------

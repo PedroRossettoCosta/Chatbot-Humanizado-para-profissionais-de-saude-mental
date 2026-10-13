@@ -50,8 +50,8 @@ function Card({ eyebrow, title, action, children }) {
 }
 
 const TABS = [
-  { key: "pending", label: "Aguardando", test: (a) => a.status === "tentative" },
-  { key: "confirmed", label: "Confirmados", test: (a) => a.status === "confirmed" },
+  { key: "pending", label: "Aguardando", test: (a) => a.awaiting_decision },
+  { key: "confirmed", label: "Confirmados", test: (a) => a.status === "confirmed" && !a.awaiting_decision },
   { key: "closed", label: "Recusados e expirados", test: (a) => a.status === "rejected" || a.status === "expired" },
 ];
 
@@ -82,9 +82,35 @@ function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-// Um pedido de horário: quem, quando, e confirmar ou recusar.
+// O que a pessoa pediu, no quadro à direita do cartão.
+function RequestBox({ item }) {
+  if (item.kind === "reschedule")
+    return (
+      <div className="rounded-2xl bg-[#eff4ff] px-4 py-3">
+        <p className="m-0 text-xs font-semibold tracking-wider text-muted">TROCA DE HORÁRIO</p>
+        <p className="m-0 mt-1 text-sm text-muted line-through">{capitalize(item.replaces_label || "")}</p>
+        <p className="m-0 font-semibold text-ink">{capitalize(item.label)}</p>
+      </div>
+    );
+  return (
+    <div className={`rounded-2xl px-4 py-3 ${item.kind === "cancel" && item.awaiting_decision ? "bg-danger-soft" : "bg-[#eff4ff]"}`}>
+      <p className="m-0 text-xs font-semibold tracking-wider text-muted">
+        {item.kind === "cancel" && item.awaiting_decision ? "CANCELAMENTO PEDIDO" : "HORÁRIO PEDIDO"}
+      </p>
+      <p className="m-0 mt-1 font-semibold text-ink">{capitalize(item.label)}</p>
+    </div>
+  );
+}
+
+// Um pedido de horário (novo, troca ou cancelamento): quem, quando, e
+// confirmar ou recusar.
 function AppointmentCard({ item, busy, onDecide }) {
-  const [tone, label] = STATUS_TAG[item.status] || ["neutral", item.status];
+  const cancelAsked = item.kind === "cancel" && item.awaiting_decision;
+  const [tone, label] = cancelAsked
+    ? ["danger", "Pediu cancelamento"]
+    : item.kind === "reschedule" && item.status === "tentative"
+      ? ["warning", "Pediu troca"]
+      : STATUS_TAG[item.status] || ["neutral", item.status];
   return (
     <li className="list-none rounded-3xl border border-line bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -98,19 +124,30 @@ function AppointmentCard({ item, busy, onDecide }) {
           </div>
           {item.contact_phone && <p className="m-0 mt-1 text-sm text-muted">{item.contact_phone}</p>}
           <p className="m-0 mt-1 text-xs text-muted">
-            {item.source === "panel" ? "Marcada pelo painel" : "Pedido pela MarIA"} em {formatDateTime(item.created_at)}
+            {item.source === "panel" ? "Marcada pelo painel" : "Pedido pela SelenIA"} em {formatDateTime(item.created_at)}
           </p>
         </div>
-        <div className="rounded-2xl bg-[#eff4ff] px-4 py-3">
-          <p className="m-0 text-xs font-semibold tracking-wider text-muted">HORÁRIO PEDIDO</p>
-          <p className="m-0 mt-1 font-semibold text-ink">{capitalize(item.label)}</p>
-        </div>
+        <RequestBox item={item} />
       </div>
 
-      {item.status === "tentative" ? (
+      {cancelAsked ? (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <span className="flex-1 text-sm text-muted">A sessão continua marcada até você decidir.</span>
+          <Link to={`/conversas/${item.conversation_id}`} className="text-sm font-semibold text-primary">
+            Ver conversa →
+          </Link>
+          <Button variant="ghost" onClick={() => onDecide(item, "reject")} disabled={busy}>
+            Manter sessão
+          </Button>
+          <Button onClick={() => onDecide(item, "approve")} disabled={busy}>
+            Confirmar cancelamento
+          </Button>
+        </div>
+      ) : item.status === "tentative" ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <span className="flex-1 text-sm text-muted">
             O horário está segurado na sua agenda por mais {hoursLeft(item.expires_at)}.
+            {item.kind === "reschedule" && " Ao confirmar, a sessão antiga sai da agenda; ao recusar, ela continua."}
           </span>
           <Link to={`/conversas/${item.conversation_id}`} className="text-sm font-semibold text-primary">
             Ver conversa →
@@ -119,7 +156,7 @@ function AppointmentCard({ item, busy, onDecide }) {
             Recusar
           </Button>
           <Button onClick={() => onDecide(item, "approve")} disabled={busy}>
-            ✓ Confirmar horário
+            {item.kind === "reschedule" ? "✓ Confirmar troca" : "✓ Confirmar horário"}
           </Button>
         </div>
       ) : (
@@ -146,7 +183,7 @@ function AppointmentCard({ item, busy, onDecide }) {
 }
 
 // Agenda (protótipo: agenda_maria). A profissional conecta o Google
-// Agenda e diz quando atende; a MarIA cruza os dois para oferecer
+// Agenda e diz quando atende; a SelenIA cruza os dois para oferecer
 // horários livres e reserva provisoriamente o que a pessoa escolher.
 // Nada fica confirmado sem ela.
 export default function Agenda() {
@@ -228,8 +265,17 @@ export default function Agenda() {
   }, [loadRequests]);
 
   async function decide(item, action) {
-    if (action === "reject" && !window.confirm(`Recusar ${item.label}? A pessoa recebe um aviso e o horário sai da sua agenda.`))
-      return;
+    const question =
+      item.kind === "cancel" && item.awaiting_decision
+        ? action === "approve"
+          ? `Cancelar a sessão de ${item.label}? Ela sai da sua agenda e a pessoa recebe um aviso.`
+          : null
+        : action === "reject"
+          ? item.kind === "reschedule"
+            ? `Recusar a troca para ${item.label}? A sessão antiga continua marcada e a pessoa recebe um aviso.`
+            : `Recusar ${item.label}? A pessoa recebe um aviso e o horário sai da sua agenda.`
+          : null;
+    if (question && !window.confirm(question)) return;
     setDeciding(item.id);
     setError("");
     try {
@@ -284,7 +330,7 @@ export default function Agenda() {
   }
 
   async function disconnect() {
-    if (!window.confirm("Desconectar a agenda? A MarIA deixa de ver seus horários livres.")) return;
+    if (!window.confirm("Desconectar a agenda? A SelenIA deixa de ver seus horários livres.")) return;
     setError("");
     try {
       setStatus(await api.disconnectCalendar(slug));
@@ -328,7 +374,7 @@ export default function Agenda() {
       <p className="m-0 text-xs font-semibold tracking-wider text-primary">GOOGLE AGENDA</p>
       <h1 className="m-0 mt-2 text-4xl font-bold tracking-tight text-ink">Agenda</h1>
       <p className="m-0 mt-2 max-w-2xl text-muted">
-        A MarIA consulta sua agenda para oferecer horários livres a quem quer marcar. Nada é confirmado sem você.
+        A SelenIA consulta sua agenda para oferecer horários livres a quem quer marcar. Nada é confirmado sem você.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2 border-b border-line pb-3">
@@ -405,7 +451,7 @@ export default function Agenda() {
                 ? "Nada por aqui ainda."
                 : status.events_permission
                   ? "Nenhum pedido aguardando. Quando alguém escolher um horário na conversa, ele aparece aqui."
-                  : "A MarIA ainda não reserva horários: conecte a agenda com a permissão de criar eventos."}
+                  : "A SelenIA ainda não reserva horários: conecte a agenda com a permissão de criar eventos."}
             </li>
           )}
           {(requests || []).filter(visibleTab.test).map((item) => (
@@ -445,13 +491,13 @@ export default function Agenda() {
                   </p>
                 )}
                 <p className="m-0 mt-3 text-sm leading-relaxed text-muted">
-                  🔒 A MarIA vê só se cada horário está livre ou ocupado: o nome, a descrição e os participantes dos seus
+                  🔒 A SelenIA vê só se cada horário está livre ou ocupado: o nome, a descrição e os participantes dos seus
                   eventos não chegam até ela. Ela só cria e altera os eventos "Sessão (a confirmar)" que ela mesma
                   reserva.
                 </p>
                 {status.connected && !status.events_permission && (
                   <p className="m-0 mt-3 rounded-2xl bg-warning-soft px-4 py-3 text-sm text-[#92400e]">
-                    Para a MarIA reservar horários, clique em <strong>Permitir reservas</strong> e marque, na janela do
+                    Para a SelenIA reservar horários, clique em <strong>Permitir reservas</strong> e marque, na janela do
                     Google, a permissão de ver e editar eventos.
                   </p>
                 )}
@@ -487,7 +533,7 @@ export default function Agenda() {
 
           <Card eyebrow="QUANDO VOCÊ ATENDE" title="Horário de atendimento">
             <p className="m-0 text-sm text-muted">
-              A MarIA só oferece horários dentro destes intervalos (horário de Brasília). Sessões de{" "}
+              A SelenIA só oferece horários dentro destes intervalos (horário de Brasília). Sessões de{" "}
               <strong className="text-slate">{professional.session_minutes} minutos</strong>, definidas no{" "}
               <Link to="/perfil" className="text-primary">
                 Perfil do atendimento
@@ -563,7 +609,7 @@ export default function Agenda() {
             <div className="mt-5 rounded-2xl bg-[#eff4ff] p-4">
               <Field
                 label="Máximo de sessões por dia"
-                hint="Quantas sessões a MarIA pode deixar marcadas num mesmo dia (pedidos aguardando, confirmadas e as que você marca pelo calendário). Vazio = sem limite."
+                hint="Quantas sessões a SelenIA pode deixar marcadas num mesmo dia (pedidos aguardando, confirmadas e as que você marca pelo calendário). Vazio = sem limite."
               >
                 <input
                   type="number"
@@ -603,7 +649,7 @@ export default function Agenda() {
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Card
             eyebrow="PRÉVIA"
-            title="O que a MarIA vê agora"
+            title="O que a SelenIA vê agora"
             action={
               status.ready && (
                 <button
@@ -634,7 +680,7 @@ export default function Agenda() {
               <>
                 <p className="m-0 mb-3 text-sm text-muted">
                   Onde cabe uma sessão de {professional.session_minutes} minutos nas próximas duas semanas, de meia em
-                  meia hora, com pelo menos 12 horas de antecedência. Na conversa, a MarIA oferece até 3 de cada vez.
+                  meia hora, com pelo menos 12 horas de antecedência. Na conversa, a SelenIA oferece até 3 de cada vez.
                 </p>
                 <ul className="m-0 max-h-[60vh] space-y-3 overflow-y-auto p-0">
                   {groupSlots(slots).map(([day, times]) => (

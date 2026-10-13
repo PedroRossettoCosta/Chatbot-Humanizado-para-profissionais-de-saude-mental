@@ -1,6 +1,6 @@
 """Cadastro em etapas: o que precisa estar preenchido para concluir.
 
-A MarIA só começa a atender em nome da profissional com o perfil
+A SelenIA só começa a atender em nome da profissional com o perfil
 completo. Sem valores, apresentação ou exemplos de tom, ela responderia
 no escuro; sem o aceite das regras, a profissional não saberia o que o
 sistema faz numa emergência.
@@ -18,7 +18,7 @@ def missing_fields(professional: models.Professional) -> list[str]:
     if not (professional.alert_email or "").strip():
         missing.append("E-mail para alertas")
     if professional.pronouns not in guidelines.PRONOUNS:
-        missing.append("Como a MarIA fala de você")
+        missing.append("Como a SelenIA fala de você")
     if not (professional.audience_description or "").strip():
         missing.append("Especialidade e público")
     if not (professional.service_info or "").strip():
@@ -33,7 +33,7 @@ def missing_fields(professional: models.Professional) -> list[str]:
         if not (answer.get("good") or "").strip() or not (answer.get("bad") or "").strip():
             missing.append(f'Respostas boa e ruim para "{question["question"]}"')
     if professional.rules_accepted_at is None:
-        missing.append("Aceite das regras da MarIA")
+        missing.append("Aceite das regras da SelenIA")
     return missing
 
 

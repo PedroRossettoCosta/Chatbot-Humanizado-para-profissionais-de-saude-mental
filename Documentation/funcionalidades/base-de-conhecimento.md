@@ -5,12 +5,12 @@
 ## O que é
 
 Os documentos que a profissional envia (abordagem, perguntas
-frequentes, informações práticas) para a MarIA responder dúvidas sobre
+frequentes, informações práticas) para a SelenIA responder dúvidas sobre
 o trabalho dela com base no que está escrito, e não inventando.
 
 ## Por que existe
 
-Desde o começo do projeto (`planejamento-projeto.md`), a MarIA responde
+Desde o começo do projeto (`planejamento-projeto.md`), a SelenIA responde
 com RAG: busca os trechos dos documentos mais parecidos com a pergunta
 e manda junto para o modelo. Assim a resposta fica presa ao material da
 profissional. Em 27/09/2026 a tela ganhou o visual do protótipo e o
@@ -24,7 +24,7 @@ botão de remover documento, que não existia.
 3. Cada documento aparece na lista com o tipo, o número de trechos e a
    data. Enquanto é processado, mostra "Processando…".
 4. Para remover, clique na lixeira e confirme em **Sim**.
-5. Use **Testar a MarIA** para ver a resposta usando o documento: a
+5. Use **Testar a SelenIA** para ver a resposta usando o documento: a
    etiqueta "Com base em: arquivo" mostra de onde veio.
 
 ## Como funciona

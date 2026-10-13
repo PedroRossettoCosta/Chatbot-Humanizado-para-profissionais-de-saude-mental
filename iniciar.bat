@@ -1,5 +1,5 @@
 @echo off
-rem Sobe a MarIA para desenvolvimento no Windows: banco, API e painel.
+rem Sobe a SelenIA para desenvolvimento no Windows: banco, API e painel.
 rem Serve para qualquer maquina: na primeira vez instala o que falta
 rem (venv, pacotes, .env); nas seguintes so confere e sobe tudo. Abre o
 rem Docker Desktop sozinho se ele estiver fechado. Cada servidor abre na
@@ -109,7 +109,7 @@ echo     Criei o backend\.env a partir do exemplo, com uma chave de
 echo     criptografia nova. Faltam as chaves das integracoes. O mais facil
 echo     e copiar o backend\.env do outro computador por cima deste.
 echo     Se for preencher na mao, o minimo e:
-echo       ANTHROPIC_API_KEY  - para a MarIA responder
+echo       ANTHROPIC_API_KEY  - para a SelenIA responder
 echo       GOOGLE_CLIENT_ID   - para o login no painel
 echo       ALLOWED_EMAILS     - seu e-mail, senao ninguem entra
 echo.
@@ -135,9 +135,9 @@ echo     API    http://127.0.0.1:8000
 rem O --reload observa so a pasta app\: o ChromaDB grava em chroma_data\
 rem a cada inicio da API, e observando o backend inteiro isso reiniciava
 rem a API sem parar (e a resposta do WhatsApp, que espera 6 s, nunca saia).
-start "MarIA - API" cmd /k "cd /d backend && .venv\Scripts\python.exe -m alembic upgrade head && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --reload-dir app"
+start "SelenIA - API" cmd /k "cd /d backend && .venv\Scripts\python.exe -m alembic upgrade head && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --reload-dir app"
 echo     Painel http://localhost:5173
-start "MarIA - Painel" cmd /k "cd /d frontend && npm run dev"
+start "SelenIA - Painel" cmd /k "cd /d frontend && npm run dev"
 
 rem O endereco fixo vem do PUBLIC_WEBHOOK_HOST do backend\.env. Por ele
 rem so passa o webhook; o resto da API continua so nesta maquina.
@@ -149,7 +149,7 @@ if errorlevel 1 (
 ) else if not defined WEBHOOK_HOST (
   echo     PUBLIC_WEBHOOK_HOST vazio no backend\.env: tunel nao iniciado.
 ) else (
-  start "MarIA - Tunel" cmd /k "ngrok http --domain=%WEBHOOK_HOST% 8000"
+  start "SelenIA - Tunel" cmd /k "ngrok http --domain=%WEBHOOK_HOST% 8000"
 )
 
 rem Espera a API responder (ate 60 s) antes de abrir o navegador.
@@ -160,7 +160,7 @@ curl -s -o nul http://127.0.0.1:8000/health && goto api_ok
 set /a TENTATIVAS+=1
 if %TENTATIVAS% lss 30 goto espera_api
 echo.
-echo A API nao respondeu em 60 segundos. Veja o erro na janela "MarIA - API".
+echo A API nao respondeu em 60 segundos. Veja o erro na janela "SelenIA - API".
 pause
 exit /b 1
 :api_ok

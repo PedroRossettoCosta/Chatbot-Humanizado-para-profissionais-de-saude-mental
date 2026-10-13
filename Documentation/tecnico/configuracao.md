@@ -27,6 +27,8 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `WHATSAPP_API_VERSION` | não | Versão da Graph API. Padrão: `v25.0` |
 | `PUBLIC_WEBHOOK_HOST` | com túnel | Endereço público do túnel, sem `https://` (ex.: `algo.ngrok-free.dev`). Por ele só passa `/webhook/`. O `iniciar.bat` usa para abrir o ngrok |
 | `REPLY_DEBOUNCE_SECONDS` | não | Espera antes de responder no WhatsApp, para juntar mensagens quebradas. Padrão: 6 |
+| `MAX_PENDING_REQUESTS` | não | Pedidos de horário aguardando confirmação ao mesmo tempo, por pessoa. Padrão: 4 ([limites por contato](../funcionalidades/limites-por-contato.md)) |
+| `CONTACT_MESSAGES_PER_HOUR` | não | Mensagens por pessoa na última hora antes de a SelenIA pausar as respostas a ela. Padrão: 50 |
 | `SMTP_HOST` | para enviar alertas | Servidor de e-mail. Sem ele, o alerta registra `notify_failed` ([alerta por e-mail](../funcionalidades/alerta-por-email.md)) |
 | `SMTP_PORT` | não | Padrão: 587 (STARTTLS) |
 | `SMTP_USER` / `SMTP_PASSWORD` | para enviar alertas | Conta que envia. No Gmail, use uma **senha de app**, nunca a senha da conta |
@@ -68,7 +70,7 @@ pré-pago, sem mensalidade.
 
 ## 3. Google Agenda
 
-A MarIA consulta a disponibilidade da agenda para oferecer horários
+A SelenIA consulta a disponibilidade da agenda para oferecer horários
 livres ([agenda](../funcionalidades/agenda.md)).
 
 A profissional dá a permissão pelo próprio painel: na tela **Agenda**,
@@ -76,7 +78,7 @@ A profissional dá a permissão pelo próprio painel: na tela **Agenda**,
 a conta. São pedidas duas permissões: **livre/ocupado**
 (`calendar.freebusy`), para ler sem ver título, descrição ou
 participantes dos eventos, e **eventos** (`calendar.events`), para a
-MarIA criar e atualizar os eventos "Sessão (a confirmar)" que ela
+SelenIA criar e atualizar os eventos "Sessão (a confirmar)" que ela
 reserva.
 
 Até 28/09/2026 o plano era uma **conta de serviço** com a agenda
@@ -87,7 +89,7 @@ ID de agenda nem mexer no compartilhamento do Google.
 ### Configuração, uma vez por projeto
 
 Usa o mesmo cliente OAuth do [login](../funcionalidades/login-com-google.md)
-("MarIA painel (dev)"), no mesmo projeto do Google Cloud:
+("SelenIA painel (dev)"), no mesmo projeto do Google Cloud:
 
 1. Em **APIs e serviços → Biblioteca**, ative a **Google Calendar API**.
 2. Em **Google Auth Platform → Acesso a dados** (ou "Tela de
@@ -95,7 +97,7 @@ Usa o mesmo cliente OAuth do [login](../funcionalidades/login-com-google.md)
    `.../auth/calendar.freebusy` e `.../auth/calendar.events` (se não
    aparecerem na lista, cole o endereço completo em "Manually add
    scopes"). Clique em **Save**.
-3. Em **Clientes**, abra "MarIA painel (dev)" e copie o **Chave secreta
+3. Em **Clientes**, abra "SelenIA painel (dev)" e copie o **Chave secreta
    do cliente** (crie uma, se não houver) para `GOOGLE_CLIENT_SECRET`
    no `backend/.env`. Reinicie o backend.
 4. Não é preciso URI de redirecionamento: a janela do Google devolve o
@@ -106,7 +108,7 @@ Com o app em modo **teste** no Google, só os usuários de teste
 conseguem dar a permissão, e o Google mostra o aviso "app não
 verificado". O Google classifica `calendar.freebusy` como **não
 sensível** (conferido em 28/09/2026), mas `calendar.events` é
-**sensível**: com a reserva, abrir a MarIA a mais pessoas exige a
+**sensível**: com a reserva, abrir a SelenIA a mais pessoas exige a
 verificação do app pelo Google.
 
 ### Configuração, uma vez por profissional

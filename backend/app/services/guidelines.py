@@ -1,4 +1,4 @@
-"""Regras do produto para a MarIA, iguais para todas as profissionais.
+"""Regras do produto para a SelenIA, iguais para todas as profissionais.
 
 Aqui fica o que é do **produto** e não da profissional: o nome da
 assistente, as perguntas usadas para calibrar o tom de voz e a lista de
@@ -7,7 +7,7 @@ a profissional só acrescenta itens próprios (`extra_never_say`), que
 podem restringir mais, nunca afrouxar o que está aqui.
 """
 
-ASSISTANT_NAME = "MarIA"
+ASSISTANT_NAME = "SelenIA"
 
 # As mesmas três perguntas para toda profissional, cada uma testando um
 # aspecto diferente: preço e jeito comercial, apresentação da
@@ -56,7 +56,7 @@ NEVER_SAY_DEFAULTS = [
     "Formação, experiência, valores ou horários que não estejam no material do atendimento.",
     "Qualquer informação sobre outras pessoas atendidas.",
     "Afirmar ou dar a entender que é uma pessoa.",
-    # As duas abaixo impedem o uso da MarIA como IA de uso geral (e o
+    # As duas abaixo impedem o uso da SelenIA como IA de uso geral (e o
     # custo da chave de API junto) e a tentativa de mudar as regras
     # dela pela conversa (prompt injection).
     "Resposta a qualquer assunto fora do atendimento (tarefas, textos, códigos, "
@@ -65,7 +65,7 @@ NEVER_SAY_DEFAULTS = [
 ]
 
 
-# Como a MarIA age em situação de risco, em linguagem da profissional.
+# Como a SelenIA age em situação de risco, em linguagem da profissional.
 # Aparece no cadastro (etapa "Regras") para ela ler e aceitar. Descreve
 # o que `services/triage.py` e `services/handoff.py` fazem; se o
 # comportamento mudar lá, este texto muda junto.
@@ -74,17 +74,17 @@ RISK_BEHAVIORS = [
     "qualquer resposta.",
     "Em emergência, a pessoa recebe uma mensagem fixa, em linguagem neutra, orientando a ligar para o "
     "SAMU (192), procurar uma UPA ou pronto-socorro, ligar para o 190 em caso de violência ou para o "
-    "CVV (188). A MarIA para de responder.",
-    "Você recebe um alerta por e-mail e no painel. A MarIA só volta a responder quando você liberar a "
+    "CVV (188). A SelenIA para de responder.",
+    "Você recebe um alerta por e-mail e no painel. A SelenIA só volta a responder quando você liberar a "
     "conversa.",
-    "Se não for possível saber se a mensagem é grave, você recebe um alerta e a MarIA continua a conversa "
+    "Se não for possível saber se a mensagem é grave, você recebe um alerta e a SelenIA continua a conversa "
     "com cuidado.",
-    "Se a pessoa pedir para falar com você, ou disser que não quer falar com uma assistente, a MarIA para "
+    "Se a pessoa pedir para falar com você, ou disser que não quer falar com uma assistente, a SelenIA para "
     "e a conversa passa para você.",
 ]
 
 
-# Como a MarIA fala da profissional com o paciente. É a escolha dela no
+# Como a SelenIA fala da profissional com o paciente. É a escolha dela no
 # cadastro (etapa 1); sem escolha, vale a forma neutra. Não se pergunta
 # o gênero à parte: para o bot, o que importa é o pronome, e a LGPD pede
 # coletar só o necessário.

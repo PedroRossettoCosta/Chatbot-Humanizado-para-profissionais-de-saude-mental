@@ -181,7 +181,7 @@ function NewEventDialog({ initial, sessionMinutes, onClose, onSave }) {
 }
 
 // Calendário da semana: eventos do Google Agenda (com título, só para a
-// profissional), sessões da MarIA e o horário de atendimento. Clicar num
+// profissional), sessões da SelenIA e o horário de atendimento. Clicar num
 // espaço vazio abre "Marcar na agenda" naquele horário.
 export default function WeekCalendar({ slug, workingHours, sessionMinutes, onChanged }) {
   const today = localParts(Date.now()).ymd;
@@ -274,7 +274,7 @@ export default function WeekCalendar({ slug, workingHours, sessionMinutes, onCha
       </div>
 
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-        <span><span className="mr-1 inline-block h-3 w-3 rounded bg-warning-soft align-middle ring-1 ring-warning" /> A confirmar (pedido pela MarIA)</span>
+        <span><span className="mr-1 inline-block h-3 w-3 rounded bg-warning-soft align-middle ring-1 ring-warning" /> A confirmar (pedido pela SelenIA)</span>
         <span><span className="mr-1 inline-block h-3 w-3 rounded bg-primary-soft align-middle ring-1 ring-primary" /> Sessão confirmada</span>
         <span><span className="mr-1 inline-block h-3 w-3 rounded bg-[#eef2f7] align-middle ring-1 ring-[#94a3b8]" /> Outros eventos</span>
         <span><span className="mr-1 inline-block h-3 w-3 rounded bg-white align-middle ring-1 ring-line" /> Horário de atendimento</span>

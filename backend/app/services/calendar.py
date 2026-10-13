@@ -7,16 +7,16 @@ Como funciona:
    único, que o painel manda para `POST /calendar/{slug}/connect`.
 2. `connect` troca o código, com o segredo do cliente OAuth, por um
    código de longa duração (`refresh_token`), que fica cifrado em
-   `CalendarConnection`. Com ele a MarIA consulta a agenda mesmo com a
+   `CalendarConnection`. Com ele a SelenIA consulta a agenda mesmo com a
    profissional fora do painel.
 3. Para **ler**, a permissão é só livre/ocupado (`calendar.freebusy`):
-   a MarIA vê os intervalos ocupados da agenda principal, nunca o
+   a SelenIA vê os intervalos ocupados da agenda principal, nunca o
    título, a descrição ou os convidados de um evento, que podem ter
    nome de paciente. Para **reservar**, pede também `calendar.events`,
    usada só para criar, atualizar e apagar os eventos que ela mesma
-   cria (`services/appointments.py`). Sem ela, a MarIA só consulta.
+   cria (`services/appointments.py`). Sem ela, a SelenIA só consulta.
 4. `free_slots` cruza o horário de atendimento (`working_hours`), a
-   duração da sessão e os intervalos ocupados. A MarIA consulta isso
+   duração da sessão e os intervalos ocupados. A SelenIA consulta isso
    por uma ferramenta, só quando a conversa pede horário
    (`describe_for_assistant`, usado em `services/pipeline.py`).
 
@@ -51,7 +51,7 @@ GOOGLE_CLOCK_SKEW_SECONDS = 30
 WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 WEEKDAY_NAMES = ("segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo")
 
-# Até onde olhar, a antecedência mínima e a grade dos inícios. A MarIA
+# Até onde olhar, a antecedência mínima e a grade dos inícios. A SelenIA
 # recebe todos os horários livres e oferece no máximo 3 de cada vez,
 # procurando na lista o que a pessoa pedir ("tem de manhã?", "e na quinta?").
 HORIZON_DAYS = 14
@@ -105,7 +105,7 @@ def connect(db: Session, professional: models.Professional, code: str) -> models
     granted = set(tokens.get("scope", "").split())
     if SCOPE_FREEBUSY not in granted:
         # Na janela do Google dá para desmarcar a permissão da agenda.
-        raise CalendarError("Para a MarIA ver seus horários livres, marque a permissão da agenda na janela do Google.")
+        raise CalendarError("Para a SelenIA ver seus horários livres, marque a permissão da agenda na janela do Google.")
     try:
         claims = id_token.verify_oauth2_token(
             tokens.get("id_token", ""),
@@ -129,7 +129,7 @@ def connect(db: Session, professional: models.Professional, code: str) -> models
         # O Google só manda o código de longa duração na primeira
         # permissão. Se já havia uma antiga, ela precisa ser removida.
         raise CalendarError(
-            "O Google não enviou o acesso completo. Remova a MarIA em "
+            "O Google não enviou o acesso completo. Remova a SelenIA em "
             "myaccount.google.com/permissions e sincronize de novo."
         )
 
@@ -159,7 +159,7 @@ def disconnect(db: Session, professional: models.Professional) -> None:
 
 def _revoke(refresh_token: str) -> None:
     """Retira a permissão no Google. Se falhar, a conexão sai do banco
-    mesmo assim: sem o código guardado, a MarIA já não tem acesso."""
+    mesmo assim: sem o código guardado, a SelenIA já não tem acesso."""
     try:
         requests.post(_REVOKE_URL, data={"token": refresh_token}, timeout=_TIMEOUT)
     except requests.RequestException:
@@ -223,7 +223,7 @@ def _events_call(connection: models.CalendarConnection, method: str, url: str, b
     if response.status_code in (404, 410):
         raise CalendarError("O evento não existe mais no Google Agenda.")
     if response.status_code == 403:
-        raise CalendarError("A MarIA não tem permissão para mexer na agenda. Reconecte o Google Agenda.")
+        raise CalendarError("A SelenIA não tem permissão para mexer na agenda. Reconecte o Google Agenda.")
     if response.status_code >= 300:
         raise CalendarError("O Google Agenda recusou a alteração agora. Tente de novo.")
     return response.json() if response.content else {}
@@ -243,7 +243,7 @@ def delete_event(connection: models.CalendarConnection, event_id: str) -> None:
 
 def list_events(connection: models.CalendarConnection, start: datetime, end: datetime) -> list[dict]:
     """Eventos da agenda principal entre `start` e `end`, para o calendário
-    do painel. Só a profissional vê: nada é gravado nem vai para a MarIA.
+    do painel. Só a profissional vê: nada é gravado nem vai para a SelenIA.
 
     Devolve dicionários com id, título, início, fim e se é de dia inteiro.
     """
@@ -364,7 +364,7 @@ def can_book(professional: models.Professional) -> bool:
 
 
 def is_ready(professional: models.Professional) -> bool:
-    """A MarIA só consulta a agenda com tudo o que precisa para isso."""
+    """A SelenIA só consulta a agenda com tudo o que precisa para isso."""
     return bool(
         professional.calendar_connection
         and professional.session_minutes
@@ -378,7 +378,7 @@ def available_slots(professional: models.Professional, now: datetime | None = No
         raise CalendarError("Conecte a agenda e preencha o horário de atendimento.")
     now = now or models._now()
     busy = busy_intervals(professional.calendar_connection, now, now + timedelta(days=HORIZON_DAYS + 1))
-    # Os pedidos da MarIA também ocupam, mesmo antes de o Google refletir.
+    # Os pedidos da SelenIA também ocupam, mesmo antes de o Google refletir.
     busy = busy + [(a.starts_at, a.ends_at) for a in professional.appointments if _holds(a, now)]
     return free_slots(
         professional.working_hours,
@@ -400,7 +400,7 @@ def group_by_day(slots: list[datetime]) -> list[tuple[date, list[datetime]]]:
 
 
 # ---------------------------------------------------------------------------
-# Textos para a MarIA
+# Textos para a SelenIA
 # ---------------------------------------------------------------------------
 
 
@@ -410,7 +410,7 @@ def format_slot(slot: datetime) -> str:
 
 
 def slot_code(slot: datetime) -> str:
-    """Código do horário que a MarIA devolve para reservar (2026-09-29T10:00)."""
+    """Código do horário que a SelenIA devolve para reservar (2026-09-29T10:00)."""
     return slot.astimezone(_tz()).strftime("%Y-%m-%dT%H:%M")
 
 
@@ -437,7 +437,7 @@ def describe_for_assistant(
 ) -> str:
     """Resposta da ferramenta de horários: data de hoje e os horários livres.
 
-    Nunca levanta exceção: se o Google falhar, diz isso, e a MarIA
+    Nunca levanta exceção: se o Google falhar, diz isso, e a SelenIA
     responde que vai confirmar com a profissional.
     """
     now = now or models._now()

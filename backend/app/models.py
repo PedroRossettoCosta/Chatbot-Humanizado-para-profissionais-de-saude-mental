@@ -1,4 +1,4 @@
-"""Modelo de dados do MarIA.
+"""Modelo de dados do SelenIA.
 
 Visão geral das tabelas e de como elas se ligam:
 
@@ -12,6 +12,7 @@ Visão geral das tabelas e de como elas se ligam:
       │           ├── SafetyAlert    (disparos da triagem de segurança)
       │           │     └── SafetyAlertEvent   (trilha de auditoria)
       │           └── Appointment    (pré-agendamento no Google Calendar)
+      └── LlmUsage       (tokens de cada chamada ao modelo, sem conteúdo)
 
 Três decisões que valem explicação:
 
@@ -218,23 +219,23 @@ class Professional(Base):
     # para isso.
     session_minutes = Column(Integer, nullable=True)
     # Dias e horários em que ela atende, no fuso `settings.agenda_timezone`.
-    # A MarIA só oferece horário livre dentro disto. Formato:
+    # A SelenIA só oferece horário livre dentro disto. Formato:
     # {"mon": [{"start": "10:00", "end": "16:00"}], ...}; dia ausente ou
     # lista vazia = não atende (ver `services/calendar.WEEKDAYS`).
     working_hours = Column(JSON, nullable=True)
-    # Quantas sessões por dia a MarIA pode deixar marcadas (pedidos
+    # Quantas sessões por dia a SelenIA pode deixar marcadas (pedidos
     # aguardando + confirmados + as marcadas pelo painel). Nulo = sem limite.
     max_sessions_per_day = Column(Integer, nullable=True)
     # Cadastro em etapas: onde ela parou (1 a 7), quando aceitou as
-    # regras fixas da MarIA e quando concluiu. O painel só libera com o
+    # regras fixas da SelenIA e quando concluiu. O painel só libera com o
     # cadastro concluído.
     onboarding_step = Column(Integer, nullable=True)
     rules_accepted_at = Column(DateTime(timezone=True), nullable=True)
     onboarding_completed_at = Column(DateTime(timezone=True), nullable=True)
-    # Como a MarIA fala dela com o paciente: "feminine", "masculine" ou
+    # Como a SelenIA fala dela com o paciente: "feminine", "masculine" ou
     # "neutral" (ver `guidelines.PRONOUNS`). Nulo = neutro.
     pronouns = Column(String(20), nullable=True)
-    # Número da MarIA desta profissional no WhatsApp (o "phone number ID"
+    # Número da SelenIA desta profissional no WhatsApp (o "phone number ID"
     # da Meta). O webhook diz para qual número a pessoa escreveu, e é
     # assim que a mensagem chega à profissional certa.
     whatsapp_phone_number_id = Column(String(32), nullable=True, unique=True)
@@ -259,7 +260,7 @@ class CalendarConnection(Base):
     """Acesso ao Google Agenda que a profissional deu pelo painel.
 
     Só a disponibilidade (livre/ocupado) da agenda principal: com esse
-    acesso, a MarIA não vê título, descrição nem convidados dos eventos,
+    acesso, a SelenIA não vê título, descrição nem convidados dos eventos,
     que podem ter nome de paciente. Ver `services/calendar.py`.
     """
 
@@ -380,6 +381,10 @@ class Message(Base):
     sent_by = Column(String(20), nullable=True)
     # Identificador da mensagem no canal de origem (no WhatsApp, o `wamid`).
     external_id = Column(String(128), nullable=True)
+    # Só no WhatsApp: a Meta recusou o envio desta mensagem de saída (ex.:
+    # erro 131042, falta de forma de pagamento). O painel mostra "não
+    # entregue".
+    delivery_failed = Column(Boolean, nullable=False, default=False, server_default=text("false"))
     created_at = Column(DateTime(timezone=True), default=_now)
 
     conversation = relationship("Conversation", back_populates="messages")
@@ -478,10 +483,17 @@ class Appointment(Base):
     # Se a mensagem de confirmação ou recusa chegou à pessoa. Falso quando
     # a janela de 24h do WhatsApp já fechou ou o envio falhou.
     contact_notified = Column(Boolean, nullable=True)
+    # Remarcar e cancelar como pedido (Pedro, 12/10/2026). No pedido de
+    # troca, a sessão que ele substitui quando a profissional confirmar.
+    replaces_id = Column(UUID(as_uuid=False), ForeignKey("appointments.id", ondelete="SET NULL"), nullable=True)
+    # A pessoa pediu para cancelar esta sessão confirmada e a profissional
+    # ainda não decidiu. Até lá a sessão continua de pé.
+    cancel_requested_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     conversation = relationship("Conversation", back_populates="appointments")
     professional = relationship("Professional", back_populates="appointments")
+    replaces = relationship("Appointment", remote_side=[id])
 
 
 # ---------------------------------------------------------------------------
@@ -493,7 +505,7 @@ class User(Base):
     """Quem entra no painel, identificado pela conta Google.
 
     Separado de `Professional` porque são coisas diferentes: a conta é
-    quem faz login; a profissional é o consultório que a MarIA atende.
+    quem faz login; a profissional é o consultório que a SelenIA atende.
     No MVP é uma para uma, e `professional_id` fica nulo até o cadastro
     ser concluído. Não há senha: quem prova a identidade é o Google.
     """
@@ -540,3 +552,32 @@ class UserSession(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
 
     user = relationship("User", back_populates="sessions")
+
+
+class LlmUsage(Base):
+    """Tokens de uma chamada ao modelo, para medir o custo de verdade.
+
+    Uma linha por chamada (cada rodada de ferramenta é uma chamada). Só
+    números: nunca o texto enviado ou recebido. A linha continua quando
+    a conversa é apagada pela retenção (`conversation_id` vira nulo),
+    para o custo do mês não sumir junto.
+    """
+
+    __tablename__ = "llm_usage"
+    __table_args__ = (Index("ix_uso_profissional_data", "professional_id", "created_at"),)
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
+    professional_id = Column(
+        UUID(as_uuid=False), ForeignKey("professionals.id", ondelete="CASCADE"), nullable=False
+    )
+    conversation_id = Column(
+        UUID(as_uuid=False), ForeignKey("conversations.id", ondelete="SET NULL"), nullable=True
+    )
+    # "reply" (resposta da SelenIA) ou "triage" (camada 2 da triagem).
+    purpose = Column(String(20), nullable=False)
+    model = Column(String(64), nullable=False)
+    input_tokens = Column(Integer, nullable=False, default=0)
+    output_tokens = Column(Integer, nullable=False, default=0)
+    cache_read_tokens = Column(Integer, nullable=False, default=0)
+    cache_write_tokens = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=_now)

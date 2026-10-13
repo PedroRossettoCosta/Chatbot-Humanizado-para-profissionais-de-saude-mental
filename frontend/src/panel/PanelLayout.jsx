@@ -80,7 +80,7 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
   const refreshAppointmentCount = useCallback(() => {
     api
       .listAppointments(professional.slug)
-      .then((list) => setPendingAppointments(list.filter((a) => a.status === "tentative").length))
+      .then((list) => setPendingAppointments(list.filter((a) => a.awaiting_decision).length))
       .catch(() => {});
   }, [professional.slug]);
   useEffect(() => {
@@ -155,7 +155,7 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
       </nav>
 
       <div className="mt-auto rounded-2xl bg-[#eff4ff] p-4">
-        <p className="m-0 text-sm font-semibold text-ink">Testar a MarIA</p>
+        <p className="m-0 text-sm font-semibold text-ink">Testar a SelenIA</p>
         <p className="m-0 mt-1 text-sm text-muted">Converse como se fosse uma pessoa procurando atendimento.</p>
         <button
           type="button"
@@ -165,7 +165,7 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
           Simular fluxo →
         </button>
       </div>
-      <p className="m-0 mt-4 px-2 text-xs text-muted">© MarIA</p>
+      <p className="m-0 mt-4 px-2 text-xs text-muted">© SelenIA</p>
     </aside>
   );
 

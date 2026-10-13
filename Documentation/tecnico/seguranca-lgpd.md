@@ -1,6 +1,6 @@
 # Segurança e LGPD
 
-O MarIA lida com dados sensíveis: mensagens de pessoas em sofrimento
+O SelenIA lida com dados sensíveis: mensagens de pessoas em sofrimento
 emocional procurando atendimento psicológico. Este documento reúne as
 proteções implementadas, o protocolo de risco e o que ainda falta.
 
@@ -26,7 +26,7 @@ na entrevista de protocolo com a profissional:
 
 O texto público está em [politica-de-privacidade.md](../politica-de-privacidade.md)
 e publicado num repositório público separado
-(<https://github.com/PedroRossettoCosta/MarIA-Privacidade/blob/main/politica-de-privacidade.md>),
+(<https://github.com/PedroRossettoCosta/SelenIA-Privacidade/blob/main/politica-de-privacidade.md>),
 porque este repositório é privado e tem materiais da Marília. É o link
 cadastrado na Meta para publicar o app. Mudou o tratamento de dados?
 Atualize os dois arquivos juntos.
@@ -170,6 +170,28 @@ Ela pediu esse registro para poder avaliar depois se o sistema
 classificou corretamente — é insumo do ajuste do protocolo, e também dos
 resultados do TCC.
 
+### Quem está com o celular da pessoa
+
+A identidade no WhatsApp é o número: quem tem o celular na mão "é" a
+pessoa. Para o caso levantado no feedback de 30/09 (um parceiro que pega
+o celular para desmarcar a sessão), remarcar e cancelar uma sessão
+confirmada nunca acontecem sozinhos: viram pedido que a profissional
+confirma no painel, e até lá a sessão continua marcada. A SelenIA também
+não revela nada que já não esteja na própria conversa. Confirmação por
+e-mail foi descartada como solução única (o e-mail costuma estar no
+mesmo celular); uma palavra-chave combinada fica como trabalho futuro.
+
+### Limite por contato
+
+Acima de 50 mensagens na última hora, a mesma pessoa deixa de acionar
+os modelos pagos: só a camada 1 da triagem roda (um sinal explícito de
+risco continua gerando alerta e mensagem de emergência), ela recebe um
+aviso fixo com os números de emergência, e a conversa é marcada para a
+profissional. Cada pessoa também pode ter no máximo 4 pedidos de
+horário pendentes, para ninguém segurar a agenda. Os dois limites
+contam por contato, nunca pela conta inteira. Ver
+[limites por contato](../funcionalidades/limites-por-contato.md).
+
 ### Falha fechada
 
 Se a classificação falhar (erro de rede, tempo esgotado, resposta
@@ -202,7 +224,7 @@ vazaria para um terceiro.
 ## 7. Acesso ao painel
 
 - **Login com Google** ([detalhes](../funcionalidades/login-com-google.md)):
-  a MarIA não guarda senha; o backend confere a assinatura do token do
+  a SelenIA não guarda senha; o backend confere a assinatura do token do
   Google e se o e-mail está verificado.
 - **Só convidados** (`ALLOWED_EMAILS`), conferido também a cada
   requisição: tirar alguém da lista corta o acesso na hora.
@@ -220,19 +242,19 @@ identificador do Google.
 - **Leitura mínima:** só livre/ocupado (`calendar.freebusy`). Título,
   descrição e participantes dos eventos (que podem ter nome de
   paciente) não chegam ao sistema, nem ao modelo.
-- **Escrita só nos eventos da MarIA:** com `calendar.events`, o código
+- **Escrita só nos eventos da SelenIA:** com `calendar.events`, o código
   só cria, altera e apaga eventos cujo id está em
   `appointments.calendar_event_id`.
 - **Nome e telefone do paciente no Google** (decisão do Pedro,
   28/09/2026): o evento do pedido de horário leva o nome dado na
   conversa e o telefone. Esses dados ficam no Google Agenda da
-  profissional, fora da retenção da MarIA; precisa constar na política
+  profissional, fora da retenção da SelenIA; precisa constar na política
   de privacidade.
 - **Duas pessoas no mesmo horário:** trava por profissional no banco e
   índice único; ver [agenda](../funcionalidades/agenda.md).
 - **Calendário do painel:** mostra à profissional os títulos dos
   eventos dela, lidos do Google a cada abertura; nada é gravado, logado
-  ou enviado à MarIA.
+  ou enviado à SelenIA.
 - O acesso de longa duração fica **cifrado** no banco. Desconectar
   revoga a permissão no Google e apaga a linha.
 - Para a Claude vão só horários livres, calculados no backend. Os
@@ -250,7 +272,9 @@ Antes de qualquer paciente real usar o sistema:
 - [ ] Texto do aviso de IA aprovado por ela
 - [x] Login protegendo as rotas de gestão (27/09)
 - [x] Assinatura do webhook validada (27/09; senão qualquer um injeta mensagem)
-- [ ] Limite de requisições por contato
+- [x] Limite por contato (12/10): 50 mensagens por hora e 4 pedidos de
+      horário pendentes por pessoa ([limites por contato](../funcionalidades/limites-por-contato.md))
 - [ ] Política de privacidade e termos publicados
-- [ ] Backup do banco, com restauração testada
+- [x] Backup do banco, com restauração testada (12/10, `scripts/backup.py`;
+      o arquivo leva as conversas cifradas, sem a chave)
 - [ ] Retenção automatizada

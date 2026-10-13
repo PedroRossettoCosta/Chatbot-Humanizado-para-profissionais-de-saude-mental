@@ -1,5 +1,5 @@
 """Agenda: horários livres, horário de atendimento, conexão com o Google
-e a ferramenta que a MarIA usa na conversa.
+e a ferramenta que a SelenIA usa na conversa.
 
 Nenhum teste fala com o Google: a troca do código, a verificação da conta,
 a revogação e o livre/ocupado são substituídos.
@@ -200,7 +200,7 @@ def test_free_slots_preview_needs_a_connection(client, professional, google):
 
 
 # ---------------------------------------------------------------------------
-# A MarIA na conversa
+# A SelenIA na conversa
 # ---------------------------------------------------------------------------
 
 

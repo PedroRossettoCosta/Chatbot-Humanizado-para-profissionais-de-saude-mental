@@ -1,4 +1,4 @@
-# MarIA — Conjunto de teste da triagem (v1, 23/09/2026)
+# SelenIA — Conjunto de teste da triagem (v1, 23/09/2026)
 
 Mensagens sintéticas, escritas a partir das 10 categorias de teste que a
 Marília pediu no protocolo de segurança, mais perguntas comuns e

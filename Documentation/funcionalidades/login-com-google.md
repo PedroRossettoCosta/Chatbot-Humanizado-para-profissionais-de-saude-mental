@@ -16,13 +16,13 @@ profissional abria o perfil, os documentos e as conversas dela.
 
 Decisões:
 - **Login com Google, não senha** (Pedro, 26/09/2026). A pessoa não cria
-  mais uma senha, e a MarIA não guarda nenhuma. O Google só informa
+  mais uma senha, e a SelenIA não guarda nenhuma. O Google só informa
   nome, e-mail e foto: não há acesso à agenda nem ao Gmail dela, e por
   isso o login não depende da verificação do Google. A agenda é uma
   permissão separada, pedida só na tela Agenda (desde 28/09/2026, ver
   [agenda](agenda.md)).
 - **Só e-mails convidados** (proposta aceita em 26/09/2026). Sem a
-  lista, qualquer conta Google criaria cadastro e usaria a MarIA.
+  lista, qualquer conta Google criaria cadastro e usaria a SelenIA.
 - **Um botão só.** O protótipo tem "Entrar" e "Cadastrar" separados,
   para a apresentação; no produto, o mesmo botão serve para os dois, e
   o sistema sabe se a conta já tem cadastro.
@@ -90,7 +90,7 @@ Não se aplica: nenhum texto vai para o contato. As mensagens da tela
 | `SESSION_DAYS` | Validade da sessão. Padrão: 7 dias |
 | `SESSION_COOKIE_SECURE` | `true` em produção (HTTPS) |
 
-No Google Cloud (projeto da MarIA), uma vez só: tela de consentimento
+No Google Cloud (projeto da SelenIA), uma vez só: tela de consentimento
 externa em modo **teste**, com os e-mails convidados como usuários de
 teste, e um cliente "Web application" com a origem
 `http://localhost:5173` (em produção, o endereço do painel). Não há

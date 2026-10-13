@@ -40,19 +40,19 @@ _BRASILIA = ZoneInfo("America/Sao_Paulo")
 # Assunto e explicação de cada nível, em linguagem da profissional.
 _LEVEL_TEXT = {
     AlertLevel.EMERGENCY: (
-        "[MarIA] EMERGÊNCIA: possível risco à vida",
+        "[SelenIA] EMERGÊNCIA: possível risco à vida",
         "A triagem identificou um possível risco à vida. A pessoa recebeu a "
-        "mensagem fixa de emergência (SAMU 192, CVV 188) e a MarIA parou de "
+        "mensagem fixa de emergência (SAMU 192, CVV 188) e a SelenIA parou de "
         "responder nessa conversa até você liberar pelo painel.",
     ),
     AlertLevel.POSSIBLE_RISK: (
-        "[MarIA] Alerta: dúvida sobre segurança",
+        "[SelenIA] Alerta: dúvida sobre segurança",
         "A triagem encontrou uma referência a morte ou risco com intenção "
-        "incerta. A MarIA continua a conversa normalmente; vale você olhar.",
+        "incerta. A SelenIA continua a conversa normalmente; vale você olhar.",
     ),
     AlertLevel.BOT_REFUSED: (
-        "[MarIA] Uma pessoa quer falar com você",
-        "A pessoa disse que não quer conversar com um bot. A MarIA parou de "
+        "[SelenIA] Uma pessoa quer falar com você",
+        "A pessoa disse que não quer conversar com um bot. A SelenIA parou de "
         "responder nessa conversa e avisou que você responde pessoalmente.",
     ),
 }
@@ -80,7 +80,7 @@ def _compose(professional, subject, explanation, when, channel) -> EmailMessage:
         f"Canal: {channel}\n\n"
         f"Abra o painel para ver a conversa: {settings.frontend_url}\n\n"
         "Por segurança, este e-mail não traz o conteúdo da conversa.\n"
-        "— MarIA"
+        "— SelenIA"
     )
     return message
 
@@ -134,9 +134,9 @@ def notify_alert(alert_id: str) -> None:
         db.close()
 
 
-HUMAN_REQUEST_SUBJECT = "[MarIA] Uma pessoa pediu para falar com você"
+HUMAN_REQUEST_SUBJECT = "[SelenIA] Uma pessoa pediu para falar com você"
 HUMAN_REQUEST_TEXT = (
-    "Uma pessoa pediu para falar com você. A MarIA avisou que você responde "
+    "Uma pessoa pediu para falar com você. A SelenIA avisou que você responde "
     "por este canal, e a conversa está marcada como \"Aguardando você\" no painel."
 )
 
@@ -174,15 +174,26 @@ def notify_human_request(conversation_id: str) -> None:
         db.close()
 
 
-APPOINTMENT_REQUEST_SUBJECT = "[MarIA] Um horário aguarda sua confirmação"
+APPOINTMENT_REQUEST_SUBJECT = "[SelenIA] Um horário aguarda sua confirmação"
 APPOINTMENT_REQUEST_TEXT = (
-    "Uma pessoa pediu uma sessão e a MarIA reservou o horário provisoriamente na "
+    "Uma pessoa pediu uma sessão e a SelenIA reservou o horário provisoriamente na "
     "sua agenda: {slot}. Confirme ou recuse na tela Agenda do painel. Sem decisão "
     "em 24 horas, o horário é liberado."
 )
-APPOINTMENT_EXPIRED_SUBJECT = "[MarIA] Um horário provisório foi liberado"
+RESCHEDULE_REQUEST_SUBJECT = "[SelenIA] Um pedido de troca de horário aguarda você"
+RESCHEDULE_REQUEST_TEXT = (
+    "Uma pessoa pediu para trocar a sessão dela, e a SelenIA reservou o novo horário provisoriamente: "
+    "{slot}. A sessão antiga continua marcada até você decidir. Confirme ou recuse na tela Agenda do "
+    "painel. Sem decisão em 24 horas, o novo horário é liberado e a sessão antiga continua."
+)
+CANCEL_REQUEST_SUBJECT = "[SelenIA] Um pedido de cancelamento aguarda você"
+CANCEL_REQUEST_TEXT = (
+    "Uma pessoa pediu para cancelar a sessão de {slot}. A sessão continua marcada até você confirmar "
+    "o cancelamento na tela Agenda do painel."
+)
+APPOINTMENT_EXPIRED_SUBJECT = "[SelenIA] Um horário provisório foi liberado"
 APPOINTMENT_EXPIRED_TEXT = (
-    "O pedido de sessão para {slot} ficou 24 horas sem confirmação, e a MarIA tirou "
+    "O pedido de sessão para {slot} ficou 24 horas sem confirmação, e a SelenIA tirou "
     "o horário provisório da sua agenda. A pessoa não foi avisada; a conversa está no painel."
 )
 
@@ -215,7 +226,21 @@ def _notify_appointment(appointment_id: str, subject: str, text: str, when_field
 
 
 def notify_appointment_request(appointment_id: str) -> None:
-    _notify_appointment(appointment_id, APPOINTMENT_REQUEST_SUBJECT, APPOINTMENT_REQUEST_TEXT, "created_at")
+    """Pedido novo, de troca ou de cancelamento: o e-mail diz qual."""
+    db = SessionLocal()
+    try:
+        appointment = db.get(models.Appointment, appointment_id)
+        kind = None
+        if appointment is not None:
+            kind = "cancel" if appointment.cancel_requested_at else "reschedule" if appointment.replaces_id else None
+    finally:
+        db.close()
+    if kind == "cancel":
+        _notify_appointment(appointment_id, CANCEL_REQUEST_SUBJECT, CANCEL_REQUEST_TEXT, "cancel_requested_at")
+    elif kind == "reschedule":
+        _notify_appointment(appointment_id, RESCHEDULE_REQUEST_SUBJECT, RESCHEDULE_REQUEST_TEXT, "created_at")
+    else:
+        _notify_appointment(appointment_id, APPOINTMENT_REQUEST_SUBJECT, APPOINTMENT_REQUEST_TEXT, "created_at")
 
 
 def notify_appointment_expired(appointment_id: str) -> None:

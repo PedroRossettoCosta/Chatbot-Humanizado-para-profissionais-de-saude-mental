@@ -4,9 +4,9 @@
 
 ## O que é
 
-Onde a profissional configura a MarIA e acompanha o atendimento, depois
+Onde a profissional configura a SelenIA e acompanha o atendimento, depois
 do login e do cadastro. Tem um menu lateral, uma barra no topo com o
-botão "Em consulta" e o simulador "Testar a MarIA", que abre por cima
+botão "Em consulta" e o simulador "Testar a SelenIA", que abre por cima
 de qualquer tela.
 
 ## Por que existe
@@ -36,12 +36,12 @@ vieram primeiro, para ele testar antes das que dependem de backend novo
   do aceite, em "Ver regras".
 - **Base de conhecimento** (`/base-de-conhecimento`): ver
   [Base de conhecimento](base-de-conhecimento.md).
-- **Testar a MarIA** (menu, "Simular fluxo" ou o botão nas telas): um
+- **Testar a SelenIA** (menu, "Simular fluxo" ou o botão nas telas): um
   painel à direita com uma conversa de teste. Embaixo de cada resposta,
   etiquetas mostram o que aconteceu: nível da triagem, alerta criado,
-  pedido para falar com a profissional, MarIA pausada e os documentos
+  pedido para falar com a profissional, SelenIA pausada e os documentos
   usados. Na conversa de teste também dá para **assumir**, **responder
-  como a profissional** e **devolver para a MarIA** (ou liberar depois
+  como a profissional** e **devolver para a SelenIA** (ou liberar depois
   de uma emergência). Fechar o painel não apaga a conversa; "Nova
   conversa" começa outra.
 

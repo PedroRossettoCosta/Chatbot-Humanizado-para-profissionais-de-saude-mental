@@ -1,6 +1,6 @@
 # Modelo de dados
 
-As tabelas do MarIA, o que cada uma guarda e por quê. O código vive em
+As tabelas do SelenIA, o que cada uma guarda e por quê. O código vive em
 [`backend/app/models.py`](../../backend/app/models.py).
 
 ---
@@ -21,7 +21,9 @@ Professional ──┬── Document          documentos da base de conheciment
                │           │     └── SafetyAlertEvent   trilha de auditoria
                │           └── Appointment       pré-agendamento
                │
-               └── Conversation      (atalho para listar por profissional)
+               ├── Conversation      (atalho para listar por profissional)
+               │
+               └── LlmUsage          tokens de cada chamada ao modelo
 ```
 
 Convenções usadas em todas as tabelas:
@@ -50,22 +52,22 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `slug` | texto, único | Identificador legível (`marilia`), usado nas rotas |
 | `name` | texto | Nome exibido ao paciente |
 | `voice_tone` | texto | Instrução de tom, injetada no prompt |
-| `audience_description` | texto, opcional | Especialidade e público. Vai sempre no prompt de resposta (para a MarIA apresentar a profissional) e calibra a triagem |
+| `audience_description` | texto, opcional | Especialidade e público. Vai sempre no prompt de resposta (para a SelenIA apresentar a profissional) e calibra a triagem |
 | `service_info` | texto, opcional | Atendimento e valores. Sempre no prompt, porque o preço é respondido na primeira pergunta |
 | `voice_examples` | JSON, opcional | Resposta boa e ruim para cada uma das 3 perguntas fixas (`services/guidelines.py`) |
 | `extra_never_say` | JSON, opcional | Itens de "nunca dizer" da profissional, somados aos fixos do produto |
-| `calendar_id` | texto, opcional | Reservado para o pré-agendamento. Hoje a MarIA lê a agenda principal da conta conectada (ver `CalendarConnection`) |
+| `calendar_id` | texto, opcional | Reservado para o pré-agendamento. Hoje a SelenIA lê a agenda principal da conta conectada (ver `CalendarConnection`) |
 | `alert_email` | texto, opcional | Onde ela recebe os alertas por e-mail. Quem envia é a conta do produto (SMTP no `.env`) |
 | `in_session_since` | data, opcional | Botão "Em consulta" ligado desde. Nulo = desligado |
 | `in_session_until` | data, opcional | Fim automático do "Em consulta". Nulo com `in_session_since` preenchido = até ela desligar |
-| `pronouns` | texto, opcional | Como a MarIA fala dela com o paciente: `feminine`, `masculine` ou `neutral` (`guidelines.PRONOUNS`). Nulo = neutro |
+| `pronouns` | texto, opcional | Como a SelenIA fala dela com o paciente: `feminine`, `masculine` ou `neutral` (`guidelines.PRONOUNS`). Nulo = neutro |
 | `session_minutes` | inteiro, opcional | Duração da sessão (15 a 240). A agenda usa para montar os horários |
-| `max_sessions_per_day` | inteiro, opcional | Quantas sessões por dia a MarIA pode deixar marcadas (1 a 20). Nulo = sem limite |
+| `max_sessions_per_day` | inteiro, opcional | Quantas sessões por dia a SelenIA pode deixar marcadas (1 a 20). Nulo = sem limite |
 | `working_hours` | JSON, opcional | Dias e horários em que atende, no fuso `AGENDA_TIMEZONE`: `{"mon": [{"start": "10:00", "end": "16:00"}], ...}`, até 3 intervalos por dia. Dia ausente ou vazio = não atende |
 | `onboarding_step` | inteiro, opcional | Etapa do cadastro alcançada (1 a 7), para voltar de onde parou |
-| `rules_accepted_at` | data, opcional | Quando ela leu e aceitou as regras fixas da MarIA |
+| `rules_accepted_at` | data, opcional | Quando ela leu e aceitou as regras fixas da SelenIA |
 | `onboarding_completed_at` | data, opcional | Cadastro concluído. Nulo = o painel mostra o cadastro |
-| `whatsapp_phone_number_id` | texto, único, opcional | "Phone number ID" da Meta do número da MarIA desta profissional. O webhook encontra a profissional por ele |
+| `whatsapp_phone_number_id` | texto, único, opcional | "Phone number ID" da Meta do número da SelenIA desta profissional. O webhook encontra a profissional por ele |
 | `created_at` | data | |
 
 `calendar_id` fica por profissional para que cada uma exponha só a
@@ -152,7 +154,7 @@ profissional pediu explicitamente que ele continuasse.
 
 `awaiting_reply_since` também fica fora do estado: com "Em consulta"
 ligado, a pessoa que pediu a profissional continua sendo atendida pela
-MarIA (`active`), mas está esperando por ela. É uma data, e não um
+SelenIA (`active`), mas está esperando por ela. É uma data, e não um
 booleano, para a tela mostrar desde quando.
 
 `contact_type` existe porque a profissional pediu retenção diferente
@@ -171,7 +173,8 @@ Cada mensagem trocada. O conteúdo é sempre cifrado em repouso.
 | `role` | texto | `user` ou `assistant` |
 | `content` | **cifrado** | |
 | `sent_by` | texto, opcional | `bot`, `professional` ou `system` |
-| `external_id` | texto, único, opcional | Id da mensagem no canal de origem |
+| `external_id` | texto, único, opcional | Id da mensagem no canal de origem. Nas mensagens de saída pelo WhatsApp, o id que a Meta devolveu ao aceitar o envio |
+| `delivery_failed` | booleano | A Meta recusou o envio desta mensagem de saída. O painel mostra "Não entregue". Migração `5c2d8e1f7a40` |
 | `created_at` | data | |
 
 `role` usa o mesmo vocabulário da API da Claude, então o histórico é
@@ -257,7 +260,7 @@ depois se o sistema classificou certo.
 
 ## Appointment
 
-Um pedido de horário reservado pela MarIA e espelhado no Google Agenda
+Um pedido de horário reservado pela SelenIA e espelhado no Google Agenda
 ([agenda](../funcionalidades/agenda.md)).
 
 | Campo | Tipo | Observação |
@@ -267,13 +270,15 @@ Um pedido de horário reservado pela MarIA e espelhado no Google Agenda
 | `conversation_id` | UUID, opcional | Nulo quando a profissional marcou pelo painel |
 | `source` | texto | `maria` (pedido na conversa) ou `panel` (marcado pela profissional no calendário) |
 | `calendar_id` | texto, opcional | Agenda onde o evento foi criado (hoje sempre `primary`) |
-| `calendar_event_id` | texto, opcional | Id do evento no Google. A MarIA só altera ou apaga eventos com id aqui |
+| `calendar_event_id` | texto, opcional | Id do evento no Google. A SelenIA só altera ou apaga eventos com id aqui |
 | `starts_at` / `ends_at` | data | |
 | `status` | texto | `tentative` (aguardando), `confirmed`, `rejected`, `expired` (24h sem decisão) ou `cancelled` (a mesma pessoa escolheu outro horário) |
 | `patient_name` | texto **cifrado**, opcional | Nome que a pessoa deu na conversa |
 | `expires_at` | data, opcional | Fim da reserva provisória (24h depois do pedido) |
 | `decided_at` | data, opcional | Quando foi confirmado, recusado, expirou ou foi cancelado |
 | `contact_notified` | booleano, opcional | Se o texto fixo da decisão chegou à pessoa (falso com a janela do WhatsApp fechada) |
+| `replaces_id` | FK para `appointments`, opcional | No pedido de troca: a sessão que sai quando a profissional confirmar. Migração `8b3f6a2d9c15` |
+| `cancel_requested_at` | data, opcional | A pessoa pediu para cancelar esta sessão confirmada; vale só quando a profissional confirmar |
 | `created_at` | data | |
 
 O índice único parcial `uq_appointment_active_slot` (`professional_id`,
@@ -309,7 +314,7 @@ guardado: os horários ocupados são lidos a cada consulta e descartados.
 
 Quem entra no painel, identificado pela conta Google. Separado de
 `Professional` porque são coisas diferentes: a conta é quem faz login;
-a profissional é o consultório que a MarIA atende. No MVP é uma para
+a profissional é o consultório que a SelenIA atende. No MVP é uma para
 uma, e um dia pode haver mais de uma pessoa por consultório.
 
 | Campo | Tipo | Observação |
@@ -339,6 +344,29 @@ aparece.
 
 ---
 
+## LlmUsage
+
+Tokens de uma chamada ao modelo (`llm_usage`), para medir o custo real
+(feedback de 30/09/2026). Uma linha por chamada: cada rodada de
+ferramenta da resposta conta como uma chamada. **Só números**, nunca o
+texto enviado ou recebido.
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `professional_id` | FK | Apagada junto com a profissional |
+| `conversation_id` | FK, nulo | Vira nulo quando a retenção apaga a conversa: o custo do mês não some |
+| `purpose` | texto | `reply` (resposta) ou `triage` (camada 2 da triagem) |
+| `model` | texto | Modelo usado, para aplicar o preço certo |
+| `input_tokens` | inteiro | Entrada sem cache |
+| `output_tokens` | inteiro | Saída (inclui o raciocínio do modelo) |
+| `cache_read_tokens` | inteiro | Entrada lida do cache (10% do preço) |
+| `cache_write_tokens` | inteiro | Entrada gravada no cache (125% do preço) |
+
+O resumo em dólar e reais sai por `scripts/custo.py`. Migração
+`1e7a4c9b3d62`.
+
+---
+
 ## O que este modelo ainda não cobre
 
 Campos específicos do WhatsApp, revistos em 27/09/2026 com o webhook:
@@ -347,5 +375,6 @@ Campos específicos do WhatsApp, revistos em 27/09/2026 com o webhook:
   `professionals.whatsapp_phone_number_id`.
 - **Tipo da mensagem:** sem campo próprio. O que não é texto fica
   gravado como "[Áudio]", "[Imagem]" etc., que é o que o painel mostra.
-- **Situação de entrega** (entregue, lida, falhou): fora do MVP. Uma
-  falha de envio só vai para o log.
+- **Situação de entrega:** desde 13/10/2026, a recusa da Meta no envio
+  fica em `messages.delivery_failed`. Entregue e lida continuam fora do
+  MVP.

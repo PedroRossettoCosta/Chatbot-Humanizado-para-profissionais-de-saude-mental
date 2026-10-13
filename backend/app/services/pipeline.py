@@ -5,7 +5,7 @@ diferentes:
 
 1. `receive`: grava a mensagem e roda a **triagem na hora**. Emergência
    sai daqui, sem esperar nada.
-2. `reply`: a resposta normal (handoff ou MarIA). No simulador vem logo
+2. `reply`: a resposta normal (handoff ou SelenIA). No simulador vem logo
    em seguida; no WhatsApp, depois da espera que junta mensagens
    quebradas (`services/whatsapp_inbox.py`).
 
@@ -19,8 +19,9 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from app import models
+from app.config import settings
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
-from app.services import appointments, calendar, conversations, guidelines, handoff, llm, rag, triage
+from app.services import appointments, calendar, conversations, guidelines, handoff, llm, rag, triage, usage
 
 HISTORY_LIMIT = 12
 
@@ -38,6 +39,17 @@ AI_DISCLAIMER_TEMPLATE = (
     "pessoa e não substituo consulta ou atendimento clínico."
 )
 
+# Texto fixo de quando a pessoa passa do limite de mensagens por hora
+# (`settings.contact_messages_per_hour`). Sai uma vez, na primeira
+# mensagem acima do limite; depois disso a SelenIA fica em silêncio até a
+# conta da última hora baixar. Como a resposta para, o texto lembra dos
+# números de emergência. Precisa da aprovação da Marília.
+RATE_LIMIT_TEMPLATE = (
+    "Recebi muitas mensagens seguidas e vou pausar minhas respostas por um tempo. "
+    "Suas mensagens continuam registradas para {name}. Se for uma emergência, "
+    "ligue para o SAMU (192) ou para o CVV (188)."
+)
+
 
 @dataclass
 class Received:
@@ -48,6 +60,11 @@ class Received:
     disclaimer: str | None = None
     triage_level: str = "normal"
     alert_id: str | None = None
+    # A pessoa passou do limite de mensagens por hora: o modelo não é
+    # chamado (nem a camada 2 da triagem, nem a resposta).
+    rate_limited: bool = False
+    # O texto do limite, só na mensagem em que ele foi enviado.
+    limit_notice: str | None = None
 
     @property
     def emergency(self) -> bool:
@@ -61,7 +78,7 @@ class Reply:
     alert_id: str | None = None
     # Mandar o e-mail "uma pessoa pediu para falar com você".
     notify_request: bool = False
-    # Pedido de horário que a MarIA reservou nesta resposta (e-mail para
+    # Pedido de horário que a SelenIA reservou nesta resposta (e-mail para
     # a profissional confirmar).
     appointment_id: str | None = None
     sources: list[str] = field(default_factory=list)
@@ -99,16 +116,51 @@ def receive(
         db, conversation, MessageRole.USER, text, external_id=external_message_id
     )
     result = Received(conversation=conversation, message=message, immediate=immediate, disclaimer=disclaimer)
-    if not run_triage:
-        return result
+    sent_last_hour = conversations.contact_messages_last_hour(db, conversation)
+    result.rate_limited = sent_last_hour > settings.contact_messages_per_hour
+    if run_triage:
+        _triage(db, professional, conversation, message, text, result)
 
+    # Primeira mensagem acima do limite: avisa a pessoa uma vez e marca a
+    # conversa para a profissional. Com a conversa em espera de
+    # emergência ou com a profissional, o aviso não sai.
+    first_over = sent_last_hour == settings.contact_messages_per_hour + 1
+    if first_over and conversation.state == ConversationState.ACTIVE:
+        notice = RATE_LIMIT_TEMPLATE.format(name=professional.name)
+        conversations.record_message(db, conversation, MessageRole.ASSISTANT, notice, sent_by=SentBy.SYSTEM)
+        conversations.mark_needs_attention(db, conversation)
+        result.immediate.append(notice)
+        result.limit_notice = notice
+    return result
+
+
+def _triage(
+    db: Session,
+    professional: models.Professional,
+    conversation: models.Conversation,
+    message: models.Message,
+    text: str,
+    result: Received,
+) -> None:
+    """Roda a triagem e aplica o resultado (alerta, marcação, emergência).
+
+    Acima do limite de mensagens por hora só roda a camada 1 (regras,
+    sem custo): um sinal explícito de risco nunca passa sem alerta, mas
+    quem manda mensagens sem parar não gera uma chamada paga por
+    mensagem.
+    """
     # A camada 2 lê só as últimas mensagens da conversa dentro da mesma
     # janela da camada 1: com o histórico inteiro, uma emergência de meia
     # hora antes fazia um pedido de horário virar emergência (caso real,
     # 30/09/2026, decisão do Pedro).
     history = conversations.recent_history_within(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
     recent = conversations.recent_contact_texts(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
-    risk = triage.assess(text, history, professional.audience_description, previous=recent[:-1])
+    if result.rate_limited:
+        risk = triage.check_rules(text, previous=recent[:-1])
+    else:
+        with llm.collect_usage() as calls:
+            risk = triage.assess(text, history, professional.audience_description, previous=recent[:-1])
+        usage.record(db, conversation, calls)
     if risk:
         result.triage_level = risk.level
     if risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK):
@@ -123,7 +175,6 @@ def receive(
             db, conversation, MessageRole.ASSISTANT, triage.EMERGENCY_MESSAGE, sent_by=SentBy.SYSTEM
         )
         result.immediate.append(triage.EMERGENCY_MESSAGE)
-    return result
 
 
 def _reply_history(db: Session, conversation: models.Conversation) -> list[dict]:
@@ -132,7 +183,7 @@ def _reply_history(db: Session, conversation: models.Conversation) -> list[dict]
     A resposta lê as últimas mensagens para não perder o fio da conversa
     (nome, o que já foi perguntado). Mas a mensagem de risco e o texto de
     emergência de mais de `FRAGMENT_WINDOW` atrás ficam de fora: a
-    triagem já tratou disso, e com eles a MarIA voltava a falar em
+    triagem já tratou disso, e com eles a SelenIA voltava a falar em
     suicídio num pedido de horário meia hora depois (caso real,
     30/09/2026, decisão do Pedro). Dentro da janela, ficam.
     """
@@ -174,6 +225,11 @@ def reply(
     db.refresh(conversation)
     if conversation.state in (ConversationState.HUMAN, ConversationState.EMERGENCY_HOLD):
         return Reply()
+    # Acima do limite de mensagens por hora, a SelenIA não responde (o
+    # aviso já saiu em `receive`). Volta sozinha quando a conta da última
+    # hora baixa.
+    if conversations.contact_messages_last_hour(db, conversation) > settings.contact_messages_per_hour:
+        return Reply()
 
     # Recusa do bot ou pedido para falar com a profissional: texto fixo,
     # sem passar pelo modelo. Ver `services/handoff.py` (inclui o botão
@@ -211,16 +267,26 @@ def reply(
                 booking = appointments.request(
                     db, professional, conversation, tool_input.get("codigo", ""), tool_input.get("nome", "")
                 )
-                if booking.appointment_id:
-                    booked.append(booking.appointment_id)
-                return booking.text
-            return calendar.describe_for_assistant(
-                professional, pending=appointments.pending_note(db, conversation)
-            )
+            elif name == llm.RESCHEDULE_TOOL["name"]:
+                booking = appointments.request_reschedule(
+                    db, professional, conversation, tool_input.get("sessao_atual", ""), tool_input.get("novo_codigo", "")
+                )
+            elif name == llm.CANCEL_TOOL["name"]:
+                booking = appointments.request_cancel(db, professional, conversation, tool_input.get("sessao", ""))
+            else:
+                return calendar.describe_for_assistant(
+                    professional, pending=appointments.pending_note(db, conversation)
+                )
+            if booking.appointment_id:
+                booked.append(booking.appointment_id)
+            return booking.text
 
-        agenda_tools = [llm.AGENDA_TOOL] + ([llm.BOOKING_TOOL] if calendar.can_book(professional) else [])
+        booking_tools = [llm.BOOKING_TOOL, llm.RESCHEDULE_TOOL, llm.CANCEL_TOOL]
+        agenda_tools = [llm.AGENDA_TOOL] + (booking_tools if calendar.can_book(professional) else [])
         tools = dict(tools=agenda_tools, run_tool=run_tool)
-    reply_text = llm.generate_reply(system_prompt, history, **tools)
+    with llm.collect_usage() as calls:
+        reply_text = llm.generate_reply(system_prompt, history, **tools)
+    usage.record(db, conversation, calls)
     conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply_text, sent_by=SentBy.BOT)
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
     return Reply(text=reply_text, sources=sources, appointment_id=booked[-1] if booked else None)

@@ -1,10 +1,10 @@
-# Perfil e regras da MarIA
+# Perfil e regras da SelenIA
 
 > Situação: funcionando. Última atualização: 25/09/2026.
 
 ## O que é
 
-O que define **como** a MarIA conversa com os contatos de uma
+O que define **como** a SelenIA conversa com os contatos de uma
 profissional. Tem duas partes:
 
 - **Perfil da profissional**, que ela preenche no painel: especialidade,
@@ -23,13 +23,13 @@ permite que cada profissional ajuste o estilo sem conseguir afrouxar os
 limites de segurança.
 
 Decisões:
-- **MarIA** é o nome do produto e da assistente em todas as contas; ela
+- **SelenIA** é o nome do produto e da assistente em todas as contas; ela
   se apresenta como assistente virtual e fala da profissional em
   terceira pessoa (Pedro, 23/09/2026).
 - **Preço na primeira resposta**: valor, como funciona e convite para o
   próximo passo; nunca condicionar o preço a a pessoa contar a própria
   história (Marília, 23/09/2026).
-- **Duas regras fixas contra abuso** (Pedro, 24/09/2026): a MarIA não
+- **Duas regras fixas contra abuso** (Pedro, 24/09/2026): a SelenIA não
   responde assuntos fora do atendimento e não muda de papel nem revela
   as instruções a pedido da conversa. Motivo: impedir o uso como IA de
   graça (gastando a chave da API) e a tentativa de mudar as regras pela
@@ -46,10 +46,10 @@ editado depois em **Perfil do atendimento**, no [painel](painel.md):
 4. **Tom de voz**: descrição livre.
 5. **Exemplos de resposta**: para cada uma das três perguntas fixas,
    uma resposta boa e uma ruim.
-6. **O que a MarIA nunca diz**: a lista fixa aparece em "Ver regras";
+6. **O que a SelenIA nunca diz**: a lista fixa aparece em "Ver regras";
    ela pode acrescentar regras próprias em "Regras extras".
 
-Clique em **Salvar alterações** e teste em **Testar a MarIA**.
+Clique em **Salvar alterações** e teste em **Testar a SelenIA**.
 
 ## Como funciona
 
@@ -87,7 +87,7 @@ painel usa para mostrar a lista fixa), `pages/Profile.jsx`.
 
 O perfil não tem dado de paciente. A parte da profissional entra no
 prompt entre marcas e como dado, para que um documento enviado por ela
-não consiga dar ordens à MarIA.
+não consiga dar ordens à SelenIA.
 
 ## Limitações e pendências
 
@@ -113,7 +113,7 @@ Manual no simulador:
 ## Histórico
 
 - 23/09/2026: perfil de voz, preço na primeira resposta, lista fixa,
-  nome MarIA fixo.
+  nome SelenIA fixo.
 - 24/09/2026: regras fixas contra assuntos fora do atendimento e
   mudança de papel.
 - 25/09/2026: campo "E-mail para alertas" no mesmo formulário.
@@ -123,12 +123,15 @@ Manual no simulador:
   comportamentos em situação de risco (`RISK_BEHAVIORS`), que a
   profissional lê e aceita.
 - 27/09/2026: linguagem neutra de gênero (Pedro): as regras fixas e as
-  telas deixam de dizer "a profissional", e o prompt manda a MarIA
+  telas deixam de dizer "a profissional", e o prompt manda a SelenIA
   falar da profissional sempre pelo nome, sem pronomes nem palavras com
   gênero ("ela", "a doutora").
-- 27/09/2026: a profissional escolhe no cadastro como a MarIA fala
+- 27/09/2026: a profissional escolhe no cadastro como a SelenIA fala
   dela (feminino, masculino ou neutro); o prompt segue essa escolha e o
   neutro vale quando não há escolha (`guidelines.PRONOUNS`).
 - 28/09/2026: a duração da sessão (`session_minutes`) vai sempre no
   prompt, valendo para "sessão", "consulta" ou "atendimento". No teste
-  pelo WhatsApp, a MarIA dizia não saber quanto dura uma consulta.
+  pelo WhatsApp, a SelenIA dizia não saber quanto dura uma consulta.
+- 13/10/2026: a assistente passa a se chamar **SelenIA** (antes MarIA), a
+  pedido do orientador: o governo já usa "MarIA" num chatbot. Muda
+  `guidelines.ASSISTANT_NAME`, o aviso de IA e todas as telas.

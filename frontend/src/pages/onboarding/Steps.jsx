@@ -61,11 +61,11 @@ export function StepData({ professional, me, guidelines, drafts, setDraft, save,
         avisos importantes.
       </StepHeader>
       <div className="mt-8 space-y-6">
-        <Field label="Nome de exibição" required hint="É como a MarIA vai se referir a você nas conversas.">
+        <Field label="Nome de exibição" required hint="É como a SelenIA vai se referir a você nas conversas.">
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required maxLength={255} />
         </Field>
         <Field
-          label="Como a MarIA deve falar de você"
+          label="Como a SelenIA deve falar de você"
           required
           hint="É assim que ela se refere a você nas conversas com as pessoas. Ex.: “Ela atende online”, “Ele atende online” ou, no neutro, só pelo nome."
         >
@@ -131,7 +131,7 @@ export function StepService({ professional, drafts, setDraft, save, goTo, busy, 
   return (
     <form onSubmit={submit}>
       <StepHeader eyebrow="SEU ATENDIMENTO" title="Conte como é o seu atendimento">
-        A MarIA usa estas informações para apresentar você e responder dúvidas práticas. Escreva como você explicaria
+        A SelenIA usa estas informações para apresentar você e responder dúvidas práticas. Escreva como você explicaria
         para alguém que chega pela primeira vez.
       </StepHeader>
       <div className="mt-8 space-y-6">
@@ -147,7 +147,7 @@ export function StepService({ professional, drafts, setDraft, save, goTo, busy, 
         <Field
           label="Informações do serviço"
           required
-          hint="Inclua modalidade, frequência, valor e forma de pagamento. A MarIA informa o valor já na primeira pergunta sobre preço."
+          hint="Inclua modalidade, frequência, valor e forma de pagamento. A SelenIA informa o valor já na primeira pergunta sobre preço."
         >
           <textarea
             className={`${inputClass} min-h-28`}
@@ -204,12 +204,12 @@ export function StepVoice({ professional, guidelines, drafts, setDraft, save, go
 
   return (
     <form onSubmit={submit}>
-      <StepHeader eyebrow="PERSONALIZAÇÃO DO DIÁLOGO" title="Como a MarIA deve soar">
-        A MarIA fala em seu nome, então precisa soar como você. Descreva o tom e mostre como você responderia, e como
+      <StepHeader eyebrow="PERSONALIZAÇÃO DO DIÁLOGO" title="Como a SelenIA deve soar">
+        A SelenIA fala em seu nome, então precisa soar como você. Descreva o tom e mostre como você responderia, e como
         não responderia.
       </StepHeader>
       <div className="mt-6 rounded-2xl bg-primary-soft px-5 py-4 text-sm text-slate">
-        <strong className="text-primary">A resposta ruim ensina tanto quanto a boa:</strong> mostra à MarIA o que evitar.
+        <strong className="text-primary">A resposta ruim ensina tanto quanto a boa:</strong> mostra à SelenIA o que evitar.
       </div>
       <div className="mt-8 space-y-6">
         <Field label="Tom de voz" required hint="Adjetivos e diretrizes que resumem o seu jeito de conversar.">
@@ -263,7 +263,7 @@ export function StepVoice({ professional, guidelines, drafts, setDraft, save, go
                   className={`${inputClass} min-h-24`}
                   value={examples[q.key]?.bad || ""}
                   onChange={(e) => setExample(q.key, "bad", e.target.value)}
-                  placeholder="Escreva uma resposta que você não quer que a MarIA dê..."
+                  placeholder="Escreva uma resposta que você não quer que a SelenIA dê..."
                 />
               </Field>
             </div>
@@ -280,7 +280,7 @@ export function StepVoice({ professional, guidelines, drafts, setDraft, save, go
   );
 }
 
-// Etapa 4 — Regras da MarIA (C4)
+// Etapa 4 — Regras da SelenIA (C4)
 export function StepRules({ professional, guidelines, drafts, setDraft, acceptRules, goTo, busy, error }) {
   const alreadyAccepted = Boolean(professional.rules_accepted_at);
   const [checked, setChecked] = useDraft(drafts, setDraft, "rules_checked", alreadyAccepted);
@@ -288,14 +288,14 @@ export function StepRules({ professional, guidelines, drafts, setDraft, acceptRu
   return (
     <div>
       <StepHeader eyebrow="SEGURANÇA FUNDAMENTAL" title="Regras que valem para todo atendimento">
-        Regras de segurança iguais em todas as contas da MarIA. Elas protegem você e as pessoas que procuram
+        Regras de segurança iguais em todas as contas da SelenIA. Elas protegem você e as pessoas que procuram
         atendimento, e não podem ser alteradas.
       </StepHeader>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-3xl bg-[#eff4ff] p-6">
-          <h2 className="m-0 text-lg font-semibold text-ink">🔒 A MarIA nunca diz</h2>
-          <p className="mt-1 text-sm text-muted">Limites iguais em todas as contas da MarIA</p>
+          <h2 className="m-0 text-lg font-semibold text-ink">🔒 A SelenIA nunca diz</h2>
+          <p className="mt-1 text-sm text-muted">Limites iguais em todas as contas da SelenIA</p>
           <ol className="mt-5 space-y-3 p-0">
             {guidelines.never_say.map((rule, index) => (
               <li key={rule} className="flex list-none gap-3 text-sm leading-relaxed text-slate">
@@ -307,7 +307,7 @@ export function StepRules({ professional, guidelines, drafts, setDraft, acceptRu
         </section>
 
         <section className="rounded-3xl bg-[#eff4ff] p-6">
-          <h2 className="m-0 text-lg font-semibold text-ink">🛡️ Como a MarIA age em situações de risco</h2>
+          <h2 className="m-0 text-lg font-semibold text-ink">🛡️ Como a SelenIA age em situações de risco</h2>
           <p className="mt-1 text-sm text-muted">Protocolo de cuidado e encaminhamento</p>
           <ol className="mt-5 space-y-3 p-0">
             {guidelines.risk_behaviors.map((item, index) => (
@@ -330,7 +330,7 @@ export function StepRules({ professional, guidelines, drafts, setDraft, acceptRu
           onChange={(e) => setChecked(e.target.checked)}
           className="h-5 w-5 accent-[#4a7c59]"
         />
-        <span className="font-semibold text-ink">Li e entendi as regras da MarIA</span>
+        <span className="font-semibold text-ink">Li e entendi as regras da SelenIA</span>
         {alreadyAccepted && (
           <span className="ml-auto rounded-full bg-primary-soft px-3 py-1 text-sm text-primary">
             ✓ Aceito em {formatDateTime(professional.rules_accepted_at)}
@@ -364,7 +364,7 @@ export function StepExtraRules({ professional, drafts, setDraft, save, goTo, bus
 
   return (
     <div>
-      <StepHeader eyebrow="PERSONALIZAÇÃO E LIMITES" title="Algo mais que a MarIA nunca deve dizer?">
+      <StepHeader eyebrow="PERSONALIZAÇÃO E LIMITES" title="Algo mais que a SelenIA nunca deve dizer?">
         Além das regras fixas, você pode acrescentar limites específicos do seu atendimento. Esta etapa é opcional.
       </StepHeader>
 
@@ -443,7 +443,7 @@ export function StepWhatsApp({ professional, drafts, setDraft, save, goTo, busy,
   return (
     <div>
       <StepHeader eyebrow="CANAL DE ATENDIMENTO" title="Conecte o número de atendimento">
-        É neste número que a MarIA vai receber e responder as mensagens das pessoas que procuram você, pela plataforma
+        É neste número que a SelenIA vai receber e responder as mensagens das pessoas que procuram você, pela plataforma
         oficial do WhatsApp.
       </StepHeader>
 
@@ -452,7 +452,7 @@ export function StepWhatsApp({ professional, drafts, setDraft, save, goTo, busy,
         <div className="text-sm leading-relaxed text-[#92400e]">
           <p className="m-0 font-semibold">Atenção antes de conectar</p>
           <p className="m-0 mt-1">
-            O número conectado fica exclusivo da MarIA e deixa de funcionar no aplicativo do WhatsApp e no WhatsApp
+            O número conectado fica exclusivo da SelenIA e deixa de funcionar no aplicativo do WhatsApp e no WhatsApp
             Web. Você responde às pessoas pelo painel. Se quiser usar o número que já atende, apague a conta do
             WhatsApp dele no celular antes; as conversas antigas não são trazidas.
           </p>
@@ -552,7 +552,7 @@ export function StepReview({ professional, guidelines, goTo, complete, busy, err
     },
     {
       step: 4,
-      title: "REGRAS DA MARIA",
+      title: "REGRAS DA SELENIA",
       body: professional.rules_accepted_at ? (
         <span className="inline-block rounded-full bg-primary-soft px-3 py-1 text-sm text-primary">
           ✓ Lidas e aceitas em {formatDateTime(professional.rules_accepted_at)}
@@ -623,7 +623,7 @@ export function StepReview({ professional, guidelines, goTo, complete, busy, err
         <Button onClick={complete} disabled={busy} className="px-10">
           {busy ? "Concluindo..." : "Concluir cadastro →"}
         </Button>
-        <p className="mt-3 text-sm text-muted">Ao concluir, a MarIA começa a atender com estas configurações.</p>
+        <p className="mt-3 text-sm text-muted">Ao concluir, a SelenIA começa a atender com estas configurações.</p>
       </div>
       <StepFooter step={7} onBack={() => goTo(6)} />
     </div>
@@ -642,12 +642,12 @@ export function Done({ professional, onFinished }) {
       </p>
       <h1 className="mt-4 text-4xl font-bold tracking-tight text-ink">Tudo pronto, {professional.name}!</h1>
       <p className="mx-auto mt-4 max-w-md text-lg text-muted">
-        A <strong className="text-primary">MarIA</strong> já está configurada. Antes de liberar para as pessoas, que
+        A <strong className="text-primary">SelenIA</strong> já está configurada. Antes de liberar para as pessoas, que
         tal testar como ela responde?
       </p>
       <div className="mx-auto mt-8 flex max-w-lg flex-col gap-3 sm:flex-row">
         <Button variant="soft" className="flex-1" onClick={() => onFinished("testar")}>
-          💬 Testar a MarIA
+          💬 Testar a SelenIA
         </Button>
         <Button className="flex-1" onClick={() => onFinished()}>
           Ir para o painel →

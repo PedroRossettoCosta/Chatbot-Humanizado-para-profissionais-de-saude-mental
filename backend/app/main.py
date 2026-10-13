@@ -50,7 +50,7 @@ async def lifespan(_app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="MarIA — Assistente para profissionais de saúde mental", lifespan=lifespan)
+app = FastAPI(title="SelenIA — Assistente para profissionais de saúde mental", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -24,7 +24,7 @@ def simulate_chat(
     O `session_id` faz aqui o papel que o número de telefone faz no
     WhatsApp — é o identificador do contato dentro do canal.
     """
-    # Só a própria profissional testa a MarIA dela: o simulador gasta a
+    # Só a própria profissional testa a SelenIA dela: o simulador gasta a
     # chave da API e grava conversas no consultório.
     professional = db.query(models.Professional).filter_by(slug=payload.professional_slug).first()
     if not professional or not user.owns(professional.id):
@@ -40,6 +40,10 @@ def simulate_chat(
         background_tasks.add_task(notifications.notify_alert, received.alert_id)
     if received.emergency:
         return _response(session_id, conversation, received.immediate[-1], received.disclaimer, **info)
+    # Acima do limite de mensagens por hora, o modelo não é chamado: só o
+    # aviso do limite, na primeira vez, e depois silêncio.
+    if received.rate_limited:
+        return _response(session_id, conversation, received.limit_notice, received.disclaimer, **info)
 
     answer = pipeline.reply(db, professional, conversation, payload.message)
     if answer.alert_id:

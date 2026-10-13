@@ -22,7 +22,7 @@ def _professional(**fields):
 
 def test_prompt_introduces_maria_and_keeps_fixed_never_say():
     prompt = llm.build_system_prompt(_professional(), [])
-    assert "Você é a MarIA" in prompt
+    assert "Você é a SelenIA" in prompt
     assert "inteligência artificial" in prompt
     for item in guidelines.NEVER_SAY_DEFAULTS:
         assert item in prompt

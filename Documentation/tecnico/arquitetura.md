@@ -1,6 +1,6 @@
 # Arquitetura
 
-Como o MarIA é organizado por dentro e por que cada decisão foi tomada.
+Como o SelenIA é organizado por dentro e por que cada decisão foi tomada.
 Para o contexto de produto e as decisões combinadas com a profissional,
 veja [planejamento-projeto.md](../planejamento-projeto.md).
 
@@ -68,10 +68,16 @@ Paciente escreve
 
 No código, o caminho fica em `services/pipeline.py`, dividido em dois:
 `receive` (grava e faz a triagem) e `reply` (handoff ou resposta da
-MarIA). O simulador chama os dois em seguida. No WhatsApp, `receive`
+SelenIA). O simulador chama os dois em seguida. No WhatsApp, `receive`
 roda assim que a mensagem chega (a emergência sai na hora) e `reply`
 só depois da espera de alguns segundos que junta mensagens quebradas
 (`services/whatsapp_inbox.py`).
+
+**Limite por pessoa:** acima de `CONTACT_MESSAGES_PER_HOUR` mensagens na
+última hora, `receive` roda só a camada 1 da triagem, avisa a pessoa uma
+vez e marca a conversa; `reply` não chama o modelo. Conta por contato,
+nunca pelo consultório. Ver
+[limites por contato](../funcionalidades/limites-por-contato.md).
 
 ### Por que a triagem roda primeiro
 
@@ -112,13 +118,14 @@ alteração.
 | `whatsapp_inbox.py` | Mensagens do WhatsApp: profissional pelo número, reenvios, triagem na hora, espera antes de responder, tipos não suportados |
 | `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico, janela de 24h, número mascarado |
 | `rag.py` | Falar com o ChromaDB: indexar, buscar e apagar trechos |
-| `llm.py` | Montar o prompt de sistema e chamar a API da Claude (com a ferramenta de horários, quando a agenda está pronta) |
+| `llm.py` | Montar o prompt de sistema e chamar a API da Claude (com a ferramenta de horários, quando a agenda está pronta). A parte fixa do prompt vai com cache; os trechos do RAG, que mudam a cada pergunta, vêm depois. Anota os tokens de cada chamada dentro de `collect_usage()` |
+| `usage.py` | Gravar os tokens anotados (`llm_usage`), ligados à profissional e à conversa, sem conteúdo |
 | `calendar.py` | Google Agenda: conectar e desconectar, ler livre/ocupado, criar/alterar/apagar eventos, calcular horários livres dentro do horário de atendimento |
-| `appointments.py` | Pedidos de horário: reserva provisória com trava por profissional, confirmar, recusar e expirar em 24h |
+| `appointments.py` | Pedidos de horário: reserva provisória com trava por profissional, troca e cancelamento pedidos pela pessoa, confirmar, recusar e expirar em 24h |
 | `text_extraction.py` | Extrair texto de PDF/DOCX/TXT e dividir em trechos |
 | `crypto.py` | Cifrar dados sensíveis e gerar índice de busca |
 | `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
-| `guidelines.py` | Regras fixas do produto: nome da MarIA, perguntas de tom, lista "nunca dizer" |
+| `guidelines.py` | Regras fixas do produto: nome da SelenIA, perguntas de tom, lista "nunca dizer" |
 | `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
 | `alerts.py` | Tela de Alertas: trilha em linguagem da profissional, visto (uma vez) e revisado |
 | `notifications.py` | E-mail de alerta (com registro na trilha) e de pedido para falar com a profissional |

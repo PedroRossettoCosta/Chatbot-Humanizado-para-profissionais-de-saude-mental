@@ -11,7 +11,7 @@ const REFRESH_MS = 10000;
 const LEVELS = {
   emergency: { label: "Emergência", tone: "danger" },
   possible_risk: { label: "Dúvida sobre segurança", tone: "warning" },
-  bot_refused: { label: "Recusou falar com a MarIA", tone: "info" },
+  bot_refused: { label: "Recusou falar com a SelenIA", tone: "info" },
 };
 
 const FILTERS = [
@@ -19,7 +19,7 @@ const FILTERS = [
   { key: "new", label: "Não revisados", test: (a) => a.status === "new" },
   { key: "emergency", label: "Emergência", test: (a) => a.level === "emergency" },
   { key: "possible_risk", label: "Dúvida sobre segurança", test: (a) => a.level === "possible_risk" },
-  { key: "bot_refused", label: "Recusou a MarIA", test: (a) => a.level === "bot_refused" },
+  { key: "bot_refused", label: "Recusou a SelenIA", test: (a) => a.level === "bot_refused" },
 ];
 
 // Cor da bolinha de cada linha da trilha.
@@ -44,7 +44,7 @@ function StatusTag({ alert }) {
 
 // Alertas e auditoria (protótipo: alertas_e_auditoria_maria; no celular,
 // M4 e M5). Nada aqui edita ou apaga um alerta: abrir, revisar e liberar
-// a MarIA entram na trilha.
+// a SelenIA entram na trilha.
 export default function Alerts() {
   const { professional } = usePanel();
   const { alertId } = useParams();
@@ -114,7 +114,7 @@ export default function Alerts() {
               </span>
               <p className="m-0 mt-3 font-semibold text-ink">Nenhum alerta</p>
               <p className="m-0 mt-1 text-sm text-muted">
-                Quando a triagem encontrar risco, ou alguém recusar falar com a MarIA, o alerta aparece aqui e um e-mail
+                Quando a triagem encontrar risco, ou alguém recusar falar com a SelenIA, o alerta aparece aqui e um e-mail
                 vai para você.
               </p>
             </li>
@@ -162,7 +162,7 @@ export default function Alerts() {
             </span>
             <p className="m-0 mt-3 font-semibold text-ink">Escolha um alerta</p>
             <p className="m-0 mt-1 max-w-sm text-sm text-muted">
-              Cada alerta mostra o que disparou, o que a MarIA fez e tudo o que aconteceu depois. Os não revisados
+              Cada alerta mostra o que disparou, o que a SelenIA fez e tudo o que aconteceu depois. Os não revisados
               aparecem primeiro.
             </p>
           </div>
@@ -293,14 +293,14 @@ function AlertView({ alertId, onChanged }) {
             <div className="flex gap-3 text-danger">
               <AlertIcon size={20} className="mt-0.5 shrink-0" />
               <p className="m-0 text-sm">
-                <strong>MarIA pausada nesta conversa.</strong> Nenhuma resposta automática sai até você liberar. Você
+                <strong>SelenIA pausada nesta conversa.</strong> Nenhuma resposta automática sai até você liberar. Você
                 pode escrever para a pessoa pela conversa.
               </p>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
               {confirmRelease ? (
                 <>
-                  <span className="text-sm text-slate">A MarIA volta a responder nesta conversa. Liberar?</span>
+                  <span className="text-sm text-slate">A SelenIA volta a responder nesta conversa. Liberar?</span>
                   <Button className="!px-3 !py-1.5 text-sm" disabled={busy} onClick={release}>
                     Sim
                   </Button>
@@ -310,7 +310,7 @@ function AlertView({ alertId, onChanged }) {
                 </>
               ) : (
                 <Button variant="soft" className="!px-4 !py-2 text-sm" onClick={() => setConfirmRelease(true)}>
-                  Liberar a MarIA para responder
+                  Liberar a SelenIA para responder
                 </Button>
               )}
             </div>

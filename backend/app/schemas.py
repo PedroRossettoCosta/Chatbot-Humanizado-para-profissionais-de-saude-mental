@@ -31,7 +31,7 @@ class TimeRange(BaseModel):
 
 
 class _AssistantProfile(BaseModel):
-    """Campos do perfil que a profissional preenche para calibrar a MarIA."""
+    """Campos do perfil que a profissional preenche para calibrar a SelenIA."""
 
     alert_email: Optional[str] = Field(default=None, max_length=255)
     audience_description: Optional[str] = None
@@ -43,7 +43,7 @@ class _AssistantProfile(BaseModel):
     # Dias e horários em que atende. Até 3 intervalos por dia (ex.: manhã
     # e tarde, com almoço no meio).
     working_hours: Optional[dict[Weekday, list[TimeRange]]] = None
-    # Limite de sessões por dia que a MarIA pode marcar. Nulo = sem limite.
+    # Limite de sessões por dia que a SelenIA pode marcar. Nulo = sem limite.
     max_sessions_per_day: Optional[int] = Field(default=None, ge=1, le=20)
 
     @field_validator("working_hours")
@@ -195,6 +195,7 @@ class MessageOut(BaseModel):
     role: str
     content: str
     sent_by: Optional[str] = None
+    delivery_failed: bool = False
     created_at: datetime
 
 
@@ -287,12 +288,12 @@ class CalendarStatus(BaseModel):
     timezone: str
     # Permissões pedidas na janela do Google (só livre/ocupado).
     requested_scopes: str
-    # Conectada, com duração da sessão e horário de atendimento: a MarIA
+    # Conectada, com duração da sessão e horário de atendimento: a SelenIA
     # já consulta a agenda nas conversas.
     ready: bool
     # A conexão tem a permissão de criar eventos.
     events_permission: bool
-    # Pronta e com permissão de criar eventos: a MarIA reserva horários.
+    # Pronta e com permissão de criar eventos: a SelenIA reserva horários.
     can_book: bool
 
 
@@ -325,6 +326,13 @@ class AppointmentOut(BaseModel):
     expires_at: Optional[datetime] = None
     decided_at: Optional[datetime] = None
     contact_notified: Optional[bool] = None
+    # "new" (horário novo), "reschedule" (troca de uma sessão) ou "cancel"
+    # (a pessoa pediu para cancelar esta sessão confirmada).
+    kind: str = "new"
+    # Na troca: a sessão que sai quando a profissional confirmar.
+    replaces_label: Optional[str] = None
+    # Espera decisão da profissional: pedido provisório ou cancelamento pedido.
+    awaiting_decision: bool = False
 
 
 class GoogleLogin(BaseModel):
@@ -343,14 +351,14 @@ class MeOut(BaseModel):
 
 class CalendarEvent(BaseModel):
     """Um evento da semana no calendário do painel. O título só vai para
-    a tela da profissional; não é gravado nem passa pela MarIA."""
+    a tela da profissional; não é gravado nem passa pela SelenIA."""
 
     id: str
     title: str
     starts_at: datetime
     ends_at: datetime
     all_day: bool = False
-    # "maria_tentative", "maria_confirmed" (sessões da MarIA ou do painel)
+    # "maria_tentative", "maria_confirmed" (sessões da SelenIA ou do painel)
     # ou "google" (qualquer outro evento da agenda).
     kind: str
     appointment_id: Optional[str] = None

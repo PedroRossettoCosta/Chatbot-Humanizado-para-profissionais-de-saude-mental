@@ -1,4 +1,4 @@
-// Marca da MarIA, do protótipo (logo_maria).
+// Marca da SelenIA, do protótipo (logo_maria).
 export default function Logo({ className = "" }) {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
@@ -15,7 +15,7 @@ export default function Logo({ className = "" }) {
       </svg>
       <div className="leading-tight">
         <div className="text-xl font-bold tracking-tight text-slate">
-          Mar<span className="text-primary">IA</span>
+          Selen<span className="text-primary">IA</span>
         </div>
         <div className="text-[10.5px] font-medium tracking-wider text-muted">ASSISTENTE CLÍNICA</div>
       </div>

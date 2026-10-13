@@ -72,7 +72,7 @@ def disconnect(slug: str, db: Session = Depends(get_db), user: models.User = Dep
 
 @router.get("/{slug}/free-slots", response_model=list[schemas.FreeSlot])
 def free_slots(slug: str, db: Session = Depends(get_db), user: models.User = Depends(auth.current_user)):
-    """Os mesmos horários que a MarIA vê numa conversa agora."""
+    """Os mesmos horários que a SelenIA vê numa conversa agora."""
     professional = _get_owned(db, slug, user)
     try:
         slots = calendar.available_slots(professional)
@@ -98,6 +98,10 @@ def _appointment_out(appointment: models.Appointment) -> schemas.AppointmentOut:
         expires_at=appointment.expires_at,
         decided_at=appointment.decided_at,
         contact_notified=appointment.contact_notified,
+        kind="cancel" if appointment.cancel_requested_at else "reschedule" if appointment.replaces_id else "new",
+        replaces_label=calendar.format_slot(appointment.replaces.starts_at) if appointment.replaces else None,
+        awaiting_decision=appointment.status == models.AppointmentStatus.TENTATIVE
+        or (appointment.status == models.AppointmentStatus.CONFIRMED and appointment.cancel_requested_at is not None),
     )
 
 
@@ -116,8 +120,13 @@ def list_appointments(slug: str, db: Session = Depends(get_db), user: models.Use
         .limit(50)
         .all()
     )
-    pending = sorted((a for a in rows if a.status == models.AppointmentStatus.TENTATIVE), key=lambda a: a.starts_at)
-    decided = [a for a in rows if a.status != models.AppointmentStatus.TENTATIVE]
+    def awaiting(a):
+        return a.status == models.AppointmentStatus.TENTATIVE or (
+            a.status == models.AppointmentStatus.CONFIRMED and a.cancel_requested_at is not None
+        )
+
+    pending = sorted((a for a in rows if awaiting(a)), key=lambda a: a.starts_at)
+    decided = [a for a in rows if not awaiting(a)]
     return [_appointment_out(a) for a in pending + decided]
 
 

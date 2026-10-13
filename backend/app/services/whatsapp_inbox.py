@@ -10,13 +10,13 @@ Ordem, para cada mensagem (`handle`):
 4. A resposta normal espera `REPLY_DEBOUNCE_SECONDS` (6 s): se chegar
    outra mensagem nesse tempo, a espera recomeça. Quando a pessoa para,
    as mensagens dela desde a última resposta viram um texto só e a
-   MarIA responde uma vez (decisão do Pedro, 27/09/2026). A API do
+   SelenIA responde uma vez (decisão do Pedro, 27/09/2026). A API do
    WhatsApp não avisa quando a pessoa está digitando, então a espera é
    o único jeito de juntar mensagens quebradas.
 
 Áudio, imagem e outros tipos: ficam registrados na conversa como
 "[Áudio]" etc., sem triagem (não há texto), e a pessoa recebe um aviso
-fixo de que a MarIA só lê texto.
+fixo de que a SelenIA só lê texto.
 
 As esperas ficam na memória do processo: se o backend reiniciar no meio
 de uma, aquela resposta não sai (limitação do MVP, que roda local).
@@ -55,7 +55,7 @@ TYPE_LABELS = {
     "location": "[Localização]",
     "contacts": "[Contato compartilhado]",
 }
-OTHER_LABEL = "[Mensagem que a MarIA não lê]"
+OTHER_LABEL = "[Mensagem que a SelenIA não lê]"
 _LABELS = set(TYPE_LABELS.values()) | {OTHER_LABEL}
 
 # Uma pessoa por vez em cada conversa: duas mensagens que chegam juntas
@@ -81,12 +81,44 @@ class _Outcome:
     appointment_id: str | None = None
 
 
-def _deliver(phone_number_id: str, to: str, text: str) -> None:
+def _deliver(db, conversation_id: str, phone_number_id: str, to: str, text: str) -> None:
+    """Envia pela Meta e anota o resultado na mensagem já gravada: o id
+    da Meta, se saiu; "não entregue", se a Meta recusou. Antes disso, uma
+    recusa (ex.: erro 131042, falta de forma de pagamento) ficava só no
+    terminal e o painel mostrava a mensagem como enviada."""
     try:
-        whatsapp.send_text(phone_number_id, to, text)
+        wamid = whatsapp.send_text(phone_number_id, to, text)
     except whatsapp.SendError as exc:
         # Sem o texto no log. A mensagem já está gravada na conversa.
         logger.error("falha ao enviar pelo WhatsApp: %s", exc)
+        wamid = None
+    message = _recorded(db, conversation_id, text)
+    if message is None:
+        return
+    if wamid:
+        message.external_id = wamid
+    else:
+        message.delivery_failed = True
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+
+
+def _recorded(db, conversation_id: str, text: str) -> models.Message | None:
+    """A mensagem de saída mais recente com este texto que ainda não tem
+    o envio anotado. O caminho da mensagem grava antes de enviar e
+    devolve só o texto; o conteúdo é cifrado, então a comparação é feita
+    aqui, nas últimas mensagens."""
+    candidates = (
+        db.query(models.Message)
+        .filter_by(
+            conversation_id=conversation_id, role=MessageRole.ASSISTANT, external_id=None, delivery_failed=False
+        )
+        .order_by(models.Message.seq.desc())
+        .limit(5)
+    )
+    return next((m for m in candidates if m.content == text), None)
 
 
 def receive_now(event: whatsapp.Inbound) -> _Outcome | None:
@@ -124,17 +156,19 @@ def receive_now(event: whatsapp.Inbound) -> _Outcome | None:
             conversation = received.conversation
             outgoing = list(received.immediate)
             active = conversation.state == ConversationState.ACTIVE
-            if not is_text and active:
+            # Acima do limite de mensagens por hora, nem o aviso de tipo
+            # não suportado sai: a pessoa já recebeu o aviso do limite.
+            if not is_text and active and not received.rate_limited:
                 conversations.record_message(
                     db, conversation, MessageRole.ASSISTANT, UNSUPPORTED_MESSAGE, sent_by=SentBy.SYSTEM
                 )
                 outgoing.append(UNSUPPORTED_MESSAGE)
             for text_out in outgoing:
-                _deliver(event.phone_number_id, event.sender, text_out)
+                _deliver(db, conversation.id, event.phone_number_id, event.sender, text_out)
             return _Outcome(
                 conversation_id=conversation.id,
                 alert_ids=[received.alert_id] if received.alert_id else [],
-                wants_reply=is_text and active and not received.emergency,
+                wants_reply=is_text and active and not received.emergency and not received.rate_limited,
             )
         finally:
             db.close()
@@ -164,7 +198,7 @@ def reply_now(key: tuple[str, str], conversation_id: str) -> _Outcome | None:
 
             answer = pipeline.reply(db, conversation.professional, conversation, " ".join(burst))
             if answer.text:
-                _deliver(key[0], key[1], answer.text)
+                _deliver(db, conversation.id, key[0], key[1], answer.text)
             return _Outcome(
                 conversation_id=conversation.id,
                 alert_ids=[answer.alert_id] if answer.alert_id else [],

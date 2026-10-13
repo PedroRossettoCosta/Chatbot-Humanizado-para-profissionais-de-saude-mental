@@ -6,12 +6,12 @@
 
 No primeiro acesso, depois do login com Google, a profissional passa por
 7 etapas antes de usar o painel: dados, atendimento, tom de voz, regras
-da MarIA, regras extras, WhatsApp e revisão. Cada "Continuar" grava a
+da SelenIA, regras extras, WhatsApp e revisão. Cada "Continuar" grava a
 etapa; se ela fechar o navegador, volta de onde parou.
 
 ## Por que existe
 
-A MarIA fala em nome da profissional. Sem valores, apresentação e
+A SelenIA fala em nome da profissional. Sem valores, apresentação e
 exemplos de tom, ela responderia no escuro; sem ler as regras fixas, a
 profissional não saberia o que o sistema faz numa emergência.
 
@@ -22,7 +22,7 @@ Decisões:
   em `Documentation/TCC App Design/`, sem os textos que o protótipo
   inventou (criptografia de ponta a ponta, conformidade CFM/CFP).
 - **Aceite das regras registrado com data e hora**, para ficar claro
-  que ela leu o protocolo de risco antes de a MarIA atender.
+  que ela leu o protocolo de risco antes de a SelenIA atender.
 - **Duração da sessão como campo próprio**, e não só dentro do texto
   livre do serviço: a agenda precisa do número para montar os horários.
 - **Etapa do WhatsApp sem conexão por enquanto**: registrar o número na
@@ -32,14 +32,14 @@ Decisões:
 
 ## Como usar
 
-1. **Seus dados:** nome de exibição, como a MarIA deve falar de você
+1. **Seus dados:** nome de exibição, como a SelenIA deve falar de você
    (feminino, masculino ou neutro, só pelo nome) e e-mail para alertas
    (nome e e-mail já vêm da conta Google).
 2. **Atendimento:** especialidade e público, informações do serviço
    (modalidade, frequência, valor, pagamento) e duração da sessão.
 3. **Tom de voz:** o tom e, para cada uma das 3 perguntas, uma resposta
    boa e uma ruim. "Ver um exemplo" mostra uma de cada.
-4. **Regras da MarIA:** leia as 11 regras de "nunca dizer" e os 5
+4. **Regras da SelenIA:** leia as 11 regras de "nunca dizer" e os 5
    comportamentos em situação de risco, marque "Li e entendi" e
    continue.
 5. **Regras extras** (opcional): limites próprios do seu atendimento.
@@ -47,7 +47,7 @@ Decisões:
 7. **Revisão:** confira, use "Editar" para voltar a qualquer etapa e
    clique em **Concluir cadastro**.
 
-Na tela final, "Testar a MarIA" abre o [painel](painel.md) já no
+Na tela final, "Testar a SelenIA" abre o [painel](painel.md) já no
 simulador; "Ir para o painel" abre o painel.
 
 ## Como funciona
@@ -104,7 +104,7 @@ ambiente nova.
 ## Segurança e LGPD
 
 Os dados são os do perfil da profissional, mais os pronomes. O
-gênero não é perguntado à parte: para a MarIA falar da profissional,
+gênero não é perguntado à parte: para a SelenIA falar da profissional,
 basta o pronome, e a LGPD pede coletar só o necessário. O número de WhatsApp digitado na etapa 6 **não é
 salvo** enquanto a conexão não existir. Todas as rotas exigem login e
 só a própria profissional mexe no cadastro dela.
@@ -131,12 +131,12 @@ Manual:
 3. No meio do cadastro, feche o navegador e entre de novo: volta na
    etapa em que parou.
 4. Na revisão, use "Editar" em uma etapa e volte; conclua.
-5. Na tela final, "Testar a MarIA" abre o painel no simulador.
+5. Na tela final, "Testar a SelenIA" abre o painel no simulador.
 
 ## Histórico
 - 27/09/2026: primeira versão (7 etapas, aceite das regras, conclusão
   obrigatória para abrir o painel; WhatsApp só com "Conectar depois").
-- 27/09/2026: "Como a MarIA deve falar de você" na etapa 1 (Pedro).
+- 27/09/2026: "Como a SelenIA deve falar de você" na etapa 1 (Pedro).
 - 27/09/2026: rascunho de todas as etapas guardado na página até o
   "Continuar"; lixeira para remover regra extra; recuperação quando o
   cadastro já existe; bandeira do +55 desenhada (o Windows não mostra

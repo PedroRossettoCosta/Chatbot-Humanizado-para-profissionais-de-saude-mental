@@ -4,15 +4,15 @@
 
 ## O que é
 
-A caixa de entrada do painel: todas as conversas da MarIA com quem
-procurou a profissional. Ela vê o que a MarIA está respondendo, quem
+A caixa de entrada do painel: todas as conversas da SelenIA com quem
+procurou a profissional. Ela vê o que a SelenIA está respondendo, quem
 precisa dela primeiro, e entra na conversa quando quiser: assume,
-responde e devolve para a MarIA.
+responde e devolve para a SelenIA.
 
 ## Por que existe
 
 - O Pedro decidiu em 26/09/2026 que a profissional responde as pessoas
-  **só pelo painel**: o número conectado à MarIA sai do app do WhatsApp
+  **só pelo painel**: o número conectado à SelenIA sai do app do WhatsApp
   no celular. Sem esta tela, ela não teria onde ler nem responder.
   Por isso a tela também funciona no navegador do celular (telas M1 a
   M3 do protótipo).
@@ -42,10 +42,10 @@ responde e devolve para a MarIA.
 | Etiqueta | Quando | Quem responde |
 |---|---|---|
 | Pausada após emergência | A triagem detectou emergência | Ninguém automático; só você, até liberar |
-| Aguardando você | A pessoa pediu para falar com você ou recusou a MarIA | Depende: com "Em consulta" ligado, a MarIA segue ajudando |
-| Necessita atenção | A triagem marcou sofrimento intenso ou dúvida sobre segurança | A MarIA |
+| Aguardando você | A pessoa pediu para falar com você ou recusou a SelenIA | Depende: com "Em consulta" ligado, a SelenIA segue ajudando |
+| Necessita atenção | A triagem marcou sofrimento intenso ou dúvida sobre segurança | A SelenIA |
 | Você assumiu | Você assumiu ou respondeu | Só você |
-| MarIA atendendo | O normal | A MarIA |
+| SelenIA atendendo | O normal | A SelenIA |
 | Teste | Conversa do simulador | Nada vai para o WhatsApp |
 
 - A ordem é: emergência, aguardando você, necessita atenção, depois as
@@ -55,10 +55,10 @@ responde e devolve para a MarIA.
 **Conversa aberta** (à direita; no celular, tela cheia com a seta de
 voltar):
 - Mensagens da pessoa à esquerda. À direita, o que saiu do sistema:
-  **MarIA**, **MarIA · mensagem fixa** (aviso de IA, emergência,
+  **SelenIA**, **SelenIA · mensagem fixa** (aviso de IA, emergência,
   handoff) e **Você**.
-- Botões: **Assumir conversa** (a MarIA para), **Devolver à MarIA** e,
-  depois de uma emergência, **Liberar a MarIA**, que pede confirmação.
+- Botões: **Assumir conversa** (a SelenIA para), **Devolver à SelenIA** e,
+  depois de uma emergência, **Liberar a SelenIA**, que pede confirmação.
 - Caixa de resposta: Enter envia, Shift+Enter quebra a linha. Responder
   assume a conversa. Embaixo aparece quanto tempo falta da janela de
   24h.
@@ -76,12 +76,12 @@ voltar):
   (sem tempo real no MVP).
 - **Aguardando você** (`awaiting_reply_since`): marcado por
   `handoff.handle_human_request` quando a pessoa pede a profissional ou
-  recusa a MarIA. Sai quando ela responde ou devolve a conversa.
+  recusa a SelenIA. Sai quando ela responde ou devolve a conversa.
   Antes de 27/09/2026 esses casos marcavam "necessita atenção", que
   agora fica só para os sinais da triagem.
 - **E-mail**: no pedido para falar com a profissional,
   `notifications.notify_human_request` sai uma vez, em segundo plano,
-  só se a conversa ainda não estava aguardando. A recusa da MarIA já
+  só se a conversa ainda não estava aguardando. A recusa da SelenIA já
   gera o e-mail de alerta, então não manda outro.
 - **Janela de 24h**: `last_contact_message_at` guarda a última
   mensagem da pessoa. `conversations.reply_window_open` diz se ainda
@@ -140,13 +140,13 @@ e-mail uma vez só, janela de 24h, número mascarado),
 profissional dá 404).
 
 Manual:
-1. Em **Testar a MarIA**, mande "oi" e "quero falar com você". Em
+1. Em **Testar a SelenIA**, mande "oi" e "quero falar com você". Em
    Conversas, a conversa aparece com "Aguardando você", e o e-mail
    chega.
-2. Responda pela tela: vira "Você assumiu". **Devolver à MarIA** volta
-   para "MarIA atendendo".
+2. Responda pela tela: vira "Você assumiu". **Devolver à SelenIA** volta
+   para "SelenIA atendendo".
 3. Numa conversa nova, "to pensando em me matar": vai para o topo, em
-   vermelho. Teste **Liberar a MarIA**.
+   vermelho. Teste **Liberar a SelenIA**.
 4. Estreite a janela até a largura de celular: lista e conversa, uma
    de cada vez.
 
@@ -155,3 +155,5 @@ Manual:
 - 27/09/2026: tela de Conversas (computador e celular), situação
   "Aguardando você", e-mail de pedido, janela de 24h.
 - 27/09/2026: resposta pelo painel enviada de verdade no WhatsApp.
+- 13/10/2026: mensagem que a Meta recusou aparece com "Não entregue" ao
+  lado do horário (ver [atendimento pelo WhatsApp](atendimento-pelo-whatsapp.md)).

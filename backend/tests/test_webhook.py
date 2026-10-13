@@ -119,7 +119,7 @@ def test_text_message_gets_disclaimer_and_reply(db, client, professional, no_rea
     assert _post(client, _payload("quanto custa a sessão?")).status_code == 200
 
     sent = _sent_texts(no_real_whatsapp)
-    assert sent[0].startswith("Oi! Eu sou a MarIA")
+    assert sent[0].startswith("Oi! Eu sou a SelenIA")
     assert sent[1] == "resposta do bot"
     assert all(to_phone == PHONE_ID for to_phone, _ in no_real_whatsapp)
     assert any(body.get("typing_indicator") for _, body in no_real_whatsapp)
@@ -128,6 +128,28 @@ def test_text_message_gets_disclaimer_and_reply(db, client, professional, no_rea
     assert conversation.contact.channel == Channel.WHATSAPP
     assert conversation.contact.display_name == "Ana Teste"
     assert conversation.last_contact_message_at is not None
+
+
+def test_sent_messages_keep_the_meta_id(db, client, professional, no_real_whatsapp):
+    _post(client, _payload("quanto custa a sessão?"))
+    outgoing = [m for m in _conversation(db).messages if m.role == MessageRole.ASSISTANT]
+    assert len(outgoing) == 2
+    assert all(m.external_id and m.external_id.startswith("wamid.teste.saida") for m in outgoing)
+    assert not any(m.delivery_failed for m in outgoing)
+
+
+def test_refused_by_meta_shows_as_not_delivered(db, client, professional, monkeypatch):
+    def refuse(phone_number_id, to, text):
+        raise whatsapp.SendError("131042")
+
+    monkeypatch.setattr(whatsapp, "send_text", refuse)
+    _post(client, _payload("quanto custa a sessão?"))
+    conversation = _conversation(db)
+    outgoing = [m for m in conversation.messages if m.role == MessageRole.ASSISTANT]
+    assert [m.delivery_failed for m in outgoing] == [True, True]
+
+    detail = client.get(f"/conversations/{conversation.id}").json()
+    assert [m["delivery_failed"] for m in detail["messages"]] == [True, False, True]
 
 
 def test_meta_resend_is_processed_once(db, client, professional, no_real_whatsapp):

@@ -1,34 +1,34 @@
-# Política de Privacidade da MarIA
+# Política de Privacidade da SelenIA
 
 Vigente desde 27 de setembro de 2026.
 
-A MarIA é uma assistente virtual de atendimento inicial para
+A SelenIA é uma assistente virtual de atendimento inicial para
 profissionais de saúde mental (psicólogos, psicoterapeutas e
 psicanalistas). Ela responde, pelo WhatsApp, dúvidas de quem procura a
 profissional (como funciona o atendimento, valores, horários) e avisa a
 profissional quando alguém precisa dela.
 
-A MarIA está em **fase de testes**, desenvolvida como Trabalho de
+A SelenIA está em **fase de testes**, desenvolvida como Trabalho de
 Conclusão de Curso por Pedro Rossetto Costa, e é usada apenas por
 profissionais convidados. Esta política explica quais dados pessoais
-passam pela MarIA, para quê, com quem são compartilhados e como pedir
+passam pela SelenIA, para quê, com quem são compartilhados e como pedir
 que sejam apagados, de acordo com a Lei Geral de Proteção de Dados
 (Lei nº 13.709/2018, LGPD).
 
 ## 1. Quem é responsável pelos dados
 
-- **A profissional** que usa a MarIA é a **controladora** dos dados das
+- **A profissional** que usa a SelenIA é a **controladora** dos dados das
   pessoas que escrevem para ela: é ela quem decide como atende.
-- **A MarIA** é a **operadora**: trata esses dados em nome da
+- **A SelenIA** é a **operadora**: trata esses dados em nome da
   profissional, só para as finalidades abaixo.
 - Para os dados das próprias profissionais (conta de acesso ao painel),
-  a responsável é a equipe da MarIA.
+  a responsável é a equipe da SelenIA.
 
-## 2. A MarIA é uma inteligência artificial
+## 2. A SelenIA é uma inteligência artificial
 
-Toda conversa começa com um aviso de que a MarIA é uma assistente
+Toda conversa começa com um aviso de que a SelenIA é uma assistente
 virtual com inteligência artificial, que não é uma pessoa e não
-substitui consulta ou atendimento clínico. A MarIA **não faz
+substitui consulta ou atendimento clínico. A SelenIA **não faz
 diagnóstico, não dá orientação clínica e não é um serviço de
 emergência.**
 
@@ -49,13 +49,13 @@ pronto-socorro. Em caso de violência ou perigo imediato, ligue para o
 As mensagens podem conter informações sobre saúde, que a LGPD considera
 **dados sensíveis**. Por isso elas recebem as proteções da seção 6.
 
-**Das profissionais que usam a MarIA:**
+**Das profissionais que usam a SelenIA:**
 - nome, e-mail e foto da conta Google usada para entrar no painel;
 - as informações do perfil de atendimento que ela mesma preenche
   (apresentação, valores, tom de voz, regras) e os documentos que envia
   sobre o próprio trabalho.
 
-A MarIA não pede documentos de identidade, endereço, dados de pagamento
+A SelenIA não pede documentos de identidade, endereço, dados de pagamento
 ou dados clínicos.
 
 ## 4. Para que usamos os dados
@@ -80,11 +80,11 @@ da saúde por profissionais da área (art. 11, II, "f").
 
 ## 5. Com quem os dados são compartilhados
 
-Só com os fornecedores necessários para a MarIA funcionar:
+Só com os fornecedores necessários para a SelenIA funcionar:
 
 | Fornecedor | Para quê |
 |---|---|
-| **Meta (WhatsApp)** | Entregar as mensagens entre a pessoa e a MarIA |
+| **Meta (WhatsApp)** | Entregar as mensagens entre a pessoa e a SelenIA |
 | **Anthropic (Claude)** | Processar o texto das mensagens para gerar as respostas e para a triagem de segurança. Pelos termos comerciais da Anthropic, os dados enviados pela API não são usados para treinar os modelos |
 | **Google** | Login das profissionais no painel e, quando ativada, a agenda da profissional |
 | **Serviço de e-mail (Google)** | Avisar a profissional de alertas e pedidos. **Esses e-mails não levam o conteúdo da conversa** |
@@ -113,7 +113,7 @@ Dados também podem ser fornecidos a autoridades quando a lei obrigar.
 
 Conversas sem nenhuma mensagem nova há **90 dias** são excluídas, junto
 com as mensagens e os registros de segurança ligados a elas. A conta da
-profissional é mantida enquanto ela usar a MarIA e excluída a pedido.
+profissional é mantida enquanto ela usar a SelenIA e excluída a pedido.
 
 ## 8. Seus direitos e como pedir a exclusão dos seus dados
 

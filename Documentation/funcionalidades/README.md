@@ -2,25 +2,27 @@
 
 Um documento por funcionalidade: o que é, por que existe, como usar e
 como funciona. Os documentos técnicos (`../tecnico/`) explicam as peças
-do sistema; estes explicam o que a profissional vê e o que a MarIA faz.
+do sistema; estes explicam o que a profissional vê e o que a SelenIA faz.
 
 Toda mudança de funcionalidade atualiza o documento dela no mesmo
 commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 
 | Funcionalidade | Situação | Resumo |
 |---|---|---|
-| [Painel](painel.md) | Funcionando, parte das telas em construção | Menu, "Em consulta" no topo, Perfil do atendimento e o simulador "Testar a MarIA" |
+| [Painel](painel.md) | Funcionando, parte das telas em construção | Menu, "Em consulta" no topo, Perfil do atendimento e o simulador "Testar a SelenIA" |
 | [Alertas](alertas.md) | Funcionando | Cada alerta com o trecho, a regra e a trilha de auditoria; marcar como revisado |
 | [Atendimento pelo WhatsApp](atendimento-pelo-whatsapp.md) | Funcionando até a Meta; falta publicar o app | Webhook, triagem na hora, espera antes de responder, envio pela API da Meta |
 | [Conversas](conversas.md) | Funcionando | Caixa de entrada: quem precisa de você primeiro, assumir, responder, janela de 24h |
-| [Base de conhecimento](base-de-conhecimento.md) | Funcionando | Documentos que a MarIA usa para responder (RAG): enviar e remover |
+| [Base de conhecimento](base-de-conhecimento.md) | Funcionando | Documentos que a SelenIA usa para responder (RAG): enviar e remover |
 | [Triagem de segurança](triagem-de-seguranca.md) | Funcionando | Detecta risco em cada mensagem antes do modelo responder, em duas camadas |
-| [Perfil e regras da MarIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a MarIA nunca diz |
+| [Perfil e regras da SelenIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a SelenIA nunca diz |
 | [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano ("Aguardando você"); recusa do bot |
 | [Login com Google](login-com-google.md) | Funcionando | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
 | [Cadastro em etapas](cadastro-em-etapas.md) | Funcionando, WhatsApp em 05/10 | 7 etapas depois do primeiro login; o painel só abre com o cadastro concluído |
-| [Agenda](agenda.md) | Funcionando; textos fixos sem aprovação | Conectar o Google Agenda, horário de atendimento, horários livres, reserva provisória pela MarIA e confirmar/recusar no painel |
+| [Agenda](agenda.md) | Funcionando; textos fixos sem aprovação | Conectar o Google Agenda, horário de atendimento, horários livres, reserva provisória pela SelenIA e confirmar/recusar no painel |
 | [Alerta por e-mail](alerta-por-email.md) | Funcionando | Avisa a profissional fora do painel quando há alerta ou pedido para falar com ela |
+| [Custo do modelo](custo-do-modelo.md) | Funcionando, sem tela | Tokens de cada chamada sem conteúdo, custo por mês e por conversa (`scripts/custo.py`), cache do prompt |
+| [Limites por contato](limites-por-contato.md) | Funcionando; texto fixo sem aprovação | Até 4 pedidos de horário pendentes e 50 mensagens por hora, por pessoa |
 
 ---
 

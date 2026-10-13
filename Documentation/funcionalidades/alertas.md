@@ -6,7 +6,7 @@
 
 A tela onde a profissional vê cada alerta da triagem (emergência,
 dúvida sobre segurança) e cada vez que alguém recusou falar com a
-MarIA. Para cada um: o trecho que disparou, a regra, o que a MarIA fez
+SelenIA. Para cada um: o trecho que disparou, a regra, o que a SelenIA fez
 na hora e tudo o que aconteceu depois, numa trilha que ninguém edita
 nem apaga. Ela marca o alerta como revisado quando terminar de cuidar
 dele.
@@ -31,13 +31,13 @@ dele.
 1. O número vermelho ao lado de **Alertas**, no menu, é a quantidade
    sem revisar. Ele se atualiza a cada 10 segundos.
 2. Na lista, os não revisados vêm primeiro. Filtros: não revisados,
-   emergência, dúvida sobre segurança, recusou a MarIA.
+   emergência, dúvida sobre segurança, recusou a SelenIA.
 3. Abra um alerta para ver:
    - o trecho que disparou e a regra ("Regra fixa: ideação suicida",
      "Análise do modelo", "a análise do modelo falhou; na dúvida,
      virou alerta");
    - o contato, com o número completo, e **Abrir conversa**;
-   - com a MarIA pausada por emergência, **Liberar a MarIA para
+   - com a SelenIA pausada por emergência, **Liberar a SelenIA para
      responder** (pede confirmação);
    - a **trilha do alerta**.
 4. Escreva uma anotação, se quiser, e clique em **Marcar como
@@ -53,15 +53,15 @@ A trilha junta o próprio alerta e os eventos gravados, em ordem:
 | Linha | De onde vem |
 |---|---|
 | Alerta criado pela triagem (ou "Pedido registrado", na recusa) | O alerta, com a regra que disparou |
-| O que a MarIA fez | Derivado do nível: mensagem de emergência e pausa; seguiu a conversa; ou mensagem de compreensão e parada |
+| O que a SelenIA fez | Derivado do nível: mensagem de emergência e pausa; seguiu a conversa; ou mensagem de compreensão e parada |
 | E-mail de aviso enviado / não saiu | Evento `notified` ou `notify_failed`, com o endereço ou o motivo |
 | Você abriu o alerta | Evento `viewed`, só na primeira vez |
 | Marcado como revisado | Evento `reviewed`, com a anotação |
-| MarIA liberada para responder | Evento `bot_released` |
+| SelenIA liberada para responder | Evento `bot_released` |
 
 - A situação ("Novo" ou "Revisado") não é coluna: é derivada da trilha.
 - Não existe rota para editar nem apagar alerta; um teste garante isso.
-- Liberar a MarIA usa a rota da conversa (`/conversations/{id}/release`),
+- Liberar a SelenIA usa a rota da conversa (`/conversations/{id}/release`),
   que grava `bot_released` em todos os alertas da conversa.
 
 Rotas: `GET /alerts?professional_slug=...`, `GET /alerts/{id}`,
@@ -97,7 +97,7 @@ Não se aplica.
   da pessoa.
 - Sem campo estruturado de "a triagem acertou?"; por enquanto, só
   texto livre na anotação.
-- O "o que a MarIA fez" é derivado do nível do alerta, não de um evento
+- O "o que a SelenIA fez" é derivado do nível do alerta, não de um evento
   gravado na hora.
 
 ## Como testar
@@ -110,7 +110,7 @@ Manual:
 1. No simulador, "to pensando em me matar". Em até 10 s aparece o 1 em
    Alertas.
 2. Abra: criado → mensagem de emergência e pausa → e-mail → você abriu.
-3. **Liberar a MarIA**: a linha nova aparece na trilha.
+3. **Liberar a SelenIA**: a linha nova aparece na trilha.
 4. Anotação e **Marcar como revisado**: o número do menu some.
 5. "não quero falar com robô" numa conversa nova: alerta de recusa.
 

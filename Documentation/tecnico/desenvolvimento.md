@@ -51,7 +51,7 @@ uvicorn app.main:app --reload --reload-dir app
 ```
 
 O `--reload-dir app` é obrigatório: sem ele o reload observa o
-`backend/` inteiro e reinicia a API sem parar (ver "A MarIA não
+`backend/` inteiro e reinicia a API sem parar (ver "A SelenIA não
 responde no WhatsApp" em Problemas comuns).
 
 Deve aparecer `Application startup complete`. A API fica em
@@ -196,19 +196,21 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_chat_disclaimer.py` | Aviso de IA na primeira mensagem, e não nas seguintes |
 | `test_triage_rules.py` | Camada 1 da triagem: frases que disparam e as que não podem disparar |
 | `test_triage_layers.py` | Camadas 1 + 2: o modelo só sobe o nível, falha fechada |
-| `test_webhook.py` | WhatsApp: desafio da Meta, assinatura, aviso de IA e resposta, reenvio, número sem profissional, emergência na hora, áudio, mensagens quebradas, espera recomeçada, resposta do painel pela Meta, filtro do túnel |
+| `test_webhook.py` | WhatsApp: desafio da Meta, assinatura, aviso de IA e resposta, id da Meta guardado na mensagem enviada, recusa da Meta marcada como não entregue, reenvio, número sem profissional, emergência na hora, áudio, mensagens quebradas, espera recomeçada, resposta do painel pela Meta, filtro do túnel |
 | `test_triage_fragments.py` | Frase de risco quebrada em várias mensagens: junta, não repete alerta, o mais grave ganha, respeita os 5 minutos |
 | `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio; a camada 2 só recebe as últimas 3 mensagens em até 5 minutos; a resposta esquece risco com mais de 5 minutos |
-| `test_reply_prompt.py` | Montagem do prompt: nome MarIA, lista fixa, regras da profissional |
+| `test_reply_prompt.py` | Montagem do prompt: nome SelenIA, lista fixa, regras da profissional |
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
 | `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
 | `test_onboarding.py` | Cadastro em etapas: etapa salva, duração, o que falta, aceite das regras e conclusão |
 | `test_alerts_api.py` | Tela de Alertas: ordem da lista, trilha, visto e revisado uma vez só, liberação na trilha, sem rota de editar ou apagar |
+| `test_contact_limit.py` | Limite de mensagens por hora, por pessoa: resposta até o limite, aviso uma vez e silêncio sem chamar o modelo, camada 1 pegando risco acima do limite, outra pessoa não afetada, volta quando a hora passa |
+| `test_usage.py` | Uso de tokens: uma linha por chamada (resposta e triagem) sem conteúdo, parte fixa do prompt com cache, nada anotado fora de `collect_usage` |
 | `test_inbox.py` | Tela de Conversas: ordem da lista, "Aguardando você", e-mail de pedido uma vez só, janela de 24h, número mascarado |
 | `test_documents_api.py` | Envio e remoção de documento da base de conhecimento |
 | `test_auth.py` | Login com Google, convite, sessão, rotas fechadas sem login, isolamento entre profissionais, limite de tentativas |
-| `test_appointments.py` | Pedidos de horário: reserva provisória, horário ocupado, duas pessoas ao mesmo tempo (threads e banco de verdade), índice único, troca de horário no mesmo dia, uma sessão por dia por pessoa (vários dias permitidos), pedido vencido, limite por dia, confirmar e recusar com e sem janela do WhatsApp, lista, ferramenta só com permissão de eventos, sessão e compromisso marcados pelo painel, calendário da semana |
-| `test_calendar.py` | Agenda: cálculo dos horários livres (antecedência, ocupado, duração, fim de semana), validação do horário de atendimento, conexão com o Google (permissão desmarcada, acesso cifrado, desconectar revoga), ferramenta da MarIA e falha do Google |
+| `test_appointments.py` | Pedidos de horário: reserva provisória, horário ocupado, duas pessoas ao mesmo tempo (threads e banco de verdade), índice único, troca de horário no mesmo dia, uma sessão por dia por pessoa (vários dias permitidos), teto de pedidos pendentes por pessoa, remarcar e cancelar como pedido, pedido vencido, limite por dia, confirmar e recusar com e sem janela do WhatsApp, lista, ferramenta só com permissão de eventos, sessão e compromisso marcados pelo painel, calendário da semana |
+| `test_calendar.py` | Agenda: cálculo dos horários livres (antecedência, ocupado, duração, fim de semana), validação do horário de atendimento, conexão com o Google (permissão desmarcada, acesso cifrado, desconectar revoga), ferramenta da SelenIA e falha do Google |
 
 Os testes que chamariam a API da Claude usam `monkeypatch` para
 substituir a chamada, e o envio de e-mail e as chamadas à API da Meta
@@ -235,7 +237,29 @@ Apaga conversas sem atividade há mais de `DATA_RETENTION_DAYS` (padrão:
 python scripts/purge_old_conversations.py
 ```
 
-## 6. Problemas comuns
+## 6. Backup e custo
+
+Backup do banco (arquivo em `backend/backups/`, fora do git) e teste de
+restauração numa base separada (`<nome>_restauracao`), que compara a
+contagem de linhas de cada tabela com a original. Usa o `pg_dump` do
+contêiner quando a máquina não tem o do Postgres:
+
+```bash
+python scripts/backup.py
+python scripts/backup.py --restaurar backups/maria-AAAAMMDD-HHMM.dump
+```
+
+O backup leva as conversas cifradas; a chave fica no `.env` e não vai
+junto. Primeiro teste de restauração: 12/10/2026, todas as tabelas
+batendo.
+
+Custo real do modelo, a partir dos tokens gravados em `llm_usage`:
+
+```bash
+python scripts/custo.py --dias 30 --dolar 5.50
+```
+
+## 7. Problemas comuns
 
 **`docker compose up -d` diz "no configuration file provided"**
 Você não está na pasta certa. O comando roda na raiz do repositório,
@@ -258,8 +282,8 @@ instala o `psycopg2`. A URL precisa dizer o driver:
 `postgresql+psycopg2://...`, como no `.env.example` desde 30/09/2026.
 Em um `.env` antigo, troque o começo da linha à mão.
 
-**A MarIA não responde no WhatsApp (mas o simulador responde)**
-Confira se a API está reiniciando sozinha: na janela "MarIA - API",
+**A SelenIA não responde no WhatsApp (mas o simulador responde)**
+Confira se a API está reiniciando sozinha: na janela "SelenIA - API",
 aparece `WatchFiles detected changes` e `Started server process` de
 poucos em poucos segundos. Cada início da API abre o ChromaDB, que
 grava em `backend/chroma_data/`; se o reload observa o `backend/`

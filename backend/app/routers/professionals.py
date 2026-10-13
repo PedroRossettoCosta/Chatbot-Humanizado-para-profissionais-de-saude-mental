@@ -64,7 +64,7 @@ def accept_rules(
     db: Session = Depends(get_db),
     user: models.User = Depends(auth.current_user),
 ):
-    """Registra que ela leu e aceitou as regras fixas da MarIA (etapa 4)."""
+    """Registra que ela leu e aceitou as regras fixas da SelenIA (etapa 4)."""
     professional = _get_owned(db, slug, user)
     onboarding.accept_rules(professional)
     db.commit()

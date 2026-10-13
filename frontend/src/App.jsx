@@ -24,7 +24,7 @@ const START_LOGGED_OUT = new URLSearchParams(window.location.search).has("sair")
 export default function App() {
   // undefined = ainda verificando; null = sem sessão.
   const [me, setMe] = useState(START_LOGGED_OUT ? null : undefined);
-  // "Testar a MarIA" no fim do cadastro abre o painel já no simulador.
+  // "Testar a SelenIA" no fim do cadastro abre o painel já no simulador.
   const [openSimulator, setOpenSimulator] = useState(false);
 
   const refresh = useCallback(() => {

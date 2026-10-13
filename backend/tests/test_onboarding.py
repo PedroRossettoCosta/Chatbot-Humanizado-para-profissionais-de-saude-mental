@@ -52,8 +52,8 @@ def test_cannot_complete_with_missing_fields(client, db):
     assert response.status_code == 422
     missing = response.json()["detail"]["missing"]
     assert "Duração da sessão" in missing
-    assert "Como a MarIA fala de você" in missing
-    assert "Aceite das regras da MarIA" in missing
+    assert "Como a SelenIA fala de você" in missing
+    assert "Aceite das regras da SelenIA" in missing
     _cleanup(db)
 
 

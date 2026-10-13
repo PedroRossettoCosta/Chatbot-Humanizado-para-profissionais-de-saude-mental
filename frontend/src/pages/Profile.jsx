@@ -10,7 +10,7 @@ const SECTIONS = [
   { id: "atendimento", label: "Atendimento" },
   { id: "tom", label: "Tom de voz" },
   { id: "extras", label: "Regras extras" },
-  { id: "regras", label: "Regras da MarIA" },
+  { id: "regras", label: "Regras da SelenIA" },
 ];
 
 function formFrom(p) {
@@ -115,11 +115,11 @@ export default function Profile() {
           <p className="m-0 text-xs font-semibold tracking-wider text-primary">CONFIGURAÇÕES DO ATENDIMENTO</p>
           <h1 className="m-0 mt-2 text-4xl font-bold tracking-tight text-ink">Perfil do atendimento</h1>
           <p className="m-0 mt-2 max-w-2xl text-muted">
-            Como a MarIA apresenta você, o tom de voz dela e os limites do seu atendimento.
+            Como a SelenIA apresenta você, o tom de voz dela e os limites do seu atendimento.
           </p>
         </div>
         <Button variant="soft" onClick={openSimulator}>
-          Testar a MarIA
+          Testar a SelenIA
         </Button>
       </div>
 
@@ -138,10 +138,10 @@ export default function Profile() {
         <div className="min-w-0 space-y-6">
           <Card id="dados" eyebrow="ETAPA 1" title="Seus dados">
             <div className="grid gap-6 md:grid-cols-2 [&>*]:min-w-0">
-              <Field label="Nome de exibição" required hint="É como a MarIA vai se referir a você nas conversas.">
+              <Field label="Nome de exibição" required hint="É como a SelenIA vai se referir a você nas conversas.">
                 <input className={inputClass} value={form.name} onChange={(e) => set("name")(e.target.value)} />
               </Field>
-              <Field label="Como a MarIA deve falar de você" required>
+              <Field label="Como a SelenIA deve falar de você" required>
                 <select
                   className={`${inputClass} cursor-pointer`}
                   value={form.pronouns}
@@ -176,7 +176,7 @@ export default function Profile() {
                 onChange={(e) => set("audience_description")(e.target.value)}
               />
             </Field>
-            <Field label="Informações do serviço" required hint="A MarIA informa o valor já na primeira pergunta sobre preço.">
+            <Field label="Informações do serviço" required hint="A SelenIA informa o valor já na primeira pergunta sobre preço.">
               <textarea
                 className={`${inputClass} min-h-24`}
                 value={form.service_info}
@@ -266,7 +266,7 @@ export default function Profile() {
                 <LockIcon />
               </span>
               <div className="flex-1">
-                <h2 className="m-0 text-xl font-semibold text-ink">Regras da MarIA</h2>
+                <h2 className="m-0 text-xl font-semibold text-ink">Regras da SelenIA</h2>
                 <p className="m-0 text-sm text-muted">Iguais em todas as contas; não podem ser alteradas.</p>
               </div>
               {professional.rules_accepted_at && (
@@ -285,7 +285,7 @@ export default function Profile() {
             {showRules && (
               <div className="mt-6 grid gap-6 lg:grid-cols-2">
                 <div>
-                  <p className="m-0 mb-3 font-semibold text-ink">A MarIA nunca diz</p>
+                  <p className="m-0 mb-3 font-semibold text-ink">A SelenIA nunca diz</p>
                   <ol className="m-0 space-y-2 pl-5 text-sm leading-relaxed text-slate">
                     {guidelines.never_say.map((r) => (
                       <li key={r}>{r}</li>
@@ -293,7 +293,7 @@ export default function Profile() {
                   </ol>
                 </div>
                 <div>
-                  <p className="m-0 mb-3 font-semibold text-ink">Como a MarIA age em situações de risco</p>
+                  <p className="m-0 mb-3 font-semibold text-ink">Como a SelenIA age em situações de risco</p>
                   <ol className="m-0 space-y-2 pl-5 text-sm leading-relaxed text-slate">
                     {guidelines.risk_behaviors.map((r) => (
                       <li key={r}>{r}</li>

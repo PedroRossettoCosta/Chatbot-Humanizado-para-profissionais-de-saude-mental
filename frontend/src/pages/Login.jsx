@@ -102,7 +102,7 @@ export default function Login({ onLogin }) {
               </span>
               <div>
                 <p className="font-semibold text-slate">Acesso por convite</p>
-                <p className="text-sm text-muted">A MarIA está em fase de testes, e por enquanto o acesso é só por convite.</p>
+                <p className="text-sm text-muted">A SelenIA está em fase de testes, e por enquanto o acesso é só por convite.</p>
               </div>
             </div>
           </div>

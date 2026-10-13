@@ -1,4 +1,4 @@
-"""Configuração do Alembic para o MarIA.
+"""Configuração do Alembic para o SelenIA.
 
 Duas adaptações em relação ao arquivo padrão gerado pelo `alembic init`:
 

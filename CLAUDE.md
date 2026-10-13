@@ -1,6 +1,6 @@
-# Instruções do projeto MarIA
+# Instruções do projeto SelenIA
 
-MarIA é a assistente virtual de atendimento inicial para profissionais
+SelenIA é a assistente virtual de atendimento inicial para profissionais
 de saúde mental, desenvolvida como TCC. Visão geral no
 [README](README.md); plano em andamento em
 [planejamento-mvp-9out.md](Documentation/planejamento-mvp-9out.md).
@@ -56,17 +56,21 @@ atualizados. Se algum ficou para depois, diga qual e por quê.
 
 - Documentação e comentários em português, no tom dos documentos
   existentes: direto, explicando o porquê, sem jargão desnecessário.
-- **MarIA** é o nome do produto e da assistente em todas as contas, não
-  uma configuração da profissional.
+- **SelenIA** é o nome do produto e da assistente em todas as contas, não
+  uma configuração da profissional. Até 13/10/2026 se chamava **MarIA**
+  (trocado porque o governo já usa esse nome num chatbot). Identificadores
+  internos antigos continuam (`"maria"` no banco, cookie `maria_session`),
+  e os documentos históricos (planos, entrevista, migrações) mantêm o
+  nome da época.
 - Textos que o sistema envia sem passar pelo modelo (emergência, aviso
   de IA, handoff) são fixos no código, em forma neutra de gênero, e
   precisam da aprovação da Marília antes de uso real.
 - **Linguagem neutra de gênero em tudo que a profissional ou o contato
-  lê** (telas, regras, e-mails, prompt): a MarIA serve profissionais de
+  lê** (telas, regras, e-mails, prompt): a SelenIA serve profissionais de
   qualquer gênero. Reescreva a frase para não marcar gênero ("iguais em
   todas as contas", "colegas", "você"), em vez de usar "o/a" ou
   "um/uma". Comentários e documentação interna podem dizer "a
-  profissional". Quando a MarIA fala **da profissional** com o
+  profissional". Quando a SelenIA fala **da profissional** com o
   paciente, segue os pronomes que ela escolheu no cadastro
   (`guidelines.PRONOUNS`).
 - Nada de conteúdo de conversa em logs, e-mails ou mensagens de erro.

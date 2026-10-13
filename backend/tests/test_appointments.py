@@ -1,4 +1,4 @@
-"""Pedidos de horário: a MarIA reserva, a profissional confirma ou recusa.
+"""Pedidos de horário: a SelenIA reserva, a profissional confirma ou recusa.
 
 O Google é substituído: o livre/ocupado vem de uma lista, e criar,
 atualizar e apagar eventos só anota a chamada. O banco é o de verdade,
@@ -201,9 +201,33 @@ def test_one_session_per_day_but_many_days_are_fine(db, professional, google):
     refused = _request(db, professional, conversation, code="2026-09-29T15:00")
     assert refused.appointment_id is None and "uma sessão por dia" in refused.text
 
-    note = appointments.pending_note(db, conversation)
+    note = appointments.pending_note(db, conversation, MONDAY_8AM)
     assert "terça, 29/09 às 10:00 (confirmada)" in note
     assert "quarta, 30/09 às 11:00 (aguardando confirmação)" in note
+
+
+def test_pending_requests_have_a_ceiling_per_person(db, professional, google, monkeypatch):
+    monkeypatch.setattr(appointments.settings, "max_pending_requests", 2)
+    conversation = _conversation(db, professional)
+    assert _request(db, professional, conversation).appointment_id
+    assert _request(db, professional, conversation, code="2026-09-30T11:00").appointment_id
+    refused = _request(db, professional, conversation, code="2026-10-01T11:00")
+    assert refused.appointment_id is None and "o máximo" in refused.text
+
+    # Trocar o horário de um dia que já tem pedido continua valendo.
+    swapped = _request(db, professional, conversation, code="2026-09-29T14:00")
+    assert swapped.appointment_id
+
+    # Outra pessoa não é afetada.
+    other = _conversation(db, professional, "5521933333333")
+    assert _request(db, professional, other, code="2026-10-01T11:00").appointment_id
+
+    # Sessão confirmada não conta no teto.
+    confirmed = db.get(models.Appointment, swapped.appointment_id)
+    confirmed.status = AppointmentStatus.CONFIRMED
+    db.commit()
+    assert _request(db, professional, conversation, code="2026-10-02T11:00").appointment_id
+    assert "no máximo 2 pedidos" in appointments.pending_note(db, conversation, MONDAY_8AM)
 
 
 def test_an_overdue_request_no_longer_holds_the_slot(db, professional, google):
@@ -273,7 +297,7 @@ def test_list_shows_pending_first_with_masked_phone(client, db, professional, go
 
 
 # ---------------------------------------------------------------------------
-# A MarIA na conversa
+# A SelenIA na conversa
 # ---------------------------------------------------------------------------
 
 
@@ -282,7 +306,7 @@ def test_booking_tool_only_with_permission_to_create_events(client, db, professi
 
     def fake_reply(system_prompt, history, tools=None, run_tool=None):
         calls.append((system_prompt, [t["name"] for t in tools or []]))
-        if tools and len(tools) == 2:
+        if tools and len(tools) > 1:
             run_tool("pedir_agendamento", {"codigo": _next_tuesday_code(), "nome": "Beatriz"})
         return "resposta do bot"
 
@@ -292,7 +316,7 @@ def test_booking_tool_only_with_permission_to_create_events(client, db, professi
 
     client.post("/chat/simulate", json={"professional_slug": TEST_SLUG, "message": "quero marcar"})
     prompt, tool_names = calls[-1]
-    assert tool_names == ["consultar_horarios_livres", "pedir_agendamento"]
+    assert tool_names == ["consultar_horarios_livres", "pedir_agendamento", "pedir_remarcacao", "pedir_cancelamento"]
     assert "Nunca diga que a sessão está confirmada" in prompt
     assert len(sent) == 1  # e-mail para a profissional confirmar
 
@@ -306,7 +330,7 @@ def test_slot_list_carries_codes_and_the_pending_request(db, professional, googl
     conversation = _conversation(db, professional)
     _request(db, professional, conversation)
     text_out = calendar.describe_for_assistant(
-        professional, MONDAY_8AM, pending=appointments.pending_note(db, conversation)
+        professional, MONDAY_8AM, pending=appointments.pending_note(db, conversation, MONDAY_8AM)
     )
     assert "terça, 29/09 às 10:00 (aguardando confirmação)" in text_out
     # O pedido das 10:00 (50 min) ocupa as 10:00 e as 10:30.
@@ -396,3 +420,110 @@ def test_week_view_needs_the_events_permission(client, db, professional, google)
 def test_max_sessions_per_day_is_validated(client, professional):
     assert client.patch(f"/professionals/{TEST_SLUG}", json={"max_sessions_per_day": 0}).status_code == 422
     assert client.patch(f"/professionals/{TEST_SLUG}", json={"max_sessions_per_day": 6}).json()["max_sessions_per_day"] == 6
+
+
+# ---------------------------------------------------------------------------
+# Remarcar e cancelar (pedidos pela pessoa; a profissional confirma)
+# ---------------------------------------------------------------------------
+
+
+def _next_code(weekday, hour="11:00"):
+    """Próximo dia da semana (0 = segunda) depois da terça de `_next_tuesday_code`."""
+    tuesday = datetime.strptime(_next_tuesday_code()[:10], "%Y-%m-%d").date()
+    day = tuesday + timedelta(days=1)
+    while day.weekday() != weekday:
+        day += timedelta(days=1)
+    return f"{day:%Y-%m-%d}T{hour}"
+
+
+def _confirmed_session(client, db, professional):
+    conversation = _conversation(db, professional)
+    booking = appointments.request(db, professional, conversation, _next_tuesday_code(), "Beatriz")
+    assert client.post(f"/calendar/appointments/{booking.appointment_id}/approve").status_code == 200
+    return conversation, db.get(models.Appointment, booking.appointment_id)
+
+
+def _last_text(no_real_whatsapp):
+    return no_real_whatsapp[-1][1]["text"]["body"]
+
+
+def test_reschedule_keeps_the_old_session_until_the_professional_confirms(
+    client, db, professional, google, no_real_whatsapp
+):
+    conversation, old = _confirmed_session(client, db, professional)
+    thursday = _next_code(3)
+    booking = appointments.request_reschedule(db, professional, conversation, _next_tuesday_code(), thursday)
+    assert booking.appointment_id and "continua marcada" in booking.text
+    db.refresh(old)
+    assert old.status == AppointmentStatus.CONFIRMED  # a antiga continua de pé
+
+    listed = {a["id"]: a for a in client.get(f"/calendar/{TEST_SLUG}/appointments").json()}
+    new = listed[booking.appointment_id]
+    assert new["kind"] == "reschedule" and new["awaiting_decision"] and new["replaces_label"]
+
+    assert client.post(f"/calendar/appointments/{booking.appointment_id}/approve").status_code == 200
+    db.expire_all()
+    assert db.get(models.Appointment, old.id).status == AppointmentStatus.CANCELLED
+    assert db.get(models.Appointment, booking.appointment_id).status == AppointmentStatus.CONFIRMED
+    assert old.calendar_event_id in google.deleted
+    assert _last_text(no_real_whatsapp).startswith("Ana Reserva confirmou a troca")
+
+
+def test_rejected_reschedule_leaves_the_old_session(client, db, professional, google, no_real_whatsapp):
+    conversation, old = _confirmed_session(client, db, professional)
+    booking = appointments.request_reschedule(db, professional, conversation, _next_tuesday_code(), _next_code(3))
+    assert client.post(f"/calendar/appointments/{booking.appointment_id}/reject").status_code == 200
+    db.expire_all()
+    assert db.get(models.Appointment, old.id).status == AppointmentStatus.CONFIRMED
+    assert "continua marcada" in _last_text(no_real_whatsapp)
+
+
+def test_reschedule_rules(client, db, professional, google):
+    conversation, _ = _confirmed_session(client, db, professional)
+    tuesday = _next_tuesday_code()
+    assert appointments.request_reschedule(db, professional, conversation, "2026-01-01T10:00", _next_code(3)).text == (
+        appointments.NOT_FOUND
+    )
+    # Outra pessoa não mexe na sessão da Beatriz.
+    other = _conversation(db, professional, "5521933333333")
+    assert appointments.request_reschedule(db, professional, other, tuesday, _next_code(3)).appointment_id is None
+    # Um pedido de troca por vez.
+    assert appointments.request_reschedule(db, professional, conversation, tuesday, _next_code(3)).appointment_id
+    second = appointments.request_reschedule(db, professional, conversation, tuesday, _next_code(4))
+    assert second.appointment_id is None and "Já há um pedido de troca" in second.text
+
+
+def test_cancel_of_a_confirmed_session_waits_for_the_professional(client, db, professional, google, no_real_whatsapp):
+    conversation, session = _confirmed_session(client, db, professional)
+    booking = appointments.request_cancel(db, professional, conversation, _next_tuesday_code())
+    assert booking.appointment_id == session.id and "Nunca diga que já está cancelada" in booking.text
+    db.refresh(session)
+    assert session.status == AppointmentStatus.CONFIRMED and session.cancel_requested_at
+
+    [listed] = [a for a in client.get(f"/calendar/{TEST_SLUG}/appointments").json() if a["id"] == session.id]
+    assert listed["kind"] == "cancel" and listed["awaiting_decision"]
+    assert "cancelamento pedido" in appointments.pending_note(db, conversation)
+
+    assert client.post(f"/calendar/appointments/{session.id}/approve").status_code == 200
+    db.refresh(session)
+    assert session.status == AppointmentStatus.CANCELLED
+    assert session.calendar_event_id in google.deleted
+    assert _last_text(no_real_whatsapp).startswith("Ana Reserva confirmou o cancelamento")
+
+
+def test_rejected_cancel_keeps_the_session(client, db, professional, google, no_real_whatsapp):
+    conversation, session = _confirmed_session(client, db, professional)
+    appointments.request_cancel(db, professional, conversation, _next_tuesday_code())
+    assert client.post(f"/calendar/appointments/{session.id}/reject").status_code == 200
+    db.refresh(session)
+    assert session.status == AppointmentStatus.CONFIRMED and session.cancel_requested_at is None
+    assert "continua marcada" in _last_text(no_real_whatsapp)
+
+
+def test_a_pending_request_can_be_withdrawn_right_away(db, professional, google):
+    conversation = _conversation(db, professional)
+    booking = appointments.request(db, professional, conversation, _next_tuesday_code(), "Beatriz")
+    withdrawn = appointments.request_cancel(db, professional, conversation, _next_tuesday_code())
+    assert withdrawn.appointment_id is None and "desfeito" in withdrawn.text
+    assert db.get(models.Appointment, booking.appointment_id).status == AppointmentStatus.CANCELLED
+    assert google.deleted == ["evento-1"]

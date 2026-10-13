@@ -5,7 +5,7 @@
 ## O que é
 
 Quando a triagem gera um alerta, quando alguém recusa falar com a
-MarIA ou quando alguém pede para falar com a profissional, ela recebe
+SelenIA ou quando alguém pede para falar com a profissional, ela recebe
 um e-mail na hora, sem precisar estar com o painel aberto.
 
 ## Por que existe
@@ -34,10 +34,10 @@ Decisões:
 
 | Tipo de alerta | Assunto do e-mail |
 |---|---|
-| Emergência | "[MarIA] EMERGÊNCIA: possível risco à vida" |
-| Dúvida sobre segurança | "[MarIA] Alerta: dúvida sobre segurança" |
-| Recusa do bot | "[MarIA] Uma pessoa quer falar com você" |
-| Pedido para falar com a profissional | "[MarIA] Uma pessoa pediu para falar com você" |
+| Emergência | "[SelenIA] EMERGÊNCIA: possível risco à vida" |
+| Dúvida sobre segurança | "[SelenIA] Alerta: dúvida sobre segurança" |
+| Recusa do bot | "[SelenIA] Uma pessoa quer falar com você" |
+| Pedido para falar com a profissional | "[SelenIA] Uma pessoa pediu para falar com você" |
 
 Sofrimento intenso **não** gera e-mail, só a marcação "necessita atenção".
 
@@ -46,7 +46,7 @@ O pedido para falar com a profissional não é alerta de segurança
 responder, e **não entra em trilha**; se falhar, só vai para o log
 (`notify_human_request`).
 
-O corpo traz: o que aconteceu e o que a MarIA fez, horário de Brasília,
+O corpo traz: o que aconteceu e o que a SelenIA fez, horário de Brasília,
 canal e o link do painel.
 
 O envio roda **depois** da resposta ao contato (tarefa em segundo
@@ -60,6 +60,10 @@ O resultado vai para a trilha do alerta:
 
 Arquivos: `services/notifications.py`, `routers/chat.py`,
 `services/handoff.py`.
+
+Pedidos de troca e de cancelamento de sessão (13/10/2026) também geram
+e-mail, com assunto próprio ("Um pedido de troca de horário aguarda
+você", "Um pedido de cancelamento aguarda você"), só com o dia e a hora.
 
 ## Textos fixos
 
@@ -78,7 +82,7 @@ No `backend/.env`:
 | `SMTP_PORT` | `587` |
 | `SMTP_USER` | `conta-que-envia@gmail.com` |
 | `SMTP_PASSWORD` | senha de app do Gmail (16 letras) |
-| `SMTP_FROM` | `MarIA <conta-que-envia@gmail.com>` |
+| `SMTP_FROM` | `SelenIA <conta-que-envia@gmail.com>` |
 
 Para o Gmail: Conta Google → Segurança → Verificação em duas etapas →
 Senhas de app. Não use a senha normal da conta.

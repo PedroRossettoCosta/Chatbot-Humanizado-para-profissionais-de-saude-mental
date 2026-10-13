@@ -3,7 +3,7 @@
 O alerta nunca muda depois de criado (`models.SafetyAlert`). Tudo o que
 acontece com ele depois vira um evento acrescentado
 (`SafetyAlertEvent`): o e-mail que saiu ou falhou, a primeira vez que a
-profissional abriu, a revisão e a liberação da MarIA. A situação
+profissional abriu, a revisão e a liberação da SelenIA. A situação
 ("novo" ou "revisado") é derivada dessa trilha, não guardada.
 """
 
@@ -28,23 +28,23 @@ _TRIGGER_TEXT = {
     "camada1:violencia_perigo_imediato": "Regra fixa: violência ou perigo imediato",
     "camada1:desejo_de_morrer": "Regra fixa: desejo de morrer",
     "camada2:falha": "A análise do modelo falhou; na dúvida, virou alerta (falha fechada)",
-    "handoff:recusa_bot": "A pessoa disse que não quer conversar com a MarIA",
+    "handoff:recusa_bot": "A pessoa disse que não quer conversar com a SelenIA",
 }
 
-# O que a MarIA fez na hora, pelo nível. Vem do fluxo do código
+# O que a SelenIA fez na hora, pelo nível. Vem do fluxo do código
 # (`routers/chat.py`), que é o mesmo para todo alerta daquele nível.
 _ACTION_TEXT = {
     AlertLevel.EMERGENCY: (
-        "Mensagem fixa de emergência enviada e MarIA pausada",
-        "A pessoa recebeu os contatos do SAMU 192 e do CVV 188. A MarIA não responde nesta conversa até você liberar.",
+        "Mensagem fixa de emergência enviada e SelenIA pausada",
+        "A pessoa recebeu os contatos do SAMU 192 e do CVV 188. A SelenIA não responde nesta conversa até você liberar.",
     ),
     AlertLevel.POSSIBLE_RISK: (
-        "A MarIA seguiu a conversa",
+        "A SelenIA seguiu a conversa",
         "Na dúvida sobre segurança, a conversa continua normalmente e o aviso vai para você olhar.",
     ),
     AlertLevel.BOT_REFUSED: (
-        "Mensagem fixa de compreensão enviada e MarIA parada",
-        "A MarIA avisou que você responde pessoalmente e parou de responder nesta conversa.",
+        "Mensagem fixa de compreensão enviada e SelenIA parada",
+        "A SelenIA avisou que você responde pessoalmente e parou de responder nesta conversa.",
     ),
 }
 
@@ -53,7 +53,7 @@ _EVENT_TEXT = {
     AlertEventType.NOTIFY_FAILED: "O e-mail de aviso não saiu",
     AlertEventType.VIEWED: "Você abriu o alerta",
     AlertEventType.REVIEWED: "Marcado como revisado",
-    AlertEventType.BOT_RELEASED: "MarIA liberada para responder",
+    AlertEventType.BOT_RELEASED: "SelenIA liberada para responder",
 }
 
 
@@ -79,7 +79,7 @@ def timeline(alert: models.SafetyAlert) -> list[dict]:
     """A trilha em ordem, com textos para a tela.
 
     As duas primeiras linhas vêm do próprio alerta (disparo e o que a
-    MarIA fez); as outras, dos eventos gravados.
+    SelenIA fez); as outras, dos eventos gravados.
     """
     title, detail = _ACTION_TEXT.get(alert.level, (None, None))
     items = [

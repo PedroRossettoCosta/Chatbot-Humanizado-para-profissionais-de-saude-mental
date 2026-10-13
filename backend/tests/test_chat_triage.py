@@ -185,7 +185,7 @@ def test_reply_forgets_risk_older_than_five_minutes(client, db, monkeypatch):
     seen = _emergency_then_release(client, db, monkeypatch, minutes_ago=30)
     assert "to pensando em me matar" not in seen
     assert triage.EMERGENCY_MESSAGE not in seen
-    # O resto da conversa continua: a MarIA não perde a memória toda.
+    # O resto da conversa continua: a SelenIA não perde a memória toda.
     assert "oi, meu nome é Ana" in seen
     assert seen[-1] == "quero marcar uma sessão"
     _cleanup(db)

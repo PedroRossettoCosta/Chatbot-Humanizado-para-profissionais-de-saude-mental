@@ -77,6 +77,6 @@ def test_guidelines_expose_fixed_rules(client):
     response = client.get("/assistant/guidelines")
     assert response.status_code == 200
     body = response.json()
-    assert body["assistant_name"] == "MarIA"
+    assert body["assistant_name"] == "SelenIA"
     assert [q["key"] for q in body["voice_questions"]] == ["preco", "funcionamento", "momento_dificil"]
     assert len(body["never_say"]) > 0

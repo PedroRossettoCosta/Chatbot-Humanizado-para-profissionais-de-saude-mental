@@ -14,7 +14,7 @@ bot em silêncio):
    Pedro"), com o botão "Em consulta" desligado.
 
 Com o botão "Em consulta" ligado, o pedido do caminho 4 não muda o
-estado: a MarIA avisa que a profissional está em atendimento e oferece
+estado: a SelenIA avisa que a profissional está em atendimento e oferece
 ajuda. Quem recusou o bot não recebe essa oferta de ajuda, porque acabou
 de dizer que não quer.
 
@@ -102,7 +102,7 @@ def classify_request(text: str, professional: models.Professional) -> HumanReque
     """O contato recusou o bot, pediu a profissional, ou nenhum dos dois?
 
     Regras e não modelo: é barato, previsível e fácil de explicar. Perguntar
-    "você é humana?" não conta, porque a MarIA responde isso sozinha. A
+    "você é humana?" não conta, porque a SelenIA responde isso sozinha. A
     recusa é verificada primeiro: "não quero falar com robô, quero falar
     com o Pedro" é recusa.
     """

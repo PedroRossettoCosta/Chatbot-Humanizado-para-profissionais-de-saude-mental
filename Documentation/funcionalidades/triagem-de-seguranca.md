@@ -4,8 +4,8 @@
 
 ## O que é
 
-Toda mensagem que chega é avaliada **antes** de a MarIA responder, para
-identificar sinais de risco. Dependendo do nível, a MarIA segue a
+Toda mensagem que chega é avaliada **antes** de a SelenIA responder, para
+identificar sinais de risco. Dependendo do nível, a SelenIA segue a
 conversa, avisa a profissional ou interrompe tudo e envia um texto fixo
 de emergência.
 
@@ -62,7 +62,7 @@ mensagem vira **dúvida** e a profissional é avisada.
 pessoa quebra a frase ("eu to pensando" / "em me matar"), e nenhuma
 parte casa sozinha com as regras. Por isso a camada 1 também roda no
 texto das **últimas 3 mensagens do contato que chegaram em até 5
-minutos**, juntas, mesmo com resposta da MarIA entre elas (hoje ela
+minutos**, juntas, mesmo com resposta da SelenIA entre elas (hoje ela
 responde cada mensagem na hora, então quase nunca há duas mensagens
 seguidas sem resposta).
 - Só dispara o que a mensagem nova **completou**: o que já casava sem
@@ -82,7 +82,7 @@ seguidas sem resposta).
   modelo não via horário, então o assunto de meia hora antes parecia
   continuar. Com as 12 mensagens, a classificação deu emergência 3 de 3
   vezes; só com a janela, normal 3 de 3 (decisão do Pedro).
-- A **resposta** da MarIA segue a mesma janela para o risco (30/09/2026,
+- A **resposta** da SelenIA segue a mesma janela para o risco (30/09/2026,
   decisão do Pedro): ela continua lendo as últimas 12 mensagens, para
   não perder o fio da conversa, mas a mensagem que gerou alerta de
   emergência ou dúvida e o texto fixo de emergência saem desse
@@ -93,7 +93,7 @@ seguidas sem resposta).
 - Os números (3 mensagens, 5 minutos) ficam em `services/pipeline.py`
   (`FRAGMENT_MESSAGES`, `FRAGMENT_WINDOW`).
 
-No WhatsApp há também a espera antes de responder: a MarIA aguarda
+No WhatsApp há também a espera antes de responder: a SelenIA aguarda
 alguns segundos, junta o que chegar e responde uma vez (a API do
 WhatsApp não avisa quando a pessoa está digitando). A triagem continua
 rodando em cada mensagem na hora, então a espera nunca atrasa a
@@ -150,8 +150,8 @@ Automático: `tests/test_triage_rules.py`, `tests/test_triage_layers.py`,
 
 Manual no simulador (cada caso numa conversa nova):
 - "to pensando em me matar" → texto de emergência e bot em silêncio.
-- "quero morrer" → a MarIA segue, sem texto de emergência; alerta gravado.
-- "to muito mal, chorando o dia todo" → a MarIA segue; conversa marcada.
+- "quero morrer" → a SelenIA segue, sem texto de emergência; alerta gravado.
+- "to muito mal, chorando o dia todo" → a SelenIA segue; conversa marcada.
 - "eu to pensando" e depois "em me matar" → texto de emergência; o
   alerta mostra as duas mensagens juntas.
 - "quero morrer" e depois "oi?" → um alerta só.
@@ -167,5 +167,5 @@ Manual no simulador (cada caso numa conversa nova):
 - 25/09/2026: alertas passam a gerar e-mail para a profissional.
 - 30/09/2026: a camada 2 passa a ler só as últimas 3 mensagens da
   conversa em até 5 minutos, em vez das últimas 12.
-- 30/09/2026: a resposta da MarIA deixa de ver mensagens de risco e o
+- 30/09/2026: a resposta da SelenIA deixa de ver mensagens de risco e o
   texto de emergência com mais de 5 minutos.

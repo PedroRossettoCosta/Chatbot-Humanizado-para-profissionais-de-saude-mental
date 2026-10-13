@@ -31,13 +31,13 @@ function tagsFor(response) {
   const tags = [TRIAGE_TAGS[response.triage_level] || TRIAGE_TAGS.normal];
   if (response.handoff) tags.push({ text: HANDOFF_TAGS[response.handoff], tone: "warning" });
   if (response.alert_created) tags.push({ text: "Alerta criado · aviso por e-mail", tone: "danger" });
-  if (response.state === "emergency_hold") tags.push({ text: "MarIA pausada nesta conversa", tone: "danger" });
+  if (response.state === "emergency_hold") tags.push({ text: "SelenIA pausada nesta conversa", tone: "danger" });
   else if (response.state === "human") tags.push({ text: "Conversa passou para você", tone: "warning" });
   for (const source of response.sources || []) tags.push({ text: `Com base em: ${source}`, tone: "primary" });
   return tags;
 }
 
-// "Testar a MarIA": conversa de teste no mesmo caminho do WhatsApp
+// "Testar a SelenIA": conversa de teste no mesmo caminho do WhatsApp
 // (triagem, alerta, handoff, RAG), sem sair do painel. Nada é enviado
 // ao WhatsApp. Também dá para testar assumir, responder e devolver.
 export default function Simulator({ open, onClose }) {
@@ -123,7 +123,7 @@ export default function Simulator({ open, onClose }) {
         className={`absolute right-0 top-0 flex h-full w-full max-w-xl flex-col bg-white shadow-2xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
-        aria-label="Testar a MarIA"
+        aria-label="Testar a SelenIA"
       >
         <header className="border-b border-line px-5 py-4">
           <div className="flex items-start gap-3">
@@ -131,7 +131,7 @@ export default function Simulator({ open, onClose }) {
               <BotIcon />
             </span>
             <div className="flex-1">
-              <h2 className="m-0 text-lg font-semibold text-ink">Testar a MarIA</h2>
+              <h2 className="m-0 text-lg font-semibold text-ink">Testar a SelenIA</h2>
               <p className="m-0 text-sm text-muted">Converse como se fosse uma pessoa procurando atendimento.</p>
             </div>
             <button
@@ -158,7 +158,7 @@ export default function Simulator({ open, onClose }) {
         <div className="flex-1 space-y-4 overflow-y-auto bg-canvas px-5 py-5">
           {messages.length === 0 && (
             <p className="mt-10 text-center text-sm text-muted">
-              Mande um “oi” para começar. A primeira resposta traz o aviso de que a MarIA é uma inteligência artificial.
+              Mande um “oi” para começar. A primeira resposta traz o aviso de que a SelenIA é uma inteligência artificial.
             </p>
           )}
           {messages.map((m, i) => (
@@ -197,7 +197,7 @@ export default function Simulator({ open, onClose }) {
               {m.role === "silent" && (
                 <div>
                   <p className="m-0 text-center text-xs text-muted">
-                    A MarIA não respondeu: a conversa está com você ou pausada depois de uma emergência.
+                    A SelenIA não respondeu: a conversa está com você ou pausada depois de uma emergência.
                   </p>
                   <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                     {m.tags.map((t) => (
@@ -216,7 +216,7 @@ export default function Simulator({ open, onClose }) {
               )}
             </div>
           ))}
-          {sending && <p className="m-0 text-sm text-muted">A MarIA está escrevendo...</p>}
+          {sending && <p className="m-0 text-sm text-muted">A SelenIA está escrevendo...</p>}
           <div ref={endRef} />
         </div>
 
@@ -225,7 +225,7 @@ export default function Simulator({ open, onClose }) {
             <div className="mb-3 rounded-2xl bg-[#eff4ff] px-4 py-3 text-sm">
               {state === "active" ? (
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted">A MarIA está respondendo.</span>
+                  <span className="text-muted">A SelenIA está respondendo.</span>
                   <button
                     type="button"
                     onClick={() => conversationAction(() => api.takeOver(conversationId))}
@@ -245,7 +245,7 @@ export default function Simulator({ open, onClose }) {
                       onClick={() => conversationAction(() => api.releaseToBot(conversationId))}
                       className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-primary hover:underline"
                     >
-                      {state === "emergency_hold" ? "Liberar MarIA para responder" : "Devolver para a MarIA"}
+                      {state === "emergency_hold" ? "Liberar SelenIA para responder" : "Devolver para a SelenIA"}
                     </button>
                   </div>
                   <div className="flex gap-2">

@@ -225,6 +225,24 @@ def recent_contact_texts(
     return [m.content for m in reversed(messages) if newest - m.created_at <= within]
 
 
+def contact_messages_last_hour(db: Session, conversation: models.Conversation) -> int:
+    """Quantas mensagens esta pessoa mandou na última hora, em qualquer
+    conversa dela com a profissional. Base do limite por contato
+    (`settings.contact_messages_per_hour`): conta só a pessoa, nunca o
+    consultório inteiro."""
+    since = models._now() - timedelta(hours=1)
+    return (
+        db.query(models.Message.id)
+        .join(models.Conversation, models.Message.conversation_id == models.Conversation.id)
+        .filter(
+            models.Conversation.contact_id == conversation.contact_id,
+            models.Message.role == MessageRole.USER,
+            models.Message.created_at >= since,
+        )
+        .count()
+    )
+
+
 def raise_safety_alert(
     db: Session,
     conversation: models.Conversation,

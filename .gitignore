@@ -12,3 +12,6 @@ backend/.pytest_cache/
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+
+# backups do banco (scripts/backup.py)
+backend/backups/

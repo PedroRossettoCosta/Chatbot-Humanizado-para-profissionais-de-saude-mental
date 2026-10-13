@@ -4,9 +4,9 @@
 
 ## O que é
 
-A MarIA recebe e responde mensagens de verdade no WhatsApp, pelo número
+A SelenIA recebe e responde mensagens de verdade no WhatsApp, pelo número
 dedicado da profissional. A Meta avisa o sistema a cada mensagem (o
-**webhook**); a MarIA faz a triagem, responde pela API da Meta, e a
+**webhook**); a SelenIA faz a triagem, responde pela API da Meta, e a
 conversa aparece em [Conversas](conversas.md). O que a profissional
 escreve no painel também chega no WhatsApp da pessoa.
 
@@ -21,11 +21,17 @@ escreve no painel também chega no WhatsApp da pessoa.
   novo a cada vez, o ngrok gratuito com domínio fixo. O endereço é
   cadastrado uma vez só na Meta.
 - **Espera antes de responder** (Pedro, 27/09/2026): a API do WhatsApp
-  não avisa quando a pessoa está digitando. A MarIA espera alguns
+  não avisa quando a pessoa está digitando. A SelenIA espera alguns
   segundos depois de cada mensagem, junta as mensagens quebradas e
   responde uma vez, mostrando "digitando…" enquanto isso.
 - **Avisos de entregue e lido ficam fora do MVP** (27/09/2026): a tela
   não mostra ✓✓.
+- **Recusa da Meta aparece no painel** (Pedro, 12/10/2026): desde
+  01/10/2026 a Meta cobra as respostas, e sem forma de pagamento ela
+  pode recusar o envio (erro 131042). Antes isso ficava só no terminal e
+  o painel mostrava a mensagem como enviada. Agora a mensagem fica
+  marcada "Não entregue" na tela Conversas, e a que saiu guarda o id da
+  Meta (`external_id`).
 
 ## Como usar
 
@@ -33,7 +39,7 @@ Para a profissional, nada muda: as conversas do WhatsApp aparecem em
 Conversas (sem a etiqueta "Teste"), e ela responde por lá.
 
 Para subir o sistema com o WhatsApp (Windows): `iniciar.bat` abre o
-túnel do ngrok numa janela própria ("MarIA - Tunel"), além da API e do
+túnel do ngrok numa janela própria ("SelenIA - Tunel"), além da API e do
 painel. Configuração inicial, uma vez só:
 
 1. Conta no ngrok (gratuita), domínio fixo em **Domains** e o
@@ -68,7 +74,7 @@ Cada chamada da Meta (`POST /webhook/whatsapp`):
    - a resposta normal espera `REPLY_DEBOUNCE_SECONDS` (6 s), e a espera
      recomeça se chegar outra mensagem. Depois, as mensagens da pessoa
      desde a última resposta viram um texto só, que passa pelo handoff
-     ou pela MarIA;
+     ou pela SelenIA;
    - áudio, imagem e outros tipos ficam na conversa como "[Áudio]",
      "[Imagem]" etc., sem triagem (não há texto), e a pessoa recebe um
      aviso fixo.
@@ -127,15 +133,18 @@ simulador.
 - **O app da Meta precisa ser publicado** para chegarem mensagens
   reais; antes disso, só os testes do painel da Meta. Publicar pede um
   link público de política de privacidade.
-- **Sistema desligado = MarIA fora do ar:** com o notebook ou o túnel
+- **Sistema desligado = SelenIA fora do ar:** com o notebook ou o túnel
   desligados, ninguém recebe resposta, nem a mensagem de emergência. A
   Meta tenta reenviar por um tempo, e as mensagens chegam atrasadas
   quando o sistema volta. Em produção, o backend rodaria num servidor
   ligado o tempo todo.
 - As esperas ficam na memória: se o backend reiniciar durante uma, a
   resposta daquela rajada não sai (a triagem já rodou).
-- Falha ao enviar uma mensagem da MarIA (inclusive a de emergência) só
-  vai para o log; sem avisos de entrega, o painel não mostra.
+- Falha ao enviar uma mensagem da SelenIA (inclusive a de emergência)
+  aparece como "Não entregue" na conversa, mas não gera e-mail nem
+  alerta: a profissional só vê ao abrir a conversa. Sem avisos de
+  entregue e lido, uma mensagem aceita pela Meta que não chegou ao
+  celular não aparece.
 - Só texto: áudio, imagem e documento não são lidos nem triados.
 - O número da profissional é ligado no banco à mão até 05/10.
 - Conta Meta sem verificação: no máximo 2 números. Em produção, cada
@@ -158,7 +167,7 @@ Manual:
    servidor**. A janela do túnel mostra `POST /webhook/whatsapp 200`
    (401 = App Secret errado). Feito em 27/09/2026: 200.
 2. Com o app publicado: mande "oi" de outro celular para o número da
-   MarIA; chegam o aviso de IA e a resposta, e a conversa aparece em
+   SelenIA; chegam o aviso de IA e a resposta, e a conversa aparece em
    Conversas. Mande "eu to pensando" e "em me matar" em seguida: sai a
    mensagem de emergência e o alerta.
 
@@ -166,3 +175,5 @@ Manual:
 
 - 27/09/2026: webhook, espera antes de responder, envio pela API da
   Meta, resposta do painel pelo WhatsApp, túnel fixo com filtro.
+- 13/10/2026: recusa da Meta marcada como "Não entregue" na mensagem;
+  mensagem enviada guarda o id da Meta.

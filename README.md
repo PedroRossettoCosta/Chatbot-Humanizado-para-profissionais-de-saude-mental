@@ -1,9 +1,9 @@
-# MarIA
+# SelenIA
 
 Assistente virtual humanizado para o atendimento inicial de
 profissionais autônomos de saúde mental (psicólogas, psicanalistas).
 
-O MarIA responde às primeiras mensagens de quem procura a profissional:
+O SelenIA responde às primeiras mensagens de quem procura a profissional:
 tira dúvidas sobre a abordagem e o funcionamento do atendimento, ajuda
 no pré-agendamento e — o ponto mais importante — reconhece sinais de
 risco à vida e encaminha imediatamente aos serviços de emergência.
@@ -57,7 +57,7 @@ Souza.
 
 **Funcionalidades** — o que cada uma faz, por que existe e como usar:
 [índice](Documentation/funcionalidades/README.md) (triagem de segurança,
-perfil e regras da MarIA, handoff e "Em consulta", alerta por e-mail).
+perfil e regras da SelenIA, handoff e "Em consulta", alerta por e-mail).
 
 **Do projeto** — para entender as decisões e o percurso do TCC:
 
@@ -119,7 +119,7 @@ Funcionando:
 - **Triagem de segurança** em duas camadas (regras fixas e modelo), com
   quatro níveis, texto fixo de emergência e falha fechada, inclusive
   para frase de risco quebrada em várias mensagens.
-- **Perfil e regras da MarIA**: tom de voz, exemplos, valores na
+- **Perfil e regras da SelenIA**: tom de voz, exemplos, valores na
   primeira resposta e a lista fixa do que ela nunca diz.
 - **Handoff**: a profissional assume, responde e devolve ao bot; pedido
   de humano, recusa do bot e botão "Em consulta".
@@ -128,15 +128,15 @@ Funcionando:
 - **Login com Google**, só para e-mails convidados, com todas as rotas
   de gestão protegidas e cada profissional vendo só os próprios dados.
 - **Cadastro em 7 etapas** no primeiro acesso, no visual do protótipo,
-  com aceite das regras da MarIA (falta conectar o WhatsApp, em 05/10).
+  com aceite das regras da SelenIA (falta conectar o WhatsApp, em 05/10).
 - **Painel** no visual do protótipo: menu, "Em consulta" no topo,
   Perfil do atendimento, Base de conhecimento (enviar e remover
-  documentos) e o simulador "Testar a MarIA", com o que a triagem
+  documentos) e o simulador "Testar a SelenIA", com o que a triagem
   decidiu em cada resposta.
 - **Conversas** no computador e no celular: quem precisa da
   profissional primeiro ("Aguardando você", emergência, atenção),
-  assumir, responder, devolver à MarIA e a janela de 24h do WhatsApp.
-- **Alertas** com a trilha de auditoria (disparo, o que a MarIA fez,
+  assumir, responder, devolver à SelenIA e a janela de 24h do WhatsApp.
+- **Alertas** com a trilha de auditoria (disparo, o que a SelenIA fez,
   e-mail, visto, revisado, liberação), sem editar nem apagar, e o
   número de alertas sem revisar no menu.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
@@ -147,10 +147,21 @@ Funcionando:
   WhatsApp e túnel fixo (ngrok) que só deixa passar o webhook. Falta
   publicar o app da Meta para chegarem mensagens reais.
 - **Agenda**: a profissional conecta o Google Agenda pelo painel e
-  informa o horário de atendimento; a MarIA oferece até 3 horários
+  informa o horário de atendimento; a SelenIA oferece até 3 horários
   livres e reserva provisoriamente o que a pessoa escolher; a
   profissional confirma ou recusa no painel (24h de validade), e a
-  pessoa recebe a resposta pela conversa.
+  pessoa recebe a resposta pela conversa. Remarcar e cancelar também
+  vão pela conversa, sempre como pedido que a profissional confirma.
+- **Limites por pessoa**: até 4 pedidos de horário aguardando
+  confirmação e 50 mensagens por hora; acima disso, a SelenIA pausa as
+  respostas àquela pessoa (a triagem por regras continua) e marca a
+  conversa para a profissional.
+- **Custo medido**: tokens de cada chamada ao modelo gravados sem
+  conteúdo, resumo em dólar e reais (`scripts/custo.py`), e cache da
+  parte fixa do prompt.
+- **Backup** do banco com restauração testada (`scripts/backup.py`).
+- **Mensagem não entregue**: se a Meta recusar um envio, a mensagem
+  aparece com "Não entregue" na tela Conversas.
 
 Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
