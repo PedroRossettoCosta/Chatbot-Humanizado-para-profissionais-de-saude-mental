@@ -54,7 +54,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.config import settings
 from app.models import AppointmentStatus, Channel, MessageRole, SentBy
-from app.services import calendar, conversations, whatsapp
+from app.services import calendar, clients, conversations, whatsapp
 
 logger = logging.getLogger(__name__)
 
@@ -258,7 +258,7 @@ def request(
         db.rollback()
         return Booking(taken)
     try:
-        free = calendar.available_slots(professional, now)
+        free = calendar.available_slots(professional, now, contact=conversation.contact)
     except calendar.CalendarError:
         db.rollback()
         return Booking(f"Não foi possível consultar a agenda agora. Diga que vai confirmar com {professional.name}.")
@@ -438,6 +438,9 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
     now = models._now()
     appointment.status = AppointmentStatus.CONFIRMED
     appointment.decided_at = now
+    # Sessão confirmada: a pessoa entra na lista de clientes ativos.
+    if appointment.conversation is not None:
+        clients.activate(db, appointment.conversation.contact)
     old = appointment.replaces
     if old is not None and old.status in (AppointmentStatus.CONFIRMED, AppointmentStatus.TENTATIVE):
         # Troca confirmada: a data antiga sai do banco e do Google.
@@ -548,7 +551,7 @@ def request_reschedule(
         db.rollback()
         return Booking(TAKEN_MESSAGE)
     try:
-        free = calendar.available_slots(professional, now)
+        free = calendar.available_slots(professional, now, contact=conversation.contact)
     except calendar.CalendarError:
         db.rollback()
         return Booking(f"Não foi possível consultar a agenda agora. Diga que vai confirmar com {professional.name}.")

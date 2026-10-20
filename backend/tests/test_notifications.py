@@ -10,7 +10,7 @@ TEST_SLUG = "test-pytest-notificacao"
 
 @pytest.fixture
 def professional(db, monkeypatch):
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta do bot")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta do bot")
     monkeypatch.setattr(settings, "smtp_host", "smtp.teste.local")
     _cleanup(db)
     db.add(models.Professional(slug=TEST_SLUG, name="Marília Rossetto", alert_email="marilia@exemplo.com"))
@@ -98,3 +98,63 @@ def test_smtp_error_is_recorded_and_does_not_break_the_reply(db, client, profess
 def test_invalid_alert_email_is_rejected(client, professional):
     response = client.patch(f"/professionals/{TEST_SLUG}", json={"alert_email": "marilia.exemplo.com"})
     assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Pedido levado pela SelenIA (`avisar_profissional`)
+# ---------------------------------------------------------------------------
+
+
+def _assistant_asks(monkeypatch, motivo):
+    """O modelo chama `avisar_profissional` e responde."""
+
+    def fake_reply(system_prompt, history, tools=None, run_tool=None):
+        assert llm.ASK_PROFESSIONAL_TOOL in tools
+        run_tool("avisar_profissional", {"motivo": motivo})
+        return "Perguntei e a resposta vem por aqui."
+
+    monkeypatch.setattr(llm, "generate_reply", fake_reply)
+
+
+def test_assistant_request_emails_once_and_keeps_the_bot_answering(db, client, professional, no_real_email, monkeypatch):
+    """Caso real de 18/10/2026: "vou perguntar ao Pedro" sem nada chegar a ele."""
+    _assistant_asks(monkeypatch, "horario_especial")
+    body = _send(client, "só posso às 21h, pergunta pra ele se topa")
+    conversation = db.get(models.Conversation, body["conversation_id"])
+    assert conversation.awaiting_reply_since is not None
+    assert conversation.awaiting_reason == "horario_especial"
+    assert conversation.state == "active"  # a SelenIA continua respondendo
+
+    [email] = no_real_email
+    assert email["Subject"] == "[SelenIA] Uma pessoa aguarda uma resposta sua"
+    content = email.get_content()
+    assert "fora do seu horário de atendimento" in content
+    assert "21h" not in content  # nada do que a pessoa escreveu
+
+    # O segundo pedido, antes de ela responder, não manda outro e-mail.
+    _assistant_asks(monkeypatch, "pagamento")
+    _send(client, "e como pago?", body["session_id"])
+    assert len(no_real_email) == 1
+    db.expire_all()
+    assert db.get(models.Conversation, body["conversation_id"]).awaiting_reason == "horario_especial"
+
+    # A conversa aparece no painel com o motivo, e responder limpa.
+    listed = client.get(f"/conversations?professional_slug={TEST_SLUG}").json()[0]
+    assert listed["awaiting_reason"] == "horario_especial"
+    client.post(f"/conversations/{body['conversation_id']}/messages", json={"content": "Oi, aqui é a Marília."})
+    db.expire_all()
+    conversation = db.get(models.Conversation, body["conversation_id"])
+    assert conversation.awaiting_reply_since is None and conversation.awaiting_reason is None
+
+
+def test_unknown_reason_becomes_other(db, client, professional, no_real_email, monkeypatch):
+    _assistant_asks(monkeypatch, "qualquer coisa")
+    body = _send(client, "uma dúvida que só ela sabe")
+    assert db.get(models.Conversation, body["conversation_id"]).awaiting_reason == "outro"
+    assert "só você pode responder" in no_real_email[0].get_content()
+
+
+def test_human_request_keeps_its_own_email_and_reason(db, client, professional, no_real_email):
+    body = _send(client, "queria falar com a Marília")
+    assert db.get(models.Conversation, body["conversation_id"]).awaiting_reason == "falar_com_profissional"
+    assert no_real_email[0]["Subject"] == "[SelenIA] Uma pessoa pediu para falar com você"

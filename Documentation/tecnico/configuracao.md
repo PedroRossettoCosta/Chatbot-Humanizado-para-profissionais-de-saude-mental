@@ -25,6 +25,7 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `WHATSAPP_APP_SECRET` | só com WhatsApp | Segredo do app (Configurações do app → Básico). Confere a assinatura de cada chamada do webhook; vazio = nada entra |
 | `WHATSAPP_VERIFY_TOKEN` | só com WhatsApp | Senha do desafio da Meta ao cadastrar o webhook. Qualquer texto longo; o mesmo vai no painel da Meta |
 | `WHATSAPP_API_VERSION` | não | Versão da Graph API. Padrão: `v25.0` |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID` | para conectar números | Conta do WhatsApp Business (WABA) onde o painel cadastra os números das profissionais. O token precisa de `whatsapp_business_management`. Vazio = a etapa 6 só tem "Conectar depois" ([conectar o WhatsApp](../funcionalidades/conectar-whatsapp.md)) |
 | `PUBLIC_WEBHOOK_HOST` | com túnel | Endereço público do túnel, sem `https://` (ex.: `algo.ngrok-free.dev`). Por ele só passa `/webhook/`. O `iniciar.bat` usa para abrir o ngrok |
 | `REPLY_DEBOUNCE_SECONDS` | não | Espera antes de responder no WhatsApp, para juntar mensagens quebradas. Padrão: 6 |
 | `MAX_PENDING_REQUESTS` | não | Pedidos de horário aguardando confirmação ao mesmo tempo, por pessoa. Padrão: 4 ([limites por contato](../funcionalidades/limites-por-contato.md)) |

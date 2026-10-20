@@ -45,7 +45,11 @@ def no_real_whatsapp(monkeypatch):
         calls.append((phone_number_id, body))
         return {"messages": [{"id": f"wamid.teste.saida.{len(calls)}"}]}
 
+    def no_graph(method, path, body=None, params=None):
+        raise AssertionError(f"teste chamou a Graph API de verdade: {method} {path}")
+
     monkeypatch.setattr(whatsapp, "_post", fake_post)
+    monkeypatch.setattr(whatsapp, "_graph", no_graph)
     monkeypatch.setattr(whatsapp, "calls_in_tests", calls, raising=False)
     return calls
 

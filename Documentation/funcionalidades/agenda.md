@@ -44,7 +44,9 @@ procurar atendimento, e a SelenIA não sabia responder.
   do primeiro teste real):** a SelenIA passou a ver todo início de meia em
   meia hora em que a sessão inteira cabe, em vez de 3 por dia.
 - **Máximo de sessões por dia (Pedro, 28/09/2026):** campo da
-  profissional; dia cheio não é oferecido.
+  profissional; dia cheio não é oferecido. Desde 19/10/2026 não vale
+  para os clientes especiais (tela
+  [Clientes](clientes-e-horario-especial.md)).
 - **Calendário no painel (Pedro, 28/09/2026):** ver a semana e marcar
   pelo painel, sem abrir o Google. O calendário mostra os títulos dos
   eventos para a profissional (é a agenda dela); a SelenIA continua vendo
@@ -325,3 +327,12 @@ Manual:
 - 13/10/2026: remarcar e cancelar pela conversa, como pedido que a
   profissional confirma na tela Agenda (troca, cancelamento, desistência
   de pedido ainda sem confirmação).
+- 19/10/2026: horários especiais, fora do expediente, só para clientes
+  ativos com permissão (editados na tela [Clientes](clientes-e-horario-especial.md)).
+  A grade semanal virou o componente `WeeklyHours.jsx`, usado nas duas
+  telas. Confirmar uma sessão torna a pessoa cliente ativo.
+- 19/10/2026: os horários especiais viraram dias especiais: nesses dias,
+  quem tem a permissão vê o dia inteiro (`free_slots` com `whole_days`).
+  A grade `WeeklyHours.jsx` voltou a ser só da Agenda. O máximo de
+  sessões por dia não vale para quem tem essa permissão. Os dias
+  especiais são de cada cliente (`available_slots(..., contact=)`).

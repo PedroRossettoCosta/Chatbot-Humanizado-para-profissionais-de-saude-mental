@@ -124,11 +124,21 @@ Funcionando:
 - **Handoff**: a profissional assume, responde e devolve ao bot; pedido
   de humano, recusa do bot e botão "Em consulta".
 - **Alerta por e-mail** para a profissional, sem conteúdo da conversa;
-  também quando alguém pede para falar com ela.
+  também quando alguém pede para falar com ela ou quando a SelenIA leva
+  um pedido que só ela decide (`avisar_profissional`: horário fora do
+  expediente, pagamento, desconto), sem parar o bot.
+- **Clientes**: lista de clientes ativos (entra sozinho ao confirmar uma
+  sessão), tirar e pôr na lista, e permissão para marcar nos horários
+  especiais, fora do expediente, que a profissional define.
+- **Formas de pagamento** no Perfil (escolha múltipla), informadas pela
+  SelenIA quando perguntam como pagar.
 - **Login com Google**, só para e-mails convidados, com todas as rotas
   de gestão protegidas e cada profissional vendo só os próprios dados.
 - **Cadastro em 7 etapas** no primeiro acesso, no visual do protótipo,
-  com aceite das regras da SelenIA (falta conectar o WhatsApp, em 05/10).
+  com aceite das regras da SelenIA.
+- **Conectar o WhatsApp pelo painel** (etapa 6 e tela WhatsApp do menu): número, código
+  por SMS ou ligação e registro na Meta (testado de verdade em 19/10);
+  depois de conectado, trocar o nome que aparece ou trocar o número.
 - **Painel** no visual do protótipo: menu, "Em consulta" no topo,
   Perfil do atendimento, Base de conhecimento (enviar e remover
   documentos) e o simulador "Testar a SelenIA", com o que a triagem
@@ -141,7 +151,7 @@ Funcionando:
   número de alertas sem revisar no menu.
 - **LGPD básico**: conteúdo das mensagens e dados de contato cifrados em
   repouso, aviso automático de que é uma IA, política de retenção.
-- **WhatsApp**: webhook com assinatura conferida, triagem assim que a
+- **WhatsApp**: fotos, áudios e documentos aparecem na conversa do painel (buscados na Meta na hora, sem guardar). Webhook com assinatura conferida, triagem assim que a
   mensagem chega, espera de alguns segundos para juntar mensagens
   quebradas, resposta pela API da Meta, resposta do painel enviada ao
   WhatsApp e túnel fixo (ngrok) que só deixa passar o webhook. Falta
@@ -160,6 +170,10 @@ Funcionando:
   conteúdo, resumo em dólar e reais (`scripts/custo.py`), e cache da
   parte fixa do prompt.
 - **Backup** do banco com restauração testada (`scripts/backup.py`).
+- **Testes de comportamento** no modelo real: 22 ataques de prompt
+  injection e 31 mensagens sensíveis, com relatório
+  (`scripts/avaliar_respostas.py`); se o modelo recusar a resposta, a
+  pessoa recebe um texto fixo em vez de mensagem vazia.
 - **Mensagem não entregue**: se a Meta recusar um envio, a mensagem
   aparece com "Não entregue" na tela Conversas.
 
@@ -167,7 +181,6 @@ Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
 
 - Publicação do app na Meta (política de privacidade) e teste com mensagens reais
-- Painel: WhatsApp
 - Textos fixos da agenda aprovados pela Marília
 
 ## Estrutura do repositório

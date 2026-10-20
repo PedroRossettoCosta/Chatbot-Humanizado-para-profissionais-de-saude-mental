@@ -63,11 +63,17 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `pronouns` | texto, opcional | Como a SelenIA fala dela com o paciente: `feminine`, `masculine` ou `neutral` (`guidelines.PRONOUNS`). Nulo = neutro |
 | `session_minutes` | inteiro, opcional | Duração da sessão (15 a 240). A agenda usa para montar os horários |
 | `max_sessions_per_day` | inteiro, opcional | Quantas sessões por dia a SelenIA pode deixar marcadas (1 a 20). Nulo = sem limite |
+| `payment_methods` | JSON, opcional | Formas de pagamento aceitas: chaves de `guidelines.PAYMENT_METHODS` (ex.: `["pix", "credito"]`). Vazio = não informado |
 | `working_hours` | JSON, opcional | Dias e horários em que atende, no fuso `AGENDA_TIMEZONE`: `{"mon": [{"start": "10:00", "end": "16:00"}], ...}`, até 3 intervalos por dia. Dia ausente ou vazio = não atende |
 | `onboarding_step` | inteiro, opcional | Etapa do cadastro alcançada (1 a 7), para voltar de onde parou |
 | `rules_accepted_at` | data, opcional | Quando ela leu e aceitou as regras fixas da SelenIA |
 | `onboarding_completed_at` | data, opcional | Cadastro concluído. Nulo = o painel mostra o cadastro |
-| `whatsapp_phone_number_id` | texto, único, opcional | "Phone number ID" da Meta do número da SelenIA desta profissional. O webhook encontra a profissional por ele |
+| `whatsapp_phone_number_id` | texto, único, opcional | "Phone number ID" da Meta do número da SelenIA desta profissional. O webhook encontra a profissional por ele. Só é preenchido depois do registro ([conectar o WhatsApp](../funcionalidades/conectar-whatsapp.md)) |
+| `whatsapp_pending_id` | texto, opcional | Número já cadastrado na conta da Meta, esperando código ou registro. Não recebe mensagens |
+| `whatsapp_setup_step` | texto, opcional | Passo da conexão em andamento: `code_sent` ou `verified`. Nulo = nada em andamento |
+| `whatsapp_display_number` | texto, opcional | O número como a Meta mostra (ex.: `+55 21 95952-4339`) |
+| `whatsapp_verified_name` | texto, opcional | O nome que aparece no WhatsApp |
+| `whatsapp_pin` | texto cifrado, opcional | PIN de 6 dígitos da verificação em duas etapas do número, gerado pela SelenIA |
 | `created_at` | data | |
 
 `calendar_id` fica por profissional para que cada uma exponha só a
@@ -100,6 +106,9 @@ Quem conversa com o bot, do outro lado do canal.
 | `external_id` | **cifrado** | O telefone no WhatsApp; o id de sessão no simulador |
 | `external_id_index` | texto, indexado | Índice cego, para busca |
 | `display_name` | **cifrado**, opcional | Nome do perfil informado pelo canal |
+| `active_since` | data, opcional | Cliente ativo desde quando (tela Clientes). Preenchido ao confirmar uma sessão da pessoa ou pela profissional. Nulo = não é cliente ativo |
+| `allow_special_hours` | booleano | Cliente especial: sem limite de sessões por dia e com os dias especiais abaixo. Só vale com `active_since`; tirar da lista desliga e apaga os dias |
+| `special_days` | JSON, opcional | Dias especiais desta pessoa (ex.: `["tue", "sat"]`): nesses dias ela marca em qualquer horário livre. Escolhidos na tela Clientes. Até 19/10/2026 eram da profissional (`professionals.special_days`, antes `special_hours`) |
 | `created_at` | data | |
 
 **Restrição de unicidade:** (`professional_id`, `channel`,
@@ -132,7 +141,8 @@ Uma thread de atendimento entre um contato e a profissional.
 | `contact_id` | UUID | |
 | `state` | texto | `active`, `human` ou `emergency_hold` |
 | `needs_attention` | booleano | Marcação "necessita atenção da profissional" (sinal da triagem) |
-| `awaiting_reply_since` | data, opcional | "Aguardando você": a pessoa pediu a profissional ou recusou o bot, e ainda não teve resposta |
+| `awaiting_reply_since` | data, opcional | "Aguardando você": a pessoa pediu a profissional, recusou o bot ou a SelenIA levou um pedido (`avisar_profissional`), e ainda não teve resposta |
+| `awaiting_reason` | texto, opcional | Tipo do pedido (`models.AwaitingReason`): `falar_com_profissional`, `recusa_bot`, `horario_especial`, `pagamento`, `valor` ou `outro`. Só a categoria, nunca o texto |
 | `last_contact_message_at` | data, opcional | Última mensagem do contato; conta a janela de 24h do WhatsApp |
 | `contact_type` | texto | `lead` ou `patient` |
 | `created_at` | data | |
@@ -175,6 +185,10 @@ Cada mensagem trocada. O conteúdo é sempre cifrado em repouso.
 | `sent_by` | texto, opcional | `bot`, `professional` ou `system` |
 | `external_id` | texto, único, opcional | Id da mensagem no canal de origem. Nas mensagens de saída pelo WhatsApp, o id que a Meta devolveu ao aceitar o envio |
 | `delivery_failed` | booleano | A Meta recusou o envio desta mensagem de saída. O painel mostra "Não entregue". Migração `5c2d8e1f7a40` |
+| `media_type` | texto, opcional | Foto, áudio ou documento recebido pelo WhatsApp: `image`, `audio`, `document`. Migração `9c3f6b1e2a74` |
+| `media_id` | texto, opcional | Identificador do arquivo na Meta. O arquivo não é guardado: o painel busca na hora |
+| `media_mime` | texto, opcional | Tipo do arquivo informado pela Meta (ex.: `image/jpeg`) |
+| `media_filename` | texto cifrado, opcional | Nome do documento enviado (pode revelar dado de saúde, por isso cifrado) |
 | `created_at` | data | |
 
 `role` usa o mesmo vocabulário da API da Claude, então o histórico é
@@ -366,6 +380,22 @@ O resumo em dólar e reais sai por `scripts/custo.py`. Migração
 `1e7a4c9b3d62`.
 
 ---
+
+## WhatsAppRegisterAttempt
+
+Tabela `whatsapp_register_attempts`. Cada chamada de registro de número
+na Meta, com ou sem sucesso. A Meta aceita 10 registros por número em 72
+horas e bloqueia o número por mais 72 horas no 11º; o painel conta aqui
+e para em 8.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID | |
+| `professional_id` | FK | Quem tentou. Apagada junto com a profissional |
+| `phone_number_id` | texto | O número na Meta |
+| `ok` | booleano | O registro deu certo |
+| `error_code` | texto, opcional | Código de erro da Meta, quando falhou |
+| `created_at` | data | |
 
 ## O que este modelo ainda não cobre
 

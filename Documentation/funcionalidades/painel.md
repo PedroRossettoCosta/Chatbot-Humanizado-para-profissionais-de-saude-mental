@@ -20,9 +20,9 @@ vieram primeiro, para ele testar antes das que dependem de backend novo
 ## Como usar
 
 - **Menu lateral:** Conversas, Alertas (com o número de alertas sem
-  revisar), Perfil do atendimento, Base de conhecimento e Testar o
-  chat. WhatsApp aparece com "Em breve" e ainda não abre. A
-  [Agenda](agenda.md) abre desde 28/09/2026.
+  revisar), Agenda, Perfil do atendimento, WhatsApp, Base de
+  conhecimento e Testar o chat. A [Agenda](agenda.md) abre desde
+  28/09/2026; o [WhatsApp](conectar-whatsapp.md), desde 13/10/2026.
 - **Alertas** (`/alertas`): ver [Alertas](alertas.md).
 - **Conversas** (`/conversas`, onde o painel abre): ver
   [Conversas](conversas.md).
@@ -113,3 +113,4 @@ Manual:
 - 27/09/2026: Conversas no menu; o painel passa a abrir nela.
 - 27/09/2026: Alertas no menu, com o número de alertas sem revisar.
 - 28/09/2026: Agenda sai do "Em breve" e abre a tela nova ([agenda](agenda.md)).
+- 13/10/2026: WhatsApp sai do "Em breve" e abre a tela de conectar o número ([conectar o WhatsApp](conectar-whatsapp.md)).

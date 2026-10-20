@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import SessionLocal
 from app.services import appointments, notifications
-from app.routers import alerts, assistant, auth, calendar, chat, conversations, documents, professionals, webhook
+from app.routers import alerts, assistant, auth, calendar, chat, clients, conversations, documents, professionals, webhook
 
 # A estrutura do banco é criada e evoluída pelo Alembic
 # (`alembic upgrade head`), não pela aplicação ao subir. Ter as duas
@@ -66,6 +66,7 @@ app.include_router(documents.router)
 app.include_router(chat.router)
 app.include_router(assistant.router)
 app.include_router(conversations.router)
+app.include_router(clients.router)
 app.include_router(alerts.router)
 app.include_router(calendar.router)
 app.include_router(webhook.router)

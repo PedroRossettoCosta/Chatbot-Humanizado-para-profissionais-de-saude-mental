@@ -27,7 +27,7 @@ def test_risk_message_sends_fixed_text_raises_alert_and_silences_bot(client, db,
     _cleanup(db)
     llm_calls = []
     monkeypatch.setattr(
-        llm, "generate_reply", lambda system_prompt, history: llm_calls.append(1) or "resposta do bot"
+        llm, "generate_reply", lambda system_prompt, history, **_: llm_calls.append(1) or "resposta do bot"
     )
     db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
     db.commit()
@@ -63,7 +63,7 @@ def test_risk_message_sends_fixed_text_raises_alert_and_silences_bot(client, db,
 
 def test_possible_risk_alerts_professional_and_bot_keeps_talking(client, db, monkeypatch):
     _cleanup(db)
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta do bot")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta do bot")
     db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
     db.commit()
 
@@ -83,7 +83,7 @@ def test_possible_risk_alerts_professional_and_bot_keeps_talking(client, db, mon
 
 def test_intense_suffering_marks_attention_without_alert(client, db, monkeypatch):
     _cleanup(db)
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "acolhimento")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "acolhimento")
     monkeypatch.setattr(
         llm,
         "classify_risk",
@@ -120,7 +120,7 @@ def test_layer2_ignores_messages_older_than_five_minutes(client, db, monkeypatch
     # horário das 18:15 virar emergência, porque o modelo lia o histórico
     # inteiro, sem horário.
     _cleanup(db)
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta do bot")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta do bot")
     seen = _capture_layer2(monkeypatch)
     db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
     db.commit()
@@ -139,7 +139,7 @@ def test_layer2_ignores_messages_older_than_five_minutes(client, db, monkeypatch
 
 def test_layer2_reads_the_last_three_messages_together(client, db, monkeypatch):
     _cleanup(db)
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "ok")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "ok")
     seen = _capture_layer2(monkeypatch)
     db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
     db.commit()
@@ -160,7 +160,7 @@ def _emergency_then_release(client, db, monkeypatch, minutes_ago):
     _cleanup(db)
     histories = []
     monkeypatch.setattr(
-        llm, "generate_reply", lambda system_prompt, history: histories.append(history) or "resposta do bot"
+        llm, "generate_reply", lambda system_prompt, history, **_: histories.append(history) or "resposta do bot"
     )
     _capture_layer2(monkeypatch)
     db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
@@ -199,7 +199,7 @@ def test_reply_keeps_recent_risk_in_context(client, db, monkeypatch):
 
 def test_niche_distress_goes_to_the_model_without_alert(client, db, monkeypatch):
     _cleanup(db)
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "acolhimento")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "acolhimento")
     db.add(models.Professional(slug=TEST_SLUG, name="Teste Triagem"))
     db.commit()
 

@@ -1,9 +1,12 @@
 // As 7 etapas do cadastro (protótipo: telas C1 a C9). Cada etapa recebe
 // `save(campos, próximaEtapa)`, que grava no backend e avança.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { api } from "../../api.js";
 
 import { Button, ErrorBox, Field, formatDateTime, inputClass } from "../../components/ui.jsx";
+import WhatsAppConnect from "../../components/WhatsAppConnect.jsx";
 
 // Rascunho do cadastro: o que foi digitado e ainda não passou pelo
 // "Continuar". Fica no componente do cadastro (e não em cada etapa), para
@@ -433,12 +436,11 @@ export function StepExtraRules({ professional, drafts, setDraft, save, goTo, bus
   );
 }
 
-// Etapa 6 — Conectar seu WhatsApp (C6). A conexão com a Meta (SMS,
-// código e registro do número) entra em 05/10, no plano; até lá, esta
-// etapa mostra o que vai ser pedido e segue por "Conectar depois".
-export function StepWhatsApp({ professional, drafts, setDraft, save, goTo, busy, error }) {
-  const [number, setNumber] = useDraft(drafts, setDraft, "whatsapp_number", "");
-  const [displayName, setDisplayName] = useDraft(drafts, setDraft, "whatsapp_display_name", professional.name);
+// Etapa 6 — Conectar seu WhatsApp (C6). Os passos com a Meta (número,
+// código, registro) ficam em `WhatsAppConnect`, o mesmo da tela
+// WhatsApp do menu. A etapa é opcional: dá para conectar depois, por lá.
+export function StepWhatsApp({ professional, save, goTo, busy }) {
+  const [connected, setConnected] = useState(false);
 
   return (
     <div>
@@ -447,60 +449,17 @@ export function StepWhatsApp({ professional, drafts, setDraft, save, goTo, busy,
         oficial do WhatsApp.
       </StepHeader>
 
-      <div className="mt-6 flex gap-3 rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4">
-        <span aria-hidden="true">⚠️</span>
-        <div className="text-sm leading-relaxed text-[#92400e]">
-          <p className="m-0 font-semibold">Atenção antes de conectar</p>
-          <p className="m-0 mt-1">
-            O número conectado fica exclusivo da SelenIA e deixa de funcionar no aplicativo do WhatsApp e no WhatsApp
-            Web. Você responde às pessoas pelo painel. Se quiser usar o número que já atende, apague a conta do
-            WhatsApp dele no celular antes; as conversas antigas não são trazidas.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-8 space-y-6">
-        <Field label="Número de WhatsApp" required>
-          <div className="mt-2 flex overflow-hidden rounded-2xl border border-line bg-white focus-within:border-primary">
-            {/* Bandeira desenhada: o Windows não mostra emoji de bandeira (aparece "BR"). */}
-            <span className="flex shrink-0 items-center gap-2 whitespace-nowrap bg-[#eff4ff] px-4 text-slate">
-              <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" className="rounded-sm">
-                <rect width="22" height="16" fill="#009c3b" />
-                <path d="M11 2 L20 8 L11 14 L2 8 Z" fill="#ffdf00" />
-                <circle cx="11" cy="8" r="3.4" fill="#002776" />
-              </svg>
-              +55
-            </span>
-            <input
-              className="w-full border-0 px-4 py-3 text-base outline-none"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              placeholder="(11) 98452-7810"
-              inputMode="tel"
-            />
-          </div>
-        </Field>
-        <Field
-          label="Nome que aparece no WhatsApp"
-          required
-          hint="Este nome passa por uma análise do WhatsApp antes de aparecer para as pessoas."
-        >
-          <input className={inputClass} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-        </Field>
-
-        <Button className="w-full" disabled title="Disponível em breve">
-          Enviar código por SMS
-        </Button>
-        <p className="rounded-2xl bg-[#eff4ff] px-4 py-3 text-center text-sm text-slate">
-          A conexão com o WhatsApp chega em breve. Por enquanto, clique em <strong>Conectar depois</strong>: dá para
-          conectar mais tarde, pelo painel.
-        </p>
-        <ErrorBox>{error}</ErrorBox>
+      <div className="mt-8">
+        <WhatsAppConnect
+          slug={professional.slug}
+          defaultName={professional.name}
+          onStatus={(s) => setConnected(s.connected)}
+        />
       </div>
 
       <StepFooter step={6} onBack={() => goTo(5)}>
         <Button onClick={() => save({}, 7)} disabled={busy}>
-          Conectar depois →
+          {connected ? "Continuar →" : "Conectar depois →"}
         </Button>
       </StepFooter>
     </div>
@@ -513,6 +472,14 @@ export function StepReview({ professional, guidelines, goTo, complete, busy, err
     (q) => professional.voice_examples?.[q.key]?.good?.trim() && professional.voice_examples?.[q.key]?.bad?.trim()
   ).length;
   const extras = professional.extra_never_say || [];
+  // O resumo pergunta ao backend: o número conectado não vem no perfil.
+  const [whatsapp, setWhatsapp] = useState(null);
+  useEffect(() => {
+    api
+      .getWhatsApp(professional.slug)
+      .then(setWhatsapp)
+      .catch(() => setWhatsapp(null));
+  }, [professional.slug]);
 
   const blocks = [
     {
@@ -577,7 +544,15 @@ export function StepReview({ professional, guidelines, goTo, complete, busy, err
     {
       step: 6,
       title: "WHATSAPP",
-      body: (
+      body: whatsapp?.connected ? (
+        <>
+          <span className="inline-block rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-primary">
+            ✓ Conectado
+          </span>
+          <p className="m-0 mt-2 font-semibold text-ink">{whatsapp.display_number}</p>
+          {whatsapp.verified_name && <p className="m-0 text-sm text-muted">Aparece como “{whatsapp.verified_name}”</p>}
+        </>
+      ) : (
         <span className="inline-block rounded-full bg-warning-soft px-3 py-1 text-sm text-[#92400e]">
           Não conectado – você pode conectar depois
         </span>

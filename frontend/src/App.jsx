@@ -4,11 +4,13 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { api, setSessionLostHandler } from "./api.js";
 import Agenda from "./pages/Agenda.jsx";
 import Alerts from "./pages/Alerts.jsx";
+import Clients from "./pages/Clients.jsx";
 import Conversations from "./pages/Conversations.jsx";
 import KnowledgeBase from "./pages/KnowledgeBase.jsx";
 import Login from "./pages/Login.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import Profile from "./pages/Profile.jsx";
+import WhatsApp from "./pages/WhatsApp.jsx";
 import PanelLayout from "./panel/PanelLayout.jsx";
 
 // `?sair` no endereço encerra a sessão e mostra o login (o iniciar.bat
@@ -76,7 +78,9 @@ export default function App() {
           <Route path="/alertas" element={<Alerts />} />
           <Route path="/alertas/:alertId" element={<Alerts />} />
           <Route path="/agenda" element={<Agenda />} />
+          <Route path="/clientes" element={<Clients />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/whatsapp" element={<WhatsApp />} />
           <Route path="/base-de-conhecimento" element={<KnowledgeBase />} />
           <Route path="*" element={<Navigate to="/conversas" replace />} />
         </Route>

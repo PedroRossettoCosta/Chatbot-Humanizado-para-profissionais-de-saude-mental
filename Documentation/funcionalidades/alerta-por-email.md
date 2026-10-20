@@ -119,3 +119,7 @@ entrada (e o spam).
 - 25/09/2026: e-mail de alerta, campo por profissional, trilha de envio.
 - 25/09/2026: conta de envio configurada e envio real conferido.
 - 27/09/2026: e-mail quando alguém pede para falar com a profissional.
+- 19/10/2026: e-mail "Uma pessoa aguarda uma resposta sua" quando a
+  SelenIA leva um pedido com `avisar_profissional`, com texto fixo por
+  motivo (horário especial, pagamento, valor, outro) e sem conteúdo da
+  conversa (ver [Pedidos para a profissional](pedidos-para-a-profissional.md)).

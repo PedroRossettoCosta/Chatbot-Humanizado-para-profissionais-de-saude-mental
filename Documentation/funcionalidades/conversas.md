@@ -157,3 +157,10 @@ Manual:
 - 27/09/2026: resposta pelo painel enviada de verdade no WhatsApp.
 - 13/10/2026: mensagem que a Meta recusou aparece com "Não entregue" ao
   lado do horário (ver [atendimento pelo WhatsApp](atendimento-pelo-whatsapp.md)).
+- 19/10/2026: a faixa "Aguardando você" diz o tipo do pedido quando foi
+  a SelenIA que avisou (horário fora do atendimento, pagamento, valor,
+  outra dúvida); nesses casos a SelenIA continua respondendo.
+- 19/10/2026: fotos aparecem no balão (clique abre maior), áudios tocam
+  no próprio painel e documentos abrem ou baixam pelo nome. O arquivo é
+  buscado na Meta na hora; depois de cerca de 30 dias aparece "Arquivo
+  não disponível".

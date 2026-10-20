@@ -196,15 +196,18 @@ pytest -k blind_index             # só os testes cujo nome casa
 | `test_chat_disclaimer.py` | Aviso de IA na primeira mensagem, e não nas seguintes |
 | `test_triage_rules.py` | Camada 1 da triagem: frases que disparam e as que não podem disparar |
 | `test_triage_layers.py` | Camadas 1 + 2: o modelo só sobe o nível, falha fechada |
-| `test_webhook.py` | WhatsApp: desafio da Meta, assinatura, aviso de IA e resposta, id da Meta guardado na mensagem enviada, recusa da Meta marcada como não entregue, reenvio, número sem profissional, emergência na hora, áudio, mensagens quebradas, espera recomeçada, resposta do painel pela Meta, filtro do túnel |
+| `test_webhook.py` | WhatsApp: desafio da Meta, assinatura, aviso de IA e resposta, id da Meta guardado na mensagem enviada, recusa da Meta marcada como não entregue, reenvio, número sem profissional, emergência na hora, áudio, mensagens quebradas, espera recomeçada, resposta do painel pela Meta, filtro do túnel, foto/áudio/documento com só a referência guardada, arquivo buscado na Meta na hora, documento desconhecido como download, arquivo expirado, mídia de outra mensagem |
 | `test_triage_fragments.py` | Frase de risco quebrada em várias mensagens: junta, não repete alerta, o mais grave ganha, respeita os 5 minutos |
 | `test_chat_triage.py` | Triagem no fluxo do chat: texto de emergência, alerta, bot em silêncio; a camada 2 só recebe as últimas 3 mensagens em até 5 minutos; a resposta esquece risco com mais de 5 minutos |
-| `test_reply_prompt.py` | Montagem do prompt: nome SelenIA, lista fixa, regras da profissional |
+| `test_reply_prompt.py` | Montagem do prompt: nome SelenIA, lista fixa, regras da profissional, formas de pagamento, nada de "vou perguntar" sem `avisar_profissional`, "paciente especial" não dá permissão |
 | `test_handoff.py` | Pedido de humano, recusa do bot, "Em consulta", assumir e devolver |
-| `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas |
+| `test_notifications.py` | E-mail de alerta: quando envia, sem conteúdo da conversa, falhas registradas; pedido levado pela SelenIA (`avisar_profissional`): e-mail uma vez, por motivo, bot continua, responder limpa |
+| `test_clients.py` | Clientes e dias especiais: dia especial abre o dia todo, cada cliente com os seus dias, limite por dia não vale para quem tem permissão, permissão só com cliente ativo, a SelenIA só vê o horário especial pela permissão do painel, confirmar sessão torna ativo, tirar e pôr na lista, validação de dias especiais e formas de pagamento |
 | `test_onboarding.py` | Cadastro em etapas: etapa salva, duração, o que falta, aceite das regras e conclusão |
 | `test_alerts_api.py` | Tela de Alertas: ordem da lista, trilha, visto e revisado uma vez só, liberação na trilha, sem rota de editar ou apagar |
 | `test_contact_limit.py` | Limite de mensagens por hora, por pessoa: resposta até o limite, aviso uma vez e silêncio sem chamar o modelo, camada 1 pegando risco acima do limite, outra pessoa não afetada, volta quando a hora passa |
+| `test_whatsapp_numbers.py` | Conectar o número: formatos, fluxo até o registro, código errado, reenvio por ligação, número já na conta ou já verificado, limite de registros, bloqueio da Meta, número de outra conta, cancelar, servidor sem WABA (Graph API simulada), volta para o código quando a Meta diz que o número não está verificado, trocar o nome, aplicar o nome aprovado, desconectar para trocar o número |
+| `test_reply_refusal.py` | Recusa do modelo: resposta sem texto vira texto fixo e marca a conversa |
 | `test_usage.py` | Uso de tokens: uma linha por chamada (resposta e triagem) sem conteúdo, parte fixa do prompt com cache, nada anotado fora de `collect_usage` |
 | `test_inbox.py` | Tela de Conversas: ordem da lista, "Aguardando você", e-mail de pedido uma vez só, janela de 24h, número mascarado |
 | `test_documents_api.py` | Envio e remoção de documento da base de conhecimento |
@@ -258,6 +261,24 @@ Custo real do modelo, a partir dos tokens gravados em `llm_usage`:
 ```bash
 python scripts/custo.py --dias 30 --dolar 5.50
 ```
+
+## 6b. Avaliação do modelo (fora do pytest)
+
+Chamam a API da Claude de verdade e custam dinheiro; por isso não
+rodam com o `pytest`. Rode a partir de `backend/`:
+
+```bash
+python -m scripts.avaliar_triagem                   # triagem x rótulos da Marília
+python -m scripts.avaliar_respostas                 # prompt injection e respostas sensíveis
+python -m scripts.avaliar_respostas sensiveis S15   # só alguns casos
+```
+
+`avaliar_respostas` passa cada caso pelo caminho de uma conversa real
+(aviso de IA, triagem, handoff, resposta), com um perfil fictício e sem
+banco, e um segundo modelo (juiz) diz se a resposta cumpre o critério
+do caso. O relatório, com todas as conversas, o custo e a leitura do
+cache, vai para `Documentation/resultados-testes/`. O juiz é apoio: leia
+as falhas e as dúvidas antes de mudar o prompt.
 
 ## 7. Problemas comuns
 

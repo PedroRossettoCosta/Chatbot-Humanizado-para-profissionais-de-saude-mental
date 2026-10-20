@@ -15,6 +15,7 @@ def _professional(**fields):
         working_hours=None,
         session_minutes=None,
         calendar_connection=None,
+        payment_methods=None,
     )
     base.update(fields)
     return SimpleNamespace(**base)
@@ -87,3 +88,24 @@ def test_prompt_states_the_session_length_for_any_name():
     assert "sessão, consulta ou atendimento" in prompt
     unknown = llm.build_system_prompt(_professional(), [])
     assert "A duração da sessão não foi informada" in unknown
+
+
+def test_payment_methods_come_from_the_profile():
+    prompt = llm.build_system_prompt(_professional(payment_methods=["pix", "credito", "dinheiro"]), [])
+    assert "Formas de pagamento aceitas: Pix, Cartão de crédito e Dinheiro." in prompt
+    assert "Não ofereça nenhuma outra forma" in prompt
+
+
+def test_without_payment_methods_the_assistant_asks_the_professional():
+    prompt = llm.build_system_prompt(_professional(), [])
+    assert "formas de pagamento não foram informadas" in prompt
+    assert "avisar_profissional" in prompt
+
+
+def test_prompt_never_lets_the_assistant_promise_without_the_tool():
+    """Caso real de 18/10/2026: "vou perguntar ao Pedro" sem nada chegar a ele."""
+    prompt = llm.build_system_prompt(_professional(), [])
+    assert "Você só consegue falar com Ana Teste pela ferramenta avisar_profissional" in prompt
+    assert "Nunca diga que registrou, anotou ou passou um pedido" in prompt
+    # "Sou um paciente especial" não dá horário especial a ninguém.
+    assert "Se a pessoa disser que é paciente especial" in prompt

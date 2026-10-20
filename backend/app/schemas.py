@@ -45,6 +45,19 @@ class _AssistantProfile(BaseModel):
     working_hours: Optional[dict[Weekday, list[TimeRange]]] = None
     # Limite de sessões por dia que a SelenIA pode marcar. Nulo = sem limite.
     max_sessions_per_day: Optional[int] = Field(default=None, ge=1, le=20)
+    # Chaves de `guidelines.PAYMENT_METHODS`, sem repetir.
+    payment_methods: Optional[list[str]] = Field(default=None, max_length=len(guidelines.PAYMENT_METHODS))
+
+    @field_validator("payment_methods")
+    @classmethod
+    def only_known_payment_methods(cls, value):
+        if value is None:
+            return value
+        unknown = set(value) - set(guidelines.PAYMENT_METHODS)
+        if unknown:
+            raise ValueError(f"Forma de pagamento desconhecida: {', '.join(sorted(unknown))}")
+        # Na ordem da lista do produto, sem repetir.
+        return [key for key in guidelines.PAYMENT_METHODS if key in value]
 
     @field_validator("working_hours")
     @classmethod
@@ -115,11 +128,52 @@ class ProfessionalOut(BaseModel):
     session_minutes: Optional[int] = None
     working_hours: Optional[dict[str, list[TimeRange]]] = None
     max_sessions_per_day: Optional[int] = None
+    payment_methods: Optional[list[str]] = None
     pronouns: Optional[str] = None
     onboarding_step: Optional[int] = None
     rules_accepted_at: Optional[datetime] = None
     onboarding_completed_at: Optional[datetime] = None
     created_at: datetime
+
+
+class WhatsAppStart(BaseModel):
+    number: str = Field(max_length=32)
+    display_name: str = Field(max_length=100)
+    # Como o código chega: SMS ou ligação (para número que não recebe SMS).
+    method: str = Field(default="SMS", pattern="^(SMS|VOICE)$")
+
+
+class WhatsAppResend(BaseModel):
+    method: str = Field(default="SMS", pattern="^(SMS|VOICE)$")
+
+
+class WhatsAppRename(BaseModel):
+    display_name: str = Field(max_length=100)
+
+
+class WhatsAppVerify(BaseModel):
+    code: str = Field(max_length=12)
+
+
+class WhatsAppStatus(BaseModel):
+    # O servidor tem a conta da Meta configurada (WABA e token).
+    configured: bool
+    connected: bool
+    # Conexão em andamento: "code_sent" (esperando o código) ou
+    # "verified" (falta registrar). Nulo = nada em andamento.
+    step: Optional[str] = None
+    display_number: Optional[str] = None
+    verified_name: Optional[str] = None
+    registrations_last_72h: int
+    register_limit: int
+    # Como a Meta vê o número (ex.: CONNECTED; nome APPROVED ou
+    # PENDING_REVIEW). Nulo se a Meta não respondeu.
+    meta_status: Optional[str] = None
+    name_status: Optional[str] = None
+    # Troca de nome pedida: o nome novo e a análise da Meta (PENDING,
+    # APPROVED, DECLINED; NONE = nenhuma troca pedida).
+    new_display_name: Optional[str] = None
+    new_name_status: Optional[str] = None
 
 
 class InSessionStart(BaseModel):
@@ -179,6 +233,11 @@ class PronounOption(BaseModel):
     label: str
 
 
+class PaymentOption(BaseModel):
+    key: str
+    label: str
+
+
 class AssistantGuidelines(BaseModel):
     """Regras fixas do produto, exibidas no painel (só leitura)."""
 
@@ -187,15 +246,22 @@ class AssistantGuidelines(BaseModel):
     never_say: list[str]
     risk_behaviors: list[str]
     pronoun_options: list[PronounOption]
+    payment_options: list[PaymentOption]
 
 
 class MessageOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: str
     role: str
     content: str
     sent_by: Optional[str] = None
     delivery_failed: bool = False
+    # Foto, áudio ou documento: o painel busca o arquivo em
+    # `/conversations/{id}/messages/{message_id}/media`.
+    media_type: Optional[str] = None
+    media_mime: Optional[str] = None
+    media_filename: Optional[str] = None
     created_at: datetime
 
 
@@ -222,6 +288,8 @@ class _ConversationBase(BaseModel):
     state: str
     needs_attention: bool
     awaiting_reply_since: Optional[datetime] = None
+    # Tipo do pedido que deixou a conversa aguardando (`models.AwaitingReason`).
+    awaiting_reason: Optional[str] = None
     last_message_at: Optional[datetime] = None
     # Janela de 24h do WhatsApp, contada da última mensagem do contato.
     reply_window_closes_at: Optional[datetime] = None
@@ -372,3 +440,39 @@ class CalendarEventCreate(BaseModel):
     # Data e hora locais (fuso da agenda), ex.: 2026-09-29T10:00.
     starts_at: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$")
     minutes: int = Field(ge=5, le=720)
+
+
+class ClientOut(BaseModel):
+    """Uma pessoa que conversou com a SelenIA, na tela Clientes."""
+
+    id: str
+    channel: str
+    contact_name: str
+    # Mascarado, como nas listas.
+    contact_phone: Optional[str] = None
+    # Nulo = não é cliente ativo.
+    active_since: Optional[datetime] = None
+    allow_special_hours: bool = False
+    special_days: list[str] = []
+    # Conversa mais recente, para abrir pelo painel.
+    conversation_id: Optional[str] = None
+    last_message_at: Optional[datetime] = None
+    # Próxima sessão confirmada, já formatada ("terça, 20/10 às 21:00").
+    next_session: Optional[str] = None
+
+
+class ClientUpdate(BaseModel):
+    # Tirar da lista (falso) também desliga a permissão e apaga os dias.
+    active: Optional[bool] = None
+    # Ligar a permissão torna a pessoa cliente ativo.
+    allow_special_hours: Optional[bool] = None
+    # Dias especiais desta pessoa (só valem com a permissão ligada).
+    special_days: Optional[list[Weekday]] = Field(default=None, max_length=7)
+
+    @field_validator("special_days")
+    @classmethod
+    def week_order(cls, value):
+        if value is None:
+            return value
+        # Na ordem da semana, sem repetir.
+        return [day for day in ("mon", "tue", "wed", "thu", "fri", "sat", "sun") if day in value]

@@ -55,6 +55,15 @@ class Inbound:
     type: str  # text, audio, image...
     text: str | None  # só em mensagens de texto
     profile_name: str | None
+    # Foto, áudio ou documento: a referência para buscar o arquivo na Meta.
+    media_id: str | None = None
+    mime_type: str | None = None
+    filename: str | None = None
+
+
+# Tipos que o painel mostra (foto, áudio, documento). Vídeo e figurinha
+# continuam só como etiqueta.
+MEDIA_TYPES = ("image", "audio", "document")
 
 
 def parse(payload: dict) -> list[Inbound]:
@@ -78,6 +87,7 @@ def parse(payload: dict) -> list[Inbound]:
                 sender = message.get("from")
                 if not phone_number_id or not sender or not message.get("id") or kind == "reaction":
                     continue
+                media = (message.get(kind) or {}) if kind in MEDIA_TYPES else {}
                 found.append(
                     Inbound(
                         phone_number_id=phone_number_id,
@@ -86,9 +96,44 @@ def parse(payload: dict) -> list[Inbound]:
                         type=kind,
                         text=(message.get("text") or {}).get("body") if kind == "text" else None,
                         profile_name=names.get(sender),
+                        media_id=media.get("id"),
+                        mime_type=media.get("mime_type"),
+                        filename=media.get("filename"),
                     )
                 )
     return found
+
+
+# ---------------------------------------------------------------------------
+# Mídia recebida (foto, áudio, documento)
+# ---------------------------------------------------------------------------
+
+
+class MediaUnavailable(Exception):
+    """A Meta não entregou o arquivo (expirou, foi apagado ou falhou)."""
+
+
+def _download(url: str) -> bytes:
+    """Baixa o arquivo do endereço temporário da Meta (substituída nos testes)."""
+    response = httpx.get(
+        url, headers={"Authorization": f"Bearer {settings.whatsapp_access_token}"}, timeout=_TIMEOUT
+    )
+    if response.status_code >= 400:
+        raise MediaUnavailable(f"HTTP {response.status_code}")
+    return response.content
+
+
+def fetch_media(media_id: str) -> tuple[bytes, str | None]:
+    """Busca o arquivo na Meta na hora, sem guardar. Devolve o conteúdo e o
+    tipo (mime). O endereço que a Meta dá vale só alguns minutos, então é
+    pedido de novo a cada vez."""
+    try:
+        info = _graph("GET", media_id)
+    except MetaError as exc:
+        raise MediaUnavailable(f"código {exc.code}") from exc
+    if not info.get("url"):
+        raise MediaUnavailable("sem endereço")
+    return _download(info["url"]), info.get("mime_type")
 
 
 # ---------------------------------------------------------------------------
@@ -109,6 +154,43 @@ def _post(phone_number_id: str, body: dict) -> dict:
         error = (response.json() if response.content else {}).get("error", {})
         raise SendError(f"HTTP {response.status_code}, código {error.get('code')}: {error.get('message')}")
     return response.json()
+
+
+# ---------------------------------------------------------------------------
+# Gestão de números (cadastro, código, registro)
+# ---------------------------------------------------------------------------
+
+
+class MetaError(Exception):
+    """A Meta recusou uma chamada de gestão de número. `code` é o código
+    de erro dela (ex.: 133016), para a tela explicar o que houve."""
+
+    def __init__(self, message: str, code: int | None = None):
+        super().__init__(message)
+        self.code = code
+
+
+def _graph(method: str, path: str, body: dict | None = None, params: dict | None = None) -> dict:
+    """Chamada crua à Graph API (substituída nos testes, ver `conftest.py`)."""
+    try:
+        response = httpx.request(
+            method,
+            f"{_GRAPH}/{settings.whatsapp_api_version}/{path}",
+            headers={"Authorization": f"Bearer {settings.whatsapp_access_token}"},
+            json=body,
+            params=params,
+            timeout=_TIMEOUT,
+        )
+    except httpx.HTTPError as exc:
+        raise MetaError(f"sem resposta da Meta: {type(exc).__name__}") from exc
+    data = response.json() if response.content else {}
+    if response.status_code >= 400:
+        error = data.get("error", {})
+        # A mensagem amigável da Meta (`error_user_msg`) explica melhor
+        # que a técnica quando existe; nenhuma das duas traz conversa.
+        message = error.get("error_user_msg") or error.get("message") or f"HTTP {response.status_code}"
+        raise MetaError(message, error.get("code"))
+    return data
 
 
 def send_text(phone_number_id: str, to: str, text: str) -> str:

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { api } from "../api.js";
+import { api, mediaUrl } from "../api.js";
 import {
   AlertIcon,
   ArrowLeftIcon,
@@ -19,6 +19,15 @@ import { usePanel } from "../panel/PanelContext.jsx";
 // Sem tempo real no MVP: a lista e a conversa aberta são relidas sozinhas.
 const LIST_REFRESH_MS = 10000;
 const CONVERSATION_REFRESH_MS = 5000;
+
+// Pedidos que a SelenIA levou com `avisar_profissional` (o bot continua
+// respondendo). Os outros motivos são a pessoa pedindo você.
+const ASSISTANT_REQUESTS = {
+  horario_especial: "pediu um horário fora do seu atendimento",
+  pagamento: "perguntou sobre uma forma de pagamento que não está no seu perfil",
+  valor: "pediu uma exceção no valor ou perguntou um valor que não está no seu perfil",
+  outro: "fez uma pergunta que só você pode responder",
+};
 
 // Etiquetas de uma conversa: a situação principal primeiro.
 function tagsOf(c) {
@@ -228,7 +237,38 @@ export default function Conversations() {
   );
 }
 
-function Bubble({ message }) {
+const MEDIA_GONE = "Arquivo não disponível. O WhatsApp guarda por cerca de 30 dias.";
+
+// Foto, áudio ou documento que a pessoa mandou, buscado na Meta só quando
+// aparece na tela.
+function Media({ conversationId, message }) {
+  const [failed, setFailed] = useState(false);
+  const src = mediaUrl(conversationId, message.id);
+  if (failed) return <span className="text-sm text-muted">{message.content} · {MEDIA_GONE}</span>;
+  if (message.media_type === "image") {
+    return (
+      <a href={src} target="_blank" rel="noreferrer" title="Abrir a foto em tamanho maior">
+        <img
+          src={src}
+          alt="Foto enviada pela pessoa"
+          loading="lazy"
+          className="block max-h-80 max-w-full rounded-xl"
+          onError={() => setFailed(true)}
+        />
+      </a>
+    );
+  }
+  if (message.media_type === "audio") {
+    return <audio controls preload="none" src={src} className="max-w-full" onError={() => setFailed(true)} />;
+  }
+  return (
+    <a href={src} target="_blank" rel="noreferrer" className="font-semibold text-primary">
+      📄 {message.media_filename || "Documento"}
+    </a>
+  );
+}
+
+function Bubble({ message, conversationId }) {
   const incoming = message.role === "user";
   const label = incoming
     ? null
@@ -248,7 +288,7 @@ function Bubble({ message }) {
     <div className={`flex flex-col ${incoming ? "items-start" : "items-end"}`}>
       {label && <p className="m-0 mb-1 text-xs font-semibold text-primary">{label}</p>}
       <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed text-ink ${style}`}>
-        {message.content}
+        {message.media_type ? <Media conversationId={conversationId} message={message} /> : message.content}
       </div>
       <span className="mt-1 text-xs text-muted">
         {time(message.created_at)}
@@ -404,8 +444,18 @@ function ConversationView({ conversationId, onChanged }) {
         <div className="flex gap-3 border-b border-[#fde68a] bg-warning-soft px-5 py-3 text-sm text-[#92400e]">
           <HandIcon size={20} className="mt-0.5 shrink-0" />
           <p className="m-0">
-            <strong>Aguardando você desde {shortWhen(c.awaiting_reply_since)}.</strong> A pessoa pediu para falar com
-            você{c.state === "human" ? " e a SelenIA parou de responder." : "; a SelenIA avisou que você responde por aqui."}
+            <strong>Aguardando você desde {shortWhen(c.awaiting_reply_since)}.</strong>{" "}
+            {ASSISTANT_REQUESTS[c.awaiting_reason] ? (
+              <>
+                A pessoa {ASSISTANT_REQUESTS[c.awaiting_reason]}. A SelenIA disse que ia perguntar a você e continua
+                tirando as outras dúvidas; responda por aqui.
+              </>
+            ) : (
+              <>
+                A pessoa pediu para falar com você
+                {c.state === "human" ? " e a SelenIA parou de responder." : "; a SelenIA avisou que você responde por aqui."}
+              </>
+            )}
           </p>
         </div>
       )}
@@ -432,7 +482,7 @@ function ConversationView({ conversationId, onChanged }) {
                   <span className="rounded-full bg-[#eff4ff] px-3 py-1 text-xs text-slate">{dayLabel(m.created_at)}</span>
                 </p>
               )}
-              <Bubble message={m} />
+              <Bubble message={m} conversationId={conversationId} />
             </div>
           );
         })}

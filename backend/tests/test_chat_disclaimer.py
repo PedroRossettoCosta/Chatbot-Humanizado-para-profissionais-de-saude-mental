@@ -13,7 +13,7 @@ def _cleanup(db):
 
 def test_first_message_includes_disclaimer_and_second_does_not(client, db, monkeypatch):
     _cleanup(db)
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta de teste")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta de teste")
 
     professional = models.Professional(slug=TEST_SLUG, name="Teste Chat")
     db.add(professional)

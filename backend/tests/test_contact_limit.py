@@ -24,7 +24,7 @@ def calls(db, monkeypatch):
     monkeypatch.setattr(settings, "contact_messages_per_hour", LIMIT)
     calls = {"reply": 0, "triage": 0}
 
-    def fake_reply(system_prompt, history):
+    def fake_reply(system_prompt, history, **_):
         calls["reply"] += 1
         return "resposta do bot"
 

@@ -22,6 +22,15 @@ Nos caminhos 3 e 4 a conversa fica "Aguardando você"
 (`awaiting_reply_since`) no inbox até a profissional responder ou
 devolver a conversa ao bot (decisão do Pedro em 27/09/2026).
 
+Há ainda um quinto jeito de a conversa ficar aguardando, sem parar o
+bot: a própria SelenIA avisa a profissional pela ferramenta
+`avisar_profissional` (`ask_professional`), quando a pessoa pede algo
+que só ela decide (horário fora do expediente, forma de pagamento,
+desconto). Antes disso a SelenIA dizia "vou perguntar a ela" e nada
+chegava à profissional (teste de 18/10/2026; decisão do Pedro em 19/10).
+O motivo fica em `awaiting_reason`, para o painel e o e-mail dizerem o
+tipo do pedido sem repetir a conversa.
+
 Só ela devolve a conversa ao bot (`release`), inclusive depois de uma
 emergência (decisão da Marília em 23/09: não há retomada automática).
 
@@ -36,7 +45,7 @@ from enum import StrEnum
 from sqlalchemy.orm import Session
 
 from app import models
-from app.models import AlertEventType, AlertLevel, ConversationState, MessageRole, SentBy
+from app.models import AlertEventType, AlertLevel, AwaitingReason, ConversationState, MessageRole, SentBy
 from app.services import conversations
 from app.services.triage import normalize
 
@@ -140,16 +149,67 @@ def handle_human_request(
             excerpt=user_message.content[:500],
         )
         conversation.state = ConversationState.HUMAN
+        reason = AwaitingReason.REFUSES_BOT
     elif in_session:
         template = IN_SESSION_MESSAGE
+        reason = AwaitingReason.WANTS_PROFESSIONAL
     else:
         template = HANDOFF_MESSAGE
         conversation.state = ConversationState.HUMAN
+        reason = AwaitingReason.WANTS_PROFESSIONAL
     if conversation.awaiting_reply_since is None:
         conversation.awaiting_reply_since = models._now()
+    # A recusa do bot é o motivo mais forte: não é trocada por um pedido.
+    if conversation.awaiting_reason != AwaitingReason.REFUSES_BOT:
+        conversation.awaiting_reason = reason
     reply = template.format(name=professional.name)
     conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply, sent_by=SentBy.SYSTEM)
     return reply, alert
+
+
+# Motivos que a SelenIA pode passar pela ferramenta `avisar_profissional`.
+ASSISTANT_REASONS = (
+    AwaitingReason.SPECIAL_HOURS,
+    AwaitingReason.PAYMENT,
+    AwaitingReason.PRICE,
+    AwaitingReason.WANTS_PROFESSIONAL,
+    AwaitingReason.OTHER,
+)
+
+
+def ask_professional(
+    db: Session, professional: models.Professional, conversation: models.Conversation, reason: str
+) -> tuple[str, bool]:
+    """A SelenIA avisa a profissional. Devolve o texto da ferramenta e se
+    o e-mail deve sair.
+
+    A conversa fica "Aguardando você", mas o bot continua respondendo: a
+    pessoa pode seguir tirando dúvidas enquanto a profissional não
+    responde. O e-mail sai uma vez por pedido, como no caminho 4: se a
+    conversa já estava aguardando, a profissional já foi avisada.
+    """
+    if reason not in ASSISTANT_REASONS:
+        reason = AwaitingReason.OTHER
+    name = professional.name
+    if conversation.awaiting_reply_since is not None:
+        if conversation.awaiting_reason is None:
+            conversation.awaiting_reason = reason
+            db.commit()
+        return (
+            f"{name} já tinha recebido um aviso desta conversa e ainda não respondeu; o novo pedido fica "
+            f"junto. Diga que o pedido está com {name} e que a resposta vem por esta conversa, sem prometer "
+            "prazo. Não aceite nem recuse o pedido.",
+            False,
+        )
+    conversation.awaiting_reply_since = models._now()
+    conversation.awaiting_reason = reason
+    db.commit()
+    return (
+        f"Aviso enviado: {name} recebeu um e-mail e a conversa ficou marcada no painel. Diga que você "
+        f"avisou {name} e que a resposta vem por esta conversa, sem prometer prazo. Não aceite nem recuse "
+        "o pedido.",
+        True,
+    )
 
 
 def take_over(db: Session, conversation: models.Conversation) -> None:
@@ -178,6 +238,7 @@ def release(db: Session, conversation: models.Conversation) -> None:
     conversation.state = ConversationState.ACTIVE
     conversation.needs_attention = False
     conversation.awaiting_reply_since = None
+    conversation.awaiting_reason = None
     db.commit()
 
 
@@ -195,6 +256,7 @@ def send_professional_message(
         conversation.state = ConversationState.HUMAN
     conversation.needs_attention = False
     conversation.awaiting_reply_since = None
+    conversation.awaiting_reason = None
     return conversations.record_message(
         db, conversation, MessageRole.ASSISTANT, content, sent_by=SentBy.PROFESSIONAL, external_id=external_id
     )

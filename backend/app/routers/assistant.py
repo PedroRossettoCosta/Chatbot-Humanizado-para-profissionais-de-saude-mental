@@ -15,4 +15,5 @@ def get_guidelines():
         never_say=guidelines.NEVER_SAY_DEFAULTS,
         risk_behaviors=guidelines.RISK_BEHAVIORS,
         pronoun_options=[{"key": key, "label": item["label"]} for key, item in guidelines.PRONOUNS.items()],
+        payment_options=[{"key": key, "label": label} for key, label in guidelines.PAYMENT_METHODS.items()],
     )

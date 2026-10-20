@@ -4,8 +4,9 @@ Todas exigem login, e só a dona da conversa enxerga ou age sobre ela.
 """
 
 import logging
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
@@ -41,6 +42,7 @@ def _base(conversation: models.Conversation, full_phone: bool) -> dict:
         "state": conversation.state,
         "needs_attention": conversation.needs_attention,
         "awaiting_reply_since": conversation.awaiting_reply_since,
+        "awaiting_reason": conversation.awaiting_reason,
         "last_message_at": conversation.last_message_at,
         "reply_window_closes_at": conversations.reply_window_closes_at(conversation),
         "reply_window_open": conversations.reply_window_open(conversation),
@@ -121,6 +123,48 @@ def get_conversation(
     user: models.User = Depends(auth.current_user),
 ):
     return _detail(_get(db, conversation_id, user))
+
+
+# Tipos que o navegador abre dentro do painel. Qualquer outro documento
+# vai como download, para um arquivo mandado pela pessoa (ex.: HTML) nunca
+# rodar no endereço do painel.
+_INLINE_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+MEDIA_GONE = (
+    "Este arquivo não está mais disponível. O WhatsApp guarda fotos, áudios e documentos por cerca de 30 dias."
+)
+
+
+@router.get("/{conversation_id}/messages/{message_id}/media")
+def get_media(
+    conversation_id: str,
+    message_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
+):
+    """Foto, áudio ou documento que a pessoa mandou, buscado na Meta na
+    hora. Nada fica guardado no servidor nem no navegador."""
+    conversation = _get(db, conversation_id, user)
+    message = db.get(models.Message, message_id)
+    if not message or message.conversation_id != conversation.id or not message.media_id:
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+    try:
+        content, mime = whatsapp.fetch_media(message.media_id)
+    except whatsapp.MediaUnavailable as exc:
+        logger.warning("mídia indisponível na Meta (%s)", exc)
+        raise HTTPException(status_code=410, detail=MEDIA_GONE) from exc
+    mime = (mime or message.media_mime or "application/octet-stream").split(";")[0].strip().lower()
+    inline = mime in _INLINE_TYPES or mime.startswith("audio/")
+    filename = message.media_filename or f"arquivo-{message.id[:8]}"
+    disposition = "inline" if inline else f"attachment; filename*=UTF-8''{quote(filename)}"
+    return Response(
+        content=content,
+        media_type=mime if inline else "application/octet-stream",
+        headers={
+            "Content-Disposition": disposition,
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.post("/{conversation_id}/take-over", response_model=schemas.ConversationOut)

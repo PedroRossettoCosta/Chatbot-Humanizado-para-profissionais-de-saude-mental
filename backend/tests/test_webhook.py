@@ -25,7 +25,7 @@ def professional(db, monkeypatch):
     monkeypatch.setattr(settings, "reply_debounce_seconds", 0)
     replies = []
 
-    def fake_reply(system_prompt, history):
+    def fake_reply(system_prompt, history, **_):
         replies.append(history)
         return "resposta do bot"
 
@@ -47,10 +47,12 @@ def _cleanup(db):
 _counter = iter(range(10_000))
 
 
-def _payload(text=None, kind="text", message_id=None, sender=SENDER, phone_id=PHONE_ID):
+def _payload(text=None, kind="text", message_id=None, sender=SENDER, phone_id=PHONE_ID, media=None):
     message = {"from": sender, "id": message_id or f"wamid.teste.{next(_counter)}", "type": kind}
     if kind == "text":
         message["text"] = {"body": text}
+    if media:
+        message[kind] = media
     return {
         "object": "whatsapp_business_account",
         "entry": [
@@ -275,3 +277,72 @@ def test_tunnel_only_lets_the_webhook_through(client, professional, monkeypatch)
     assert challenge.status_code == 200
     # Pela máquina (sem o endereço público), a API continua normal.
     assert client.get("/health").status_code == 200
+
+
+def _media_message(db, client, kind, media):
+    _post(client, _payload(kind=kind, media=media))
+    conversation = _conversation(db)
+    [message] = [m for m in conversation.messages if m.media_id]
+    return conversation, message
+
+
+def test_photo_keeps_only_the_meta_reference(db, client, professional, no_real_whatsapp):
+    conversation, message = _media_message(
+        db, client, "image", {"id": "midia-1", "mime_type": "image/jpeg", "sha256": "x"}
+    )
+    assert (message.media_type, message.media_id, message.media_mime) == ("image", "midia-1", "image/jpeg")
+    assert message.content == "[Imagem]"
+    # A SelenIA continua sem ler: aviso fixo de que só lê texto.
+    assert _sent_texts(no_real_whatsapp)[-1] == whatsapp_inbox.UNSUPPORTED_MESSAGE
+    body = client.get(f"/conversations/{conversation.id}").json()
+    shown = [m for m in body["messages"] if m["media_type"]]
+    assert shown[0]["id"] == message.id and shown[0]["media_mime"] == "image/jpeg"
+
+
+def test_panel_fetches_the_file_from_meta_on_demand(db, client, professional, monkeypatch):
+    conversation, message = _media_message(db, client, "audio", {"id": "midia-2", "mime_type": "audio/ogg; codecs=opus"})
+    asked = []
+
+    def fake_graph(method, path, body=None, params=None):
+        asked.append(path)
+        return {"url": "https://lookaside.example/arquivo", "mime_type": "audio/ogg"}
+
+    monkeypatch.setattr(whatsapp, "_graph", fake_graph)
+    monkeypatch.setattr(whatsapp, "_download", lambda url: b"OGG-bytes")
+    response = client.get(f"/conversations/{conversation.id}/messages/{message.id}/media")
+    assert response.status_code == 200
+    assert response.content == b"OGG-bytes"
+    assert response.headers["content-type"].startswith("audio/ogg")
+    assert response.headers["cache-control"] == "private, no-store"
+    assert asked == ["midia-2"]
+
+
+def test_unknown_document_type_is_a_download(db, client, professional, monkeypatch):
+    conversation, message = _media_message(
+        db, client, "document", {"id": "midia-3", "mime_type": "text/html", "filename": "exame página.html"}
+    )
+    assert message.media_filename == "exame página.html"
+    monkeypatch.setattr(whatsapp, "_graph", lambda *a, **k: {"url": "https://x", "mime_type": "text/html"})
+    monkeypatch.setattr(whatsapp, "_download", lambda url: b"<script>")
+    response = client.get(f"/conversations/{conversation.id}/messages/{message.id}/media")
+    assert response.headers["content-type"] == "application/octet-stream"
+    assert response.headers["content-disposition"].startswith("attachment;")
+    assert "exame%20p%C3%A1gina.html" in response.headers["content-disposition"]
+
+
+def test_expired_file_is_explained(db, client, professional, monkeypatch):
+    conversation, message = _media_message(db, client, "image", {"id": "midia-4", "mime_type": "image/png"})
+
+    def gone(method, path, body=None, params=None):
+        raise whatsapp.MetaError("não existe", 100)
+
+    monkeypatch.setattr(whatsapp, "_graph", gone)
+    response = client.get(f"/conversations/{conversation.id}/messages/{message.id}/media")
+    assert response.status_code == 410
+    assert "30 dias" in response.json()["detail"]
+
+
+def test_media_of_another_conversation_is_not_found(db, client, professional):
+    conversation, message = _media_message(db, client, "image", {"id": "midia-5", "mime_type": "image/png"})
+    text_message = next(m for m in conversation.messages if not m.media_id)
+    assert client.get(f"/conversations/{conversation.id}/messages/{text_message.id}/media").status_code == 404

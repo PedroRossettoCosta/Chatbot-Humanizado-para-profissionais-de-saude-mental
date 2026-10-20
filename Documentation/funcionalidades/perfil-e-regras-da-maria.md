@@ -65,6 +65,28 @@ O prompt é montado a cada resposta (`llm.build_system_prompt`):
 As regras dela só **acrescentam** restrições; a parte fixa tem
 prioridade sobre tudo, inclusive sobre os exemplos e documentos dela.
 
+Pedido de exceção (desconto, outro valor, pagar mais por um encaixe,
+horário fora do atendimento) não é decidido pela SelenIA: ela não aceita
+nem recusa, e diz que vai perguntar à profissional. Entrou em 13/10,
+depois que os testes mostraram a SelenIA inventando regras para negar
+("o valor é fixo", "não dá para encaixar"). Desde 19/10, "vou perguntar"
+só vale junto com a ferramenta `avisar_profissional`, que avisa a
+profissional de verdade (ver [Pedidos para a profissional](pedidos-para-a-profissional.md)).
+
+**Formas de pagamento** (19/10): no card Atendimento, uma lista suspensa
+de escolha múltipla (Pix, cartão de crédito, cartão de débito,
+transferência, dinheiro, boleto; `guidelines.PAYMENT_METHODS`). O prompt
+diz quais estão marcadas e proíbe oferecer outra. Sem nenhuma marcada, a
+SelenIA usa `avisar_profissional` quando alguém pergunta como pagar. No
+teste de 18/10 ela não soube responder "como pago?" e prometeu perguntar
+ao Pedro, sem avisar ninguém.
+
+Se o filtro de segurança da Anthropic recusar a resposta (acontece com
+mensagem inofensiva também, como um texto em base64), o modelo devolve
+uma resposta sem texto. Em vez de uma mensagem vazia, a pessoa recebe um
+texto fixo e a conversa fica marcada como "necessita atenção"
+(`pipeline.reply`). O log registra só a categoria da recusa.
+
 Arquivos: `services/guidelines.py` (regras fixas), `services/llm.py`
 (prompt), `routers/assistant.py` (`GET /assistant/guidelines`, que o
 painel usa para mostrar a lista fixa), `pages/Profile.jsx`.
@@ -74,6 +96,10 @@ painel usa para mostrar a lista fixa), `pages/Profile.jsx`.
 - **Aviso de IA** (`chat.AI_DISCLAIMER_TEMPLATE`), primeira mensagem de
   toda conversa. **Pendente:** a Marília ainda não decidiu o texto final
   nem se haverá aceite explícito.
+- **Resposta recusada pelo modelo** (`pipeline.NO_REPLY_TEMPLATE`, 13/10):
+  "Desculpe, não consegui responder a essa mensagem. Posso ajudar com
+  alguma dúvida sobre o atendimento de {nome}?". **Pendente** de
+  aprovação da Marília.
 - **Perguntas de calibragem** (`guidelines.VOICE_QUESTIONS`): preço,
   como funciona o atendimento, "estou passando por um momento difícil".
 
@@ -81,7 +107,7 @@ painel usa para mostrar a lista fixa), `pages/Profile.jsx`.
 
 - `CLAUDE_MODEL`: modelo que gera as respostas.
 - Campos da profissional: `voice_tone`, `audience_description`,
-  `service_info`, `voice_examples`, `extra_never_say`.
+  `service_info`, `voice_examples`, `extra_never_say`, `payment_methods`.
 
 ## Segurança e LGPD
 
@@ -97,13 +123,24 @@ não consiga dar ordens à SelenIA.
 - A recusa de assuntos fora do atendimento depende do modelo obedecer.
   A proteção de custo de verdade é o limite por contato e o teto de
   custo (planejados para 06/10).
-- Não há teste automático do comportamento do modelo; só da montagem
-  do prompt.
+- O comportamento do modelo é medido pelos conjuntos de
+  [prompt injection](../testes-prompt-injection.md) e de
+  [respostas sensíveis](../testes-respostas-sensiveis.md), rodados no
+  modelo real (não fazem parte do `pytest`). Rodada de 13/10: injection
+  21/22, sensíveis 27/31 ([resultados](../resultados-testes/)). O que
+  sobrou é decisão clínica para a sessão C: dizer que a profissional
+  "não é médica" e indicar médico para remédio (S10, S24, I19), sugerir
+  outro profissional (S05) e citar CVV/SAMU para quem só está
+  desesperado (S28, aberta 6 do plano).
 
 ## Como testar
 
 Automático: `tests/test_reply_prompt.py`, `tests/test_professionals_api.py`,
-`tests/test_chat_disclaimer.py`.
+`tests/test_chat_disclaimer.py`, `tests/test_reply_refusal.py`.
+
+Comportamento do modelo (chama a API de verdade, ~US$ 1,70 a rodada):
+`python -m scripts.avaliar_respostas` em `backend/`; ver
+[desenvolvimento.md](../tecnico/desenvolvimento.md).
 
 Manual no simulador:
 - "quanto custa?" → valor já na primeira resposta.
@@ -135,3 +172,11 @@ Manual no simulador:
 - 13/10/2026: a assistente passa a se chamar **SelenIA** (antes MarIA), a
   pedido do orientador: o governo já usa "MarIA" num chatbot. Muda
   `guidelines.ASSISTANT_NAME`, o aviso de IA e todas as telas.
+- 13/10/2026: conjuntos de teste de prompt injection e de respostas
+  sensíveis; texto fixo quando o modelo recusa a resposta (antes saía
+  mensagem vazia); pedido de exceção vai para a profissional, sem a
+  SelenIA aceitar nem recusar.
+- 19/10/2026: campo "Formas de pagamento aceitas" (lista de escolha
+  múltipla) e regras do prompt contra prometer "vou perguntar" sem a
+  ferramenta `avisar_profissional` e contra aceitar "sou paciente
+  especial" como permissão (feedback do teste de 18/10).

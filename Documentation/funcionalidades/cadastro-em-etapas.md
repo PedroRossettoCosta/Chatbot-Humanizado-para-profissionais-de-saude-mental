@@ -1,6 +1,6 @@
 # Cadastro em etapas
 
-> Situação: funcionando; a conexão do WhatsApp (etapa 6) entra em 05/10. Última atualização: 27/09/2026.
+> Situação: funcionando; a conexão do WhatsApp (etapa 6) falta testar com chip. Última atualização: 13/10/2026.
 
 ## O que é
 
@@ -25,10 +25,9 @@ Decisões:
   que ela leu o protocolo de risco antes de a SelenIA atender.
 - **Duração da sessão como campo próprio**, e não só dentro do texto
   livre do serviço: a agenda precisa do número para montar os horários.
-- **Etapa do WhatsApp sem conexão por enquanto**: registrar o número na
-  Meta (SMS, código e registro) está no plano para 05/10 e depende do
-  segundo chip. Até lá, a etapa mostra o que vai ser pedido e segue por
-  "Conectar depois".
+- **Etapa do WhatsApp opcional**: a conexão do número
+  ([conectar o WhatsApp](conectar-whatsapp.md), 13/10/2026) pode ficar
+  para depois, pela tela WhatsApp do menu.
 
 ## Como usar
 
@@ -43,7 +42,9 @@ Decisões:
    comportamentos em situação de risco, marque "Li e entendi" e
    continue.
 5. **Regras extras** (opcional): limites próprios do seu atendimento.
-6. **WhatsApp:** por enquanto, clique em "Conectar depois".
+6. **WhatsApp:** conecte o número (SMS e código; ver
+   [conectar o WhatsApp](conectar-whatsapp.md)) ou clique em "Conectar
+   depois" e faça isso pela tela WhatsApp do menu.
 7. **Revisão:** confira, use "Editar" para voltar a qualquer etapa e
    clique em **Concluir cadastro**.
 
@@ -105,15 +106,14 @@ ambiente nova.
 
 Os dados são os do perfil da profissional, mais os pronomes. O
 gênero não é perguntado à parte: para a SelenIA falar da profissional,
-basta o pronome, e a LGPD pede coletar só o necessário. O número de WhatsApp digitado na etapa 6 **não é
-salvo** enquanto a conexão não existir. Todas as rotas exigem login e
+basta o pronome, e a LGPD pede coletar só o necessário. O número de WhatsApp da etapa 6 é o da
+profissional, não de paciente; o PIN do número fica cifrado
+([conectar o WhatsApp](conectar-whatsapp.md)). Todas as rotas exigem login e
 só a própria profissional mexe no cadastro dela.
 
 ## Limitações e pendências
 
-- Etapa 6 (WhatsApp): o envio do SMS e o registro do número entram em
-  05/10. As telas "Digite o código" e "WhatsApp conectado" (C7 e C8)
-  vêm junto.
+- Etapa 6 (WhatsApp): construída em 13/10, falta o teste com chip.
 - Uma profissional cadastrada antes de 27/09 cai de novo no cadastro, a
   partir da etapa 2, até concluir.
 - Textos da etapa 4 e exemplos da etapa 3 sem revisão da Marília.
@@ -141,3 +141,4 @@ Manual:
   "Continuar"; lixeira para remover regra extra; recuperação quando o
   cadastro já existe; bandeira do +55 desenhada (o Windows não mostra
   emoji de bandeira).
+- 13/10/2026: etapa 6 conecta o número de verdade (SMS ou ligação, código e registro), com as telas C7 e C8; "Conectar depois" continua.

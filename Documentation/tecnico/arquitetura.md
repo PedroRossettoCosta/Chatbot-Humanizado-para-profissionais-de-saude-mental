@@ -59,7 +59,9 @@ Paciente escreve
 │  resposta       │   agenda pronta, a Claude pode consultar os
 │                 │   horários livres e reservar um horário
 │                 │   provisório, por ferramentas, antes de
-│                 │   responder.
+│                 │   responder. A ferramenta avisar_profissional
+│                 │   está sempre lá: é o único jeito de a
+│                 │   SelenIA levar um pedido à profissional.
 └────────┬────────┘
          ▼
    Resposta gravada e devolvida pelo mesmo canal
@@ -114,21 +116,23 @@ alteração.
 | Módulo | Responsabilidade |
 |---|---|
 | `pipeline.py` | O caminho de uma mensagem, igual para simulador e WhatsApp: gravar e triar (`receive`), responder (`reply`) |
-| `whatsapp.py` | API da Meta: conferir a assinatura do webhook, ler o formato recebido, enviar texto e "digitando…" |
+| `whatsapp.py` | API da Meta: conferir a assinatura do webhook, ler o formato recebido, enviar texto e "digitando…", a chamada genérica à Graph API (`_graph`) usada na gestão de números, e buscar na hora a foto, áudio ou documento recebido (`fetch_media`), sem guardar |
+| `whatsapp_numbers.py` | Conectar o número da profissional: cadastrar na conta da Meta, pedir e conferir o código, registrar com PIN cifrado, contar os registros; depois, trocar o nome (análise da Meta) e desconectar para trocar o número |
 | `whatsapp_inbox.py` | Mensagens do WhatsApp: profissional pelo número, reenvios, triagem na hora, espera antes de responder, tipos não suportados |
 | `conversations.py` | Encontrar ou criar contato e conversa, gravar mensagens, montar o histórico, janela de 24h, número mascarado |
 | `rag.py` | Falar com o ChromaDB: indexar, buscar e apagar trechos |
-| `llm.py` | Montar o prompt de sistema e chamar a API da Claude (com a ferramenta de horários, quando a agenda está pronta). A parte fixa do prompt vai com cache; os trechos do RAG, que mudam a cada pergunta, vêm depois. Anota os tokens de cada chamada dentro de `collect_usage()` |
+| `llm.py` | Montar o prompt de sistema e chamar a API da Claude (com `avisar_profissional` sempre, e as ferramentas de horário quando a agenda está pronta). A parte fixa do prompt vai com cache; os trechos do RAG, que mudam a cada pergunta, vêm depois. Anota os tokens de cada chamada dentro de `collect_usage()` |
 | `usage.py` | Gravar os tokens anotados (`llm_usage`), ligados à profissional e à conversa, sem conteúdo |
-| `calendar.py` | Google Agenda: conectar e desconectar, ler livre/ocupado, criar/alterar/apagar eventos, calcular horários livres dentro do horário de atendimento |
+| `calendar.py` | Google Agenda: conectar e desconectar, ler livre/ocupado, criar/alterar/apagar eventos, calcular horários livres dentro do horário de atendimento (mais os dias especiais inteiros de cada cliente especial) |
+| `clients.py` | Tela Clientes: cliente ativo (automático ao confirmar sessão), tirar e pôr na lista, cliente especial e os dias especiais dele |
 | `appointments.py` | Pedidos de horário: reserva provisória com trava por profissional, troca e cancelamento pedidos pela pessoa, confirmar, recusar e expirar em 24h |
 | `text_extraction.py` | Extrair texto de PDF/DOCX/TXT e dividir em trechos |
 | `crypto.py` | Cifrar dados sensíveis e gerar índice de busca |
 | `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
 | `guidelines.py` | Regras fixas do produto: nome da SelenIA, perguntas de tom, lista "nunca dizer" |
-| `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta" |
+| `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta", pedido levado pela SelenIA (`ask_professional`) com o motivo |
 | `alerts.py` | Tela de Alertas: trilha em linguagem da profissional, visto (uma vez) e revisado |
-| `notifications.py` | E-mail de alerta (com registro na trilha) e de pedido para falar com a profissional |
+| `notifications.py` | E-mail de alerta (com registro na trilha), de pedido para a profissional (texto por motivo) e de pedidos de horário |
 | `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
 | `onboarding.py` | Cadastro em etapas: o que é obrigatório, aceite das regras e conclusão |
 

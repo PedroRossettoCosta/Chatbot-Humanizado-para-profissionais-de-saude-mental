@@ -223,20 +223,20 @@ def test_reply_gets_the_agenda_tool_only_when_ready(client, db, professional, go
     calls = []
 
     def fake_reply(system_prompt, history, tools=None, run_tool=None):
-        calls.append((system_prompt, tools, run_tool and run_tool("consultar_horarios_livres", {})))
+        calls.append((system_prompt, tools, run_tool("consultar_horarios_livres", {})))
         return "resposta do bot"
 
     monkeypatch.setattr(llm, "generate_reply", fake_reply)
 
     client.post("/chat/simulate", json={"professional_slug": TEST_SLUG, "message": "vocês atendem sábado?"})
     prompt, tools, _ = calls[-1]
-    assert tools is None
+    assert tools == [llm.ASK_PROFESSIONAL_TOOL]
     assert "segunda: 10:00 às 16:00" in prompt and "não tem acesso à agenda" in prompt
 
     calendar.connect(db, professional, "codigo")
     client.post("/chat/simulate", json={"professional_slug": TEST_SLUG, "message": "tem horário semana que vem?"})
     prompt, tools, tool_text = calls[-1]
-    assert tools == [llm.AGENDA_TOOL]
+    assert tools == [llm.ASK_PROFESSIONAL_TOOL, llm.AGENDA_TOOL]
     assert "consultar_horarios_livres" in prompt
     assert "Horários livres" in tool_text
 

@@ -13,7 +13,7 @@ TEST_SLUG = "test-pytest-inbox"
 
 @pytest.fixture
 def professional(db, monkeypatch):
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta do bot")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta do bot")
     monkeypatch.setattr(notifications.settings, "smtp_host", "smtp.teste.local")
     _cleanup(db)
     prof = models.Professional(slug=TEST_SLUG, name="Marília Rossetto", alert_email="alertas@teste.local")

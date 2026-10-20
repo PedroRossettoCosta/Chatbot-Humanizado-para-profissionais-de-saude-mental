@@ -15,6 +15,13 @@ export class ApiError extends Error {
 // iniciar.bat, validade vencida): o App volta para a tela de login em vez
 // de deixar o painel aberto respondendo "Faça login" em cada tela.
 let onSessionLost = () => {};
+// Endereço do arquivo (foto, áudio, documento) que a pessoa mandou. O
+// backend busca na Meta na hora; o cookie de sessão vai junto porque é o
+// mesmo endereço do painel.
+export function mediaUrl(conversationId, messageId) {
+  return `${API_URL}/conversations/${conversationId}/messages/${messageId}/media`;
+}
+
 export function setSessionLostHandler(handler) {
   onSessionLost = handler;
 }
@@ -88,6 +95,23 @@ export const api = {
   createEvent: (slug, payload) => request(`/calendar/${slug}/events`, { method: "POST", body: payload }),
   approveAppointment: (id) => request(`/calendar/appointments/${id}/approve`, { method: "POST" }),
   rejectAppointment: (id) => request(`/calendar/appointments/${id}/reject`, { method: "POST" }),
+  getWhatsApp: (slug) => request(`/professionals/${slug}/whatsapp`),
+  startWhatsApp: (slug, number, displayName, method) =>
+    request(`/professionals/${slug}/whatsapp`, {
+      method: "POST",
+      body: { number, display_name: displayName, method },
+    }),
+  resendWhatsAppCode: (slug, method) => request(`/professionals/${slug}/whatsapp/resend`, { method: "POST", body: { method } }),
+  verifyWhatsApp: (slug, code) => request(`/professionals/${slug}/whatsapp/verify`, { method: "POST", body: { code } }),
+  registerWhatsApp: (slug) => request(`/professionals/${slug}/whatsapp/register`, { method: "POST" }),
+  cancelWhatsApp: (slug) => request(`/professionals/${slug}/whatsapp/pending`, { method: "DELETE" }),
+  renameWhatsApp: (slug, displayName) =>
+    request(`/professionals/${slug}/whatsapp/name`, { method: "POST", body: { display_name: displayName } }),
+  applyWhatsAppName: (slug) => request(`/professionals/${slug}/whatsapp/name/apply`, { method: "POST" }),
+  disconnectWhatsApp: (slug) => request(`/professionals/${slug}/whatsapp`, { method: "DELETE" }),
+  listClients: (slug) => request(`/clients?professional_slug=${encodeURIComponent(slug)}`),
+  // { active } e/ou { allow_special_hours }.
+  updateClient: (contactId, payload) => request(`/clients/${contactId}`, { method: "PATCH", body: payload }),
   sendProfessionalMessage: (conversationId, content) =>
     request(`/conversations/${conversationId}/messages`, { method: "POST", body: { content } }),
 };

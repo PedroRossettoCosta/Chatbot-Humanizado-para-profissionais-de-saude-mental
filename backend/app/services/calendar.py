@@ -299,6 +299,7 @@ def free_slots(
     days: int = HORIZON_DAYS,
     booked_per_day: dict[date, int] | None = None,
     max_per_day: int | None = None,
+    whole_days: list[str] | None = None,
 ) -> list[datetime]:
     """Todos os inícios de sessão livres, dentro do horário de atendimento.
 
@@ -306,6 +307,8 @@ def free_slots(
     cabe no intervalo de atendimento do dia, começa com pelo menos
     `MIN_NOTICE` de antecedência e não encosta em nada ocupado da agenda.
     Dias que já têm `max_per_day` sessões (`booked_per_day`) ficam de fora.
+    Nos dias da semana em `whole_days` (dias especiais), vale o dia
+    inteiro, da 00:00 à meia-noite seguinte.
     """
     duration = timedelta(minutes=session_minutes)
     step = timedelta(minutes=SLOT_STEP_MINUTES)
@@ -317,9 +320,19 @@ def free_slots(
         day: date = today + timedelta(days=offset)
         if max_per_day and (booked_per_day or {}).get(day, 0) >= max_per_day:
             continue
-        for interval in (working_hours or {}).get(WEEKDAYS[day.weekday()], []):
-            start = datetime.combine(day, _parse_time(interval["start"]), tzinfo=tz)
-            end = datetime.combine(day, _parse_time(interval["end"]), tzinfo=tz)
+        weekday = WEEKDAYS[day.weekday()]
+        if weekday in (whole_days or []):
+            midnight = datetime.combine(day, time(0, 0), tzinfo=tz)
+            intervals = [(midnight, midnight + timedelta(days=1))]
+        else:
+            intervals = [
+                (
+                    datetime.combine(day, _parse_time(i["start"]), tzinfo=tz),
+                    datetime.combine(day, _parse_time(i["end"]), tzinfo=tz),
+                )
+                for i in (working_hours or {}).get(weekday, [])
+            ]
+        for start, end in intervals:
             slot = start
             while slot + duration <= end:
                 slot_end = slot + duration
@@ -372,10 +385,19 @@ def is_ready(professional: models.Professional) -> bool:
     )
 
 
-def available_slots(professional: models.Professional, now: datetime | None = None) -> list[datetime]:
-    """Horários livres de verdade (lendo o Google). Levanta `CalendarError`."""
+def available_slots(
+    professional: models.Professional, now: datetime | None = None, contact: models.Contact | None = None
+) -> list[datetime]:
+    """Horários livres de verdade (lendo o Google). Levanta `CalendarError`.
+
+    Para um `contact` com a permissão (`Contact.can_use_special_hours`),
+    os dias especiais dele ficam livres o dia inteiro e o limite de
+    sessões por dia não vale. As sessões dessa pessoa continuam contando
+    no limite para os outros.
+    """
     if not is_ready(professional):
         raise CalendarError("Conecte a agenda e preencha o horário de atendimento.")
+    special = contact is not None and contact.can_use_special_hours
     now = now or models._now()
     busy = busy_intervals(professional.calendar_connection, now, now + timedelta(days=HORIZON_DAYS + 1))
     # Os pedidos da SelenIA também ocupam, mesmo antes de o Google refletir.
@@ -387,7 +409,8 @@ def available_slots(professional: models.Professional, now: datetime | None = No
         now,
         _tz(),
         booked_per_day=sessions_per_day(professional, now),
-        max_per_day=professional.max_sessions_per_day,
+        max_per_day=None if special else professional.max_sessions_per_day,
+        whole_days=contact.special_days if special else None,
     )
 
 
@@ -432,21 +455,40 @@ def working_hours_text(working_hours: dict | None) -> str:
     return "\n".join(lines)
 
 
+SPECIAL_HOURS_NOTE = (
+    "Esta pessoa é cliente ativo e {name} deixou que ela marque também nos dias especiais ({days}), em "
+    "qualquer horário livre do dia, fora do atendimento normal; esses horários já estão na lista abaixo e "
+    "podem ser oferecidos como qualquer outro."
+)
+OUTSIDE_LIST_NOTE = (
+    "Horário fora desta lista não é oferecido. Se a pessoa pedir outro horário (à noite, de madrugada, fora "
+    "dos dias de atendimento), não aceite nem recuse: use avisar_profissional e diga que perguntou a {name}."
+)
+
+
 def describe_for_assistant(
-    professional: models.Professional, now: datetime | None = None, pending: str | None = None
+    professional: models.Professional,
+    now: datetime | None = None,
+    pending: str | None = None,
+    contact: models.Contact | None = None,
 ) -> str:
     """Resposta da ferramenta de horários: data de hoje e os horários livres.
 
-    Nunca levanta exceção: se o Google falhar, diz isso, e a SelenIA
-    responde que vai confirmar com a profissional.
+    Para um `contact` com a permissão, a lista inclui os dias especiais
+    dele inteiros e ignora o limite de sessões por dia. Nunca levanta exceção: se o Google falhar, diz isso,
+    e a SelenIA responde que vai confirmar com a profissional.
     """
     now = now or models._now()
     local_now = now.astimezone(_tz())
     today = f"Agora é {WEEKDAY_NAMES[local_now.weekday()]}, {local_now:%d/%m/%Y}, {local_now:%H:%M}."
     if pending:
         today += f"\n{pending}"
+    if contact is not None and contact.can_use_special_hours and contact.special_days:
+        days = ", ".join(n for k, n in zip(WEEKDAYS, WEEKDAY_NAMES) if k in contact.special_days)
+        today += "\n" + SPECIAL_HOURS_NOTE.format(name=professional.name, days=days)
+    today += "\n" + OUTSIDE_LIST_NOTE.format(name=professional.name)
     try:
-        slots = available_slots(professional, now)
+        slots = available_slots(professional, now, contact=contact)
     except CalendarError:
         return f"{today}\nNão foi possível consultar a agenda agora. Não ofereça horários: diga que vai confirmar com {professional.name}."
     if not slots:

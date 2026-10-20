@@ -84,6 +84,21 @@ RISK_BEHAVIORS = [
 ]
 
 
+# Formas de pagamento que a profissional marca no Perfil (lista de
+# escolha múltipla). A chave vai para o banco; o nome, para o prompt e
+# para a tela. Lista fechada para a SelenIA nunca oferecer uma forma que
+# ela não marcou (pedido do Pedro em 19/10/2026, depois do teste em que
+# a SelenIA não soube responder "como pago?").
+PAYMENT_METHODS = {
+    "pix": "Pix",
+    "credito": "Cartão de crédito",
+    "debito": "Cartão de débito",
+    "transferencia": "Transferência bancária",
+    "dinheiro": "Dinheiro",
+    "boleto": "Boleto",
+}
+
+
 # Como a SelenIA fala da profissional com o paciente. É a escolha dela no
 # cadastro (etapa 1); sem escolha, vale a forma neutra. Não se pergunta
 # o gênero à parte: para o bot, o que importa é o pronome, e a LGPD pede

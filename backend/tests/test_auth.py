@@ -127,7 +127,7 @@ def test_removed_from_invite_list_loses_access(anon_client, monkeypatch):
 
 
 def test_professional_cannot_see_another_ones_data(anon_client, db, monkeypatch):
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta de teste")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta de teste")
     _login(anon_client)
     slug_a = anon_client.post("/professionals", json={"name": "Dra. Teste A"}).json()["slug"]
     conversation_id = anon_client.post(

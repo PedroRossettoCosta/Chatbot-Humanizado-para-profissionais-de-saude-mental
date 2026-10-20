@@ -16,7 +16,9 @@ Ordem, para cada mensagem (`handle`):
 
 Áudio, imagem e outros tipos: ficam registrados na conversa como
 "[Áudio]" etc., sem triagem (não há texto), e a pessoa recebe um aviso
-fixo de que a SelenIA só lê texto.
+fixo de que a SelenIA só lê texto. Em foto, áudio e documento, a
+mensagem guarda a referência da Meta para o painel mostrar o arquivo
+(`Message.media_*`); o arquivo em si não é baixado nem guardado aqui.
 
 As esperas ficam na memória do processo: se o backend reiniciar no meio
 de uma, aquela resposta não sai (limitação do MVP, que roda local).
@@ -153,6 +155,8 @@ def receive_now(event: whatsapp.Inbound) -> _Outcome | None:
                 db.rollback()
                 return None  # reenvio que chegou ao mesmo tempo
 
+            if event.media_id:
+                _attach_media(db, event)
             conversation = received.conversation
             outgoing = list(received.immediate)
             active = conversation.state == ConversationState.ACTIVE
@@ -172,6 +176,18 @@ def receive_now(event: whatsapp.Inbound) -> _Outcome | None:
             )
         finally:
             db.close()
+
+
+def _attach_media(db, event: whatsapp.Inbound) -> None:
+    """Guarda na mensagem recebida a referência do arquivo na Meta."""
+    message = db.query(models.Message).filter_by(external_id=event.message_id).first()
+    if message is None:
+        return
+    message.media_type = event.type
+    message.media_id = event.media_id
+    message.media_mime = event.mime_type
+    message.media_filename = event.filename
+    db.commit()
 
 
 def reply_now(key: tuple[str, str], conversation_id: str) -> _Outcome | None:

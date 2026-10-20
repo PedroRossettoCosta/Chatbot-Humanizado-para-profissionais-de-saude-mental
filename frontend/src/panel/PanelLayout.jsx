@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { api } from "../api.js";
 import Logo from "../components/Logo.jsx";
+import { nameNeedsAction } from "../components/WhatsAppConnect.jsx";
 import {
   BellIcon,
   BookIcon,
@@ -12,6 +13,7 @@ import {
   MenuIcon,
   PhoneIcon,
   ProfileIcon,
+  UsersIcon,
 } from "../components/icons.jsx";
 import InSessionControl from "./InSessionControl.jsx";
 import { PanelContext } from "./PanelContext.jsx";
@@ -23,8 +25,9 @@ const NAV = [
   { label: "Conversas", icon: ChatIcon, to: "/conversas" },
   { label: "Alertas", icon: BellIcon, to: "/alertas", badge: "alerts" },
   { label: "Agenda", icon: CalendarIcon, to: "/agenda", badge: "appointments" },
+  { label: "Clientes", icon: UsersIcon, to: "/clientes" },
   { label: "Perfil do atendimento", icon: ProfileIcon, to: "/perfil" },
-  { label: "WhatsApp", icon: PhoneIcon, soon: true },
+  { label: "WhatsApp", icon: PhoneIcon, to: "/whatsapp", badge: "whatsapp" },
   { label: "Base de conhecimento", icon: BookIcon, to: "/base-de-conhecimento" },
 ];
 
@@ -32,7 +35,9 @@ const TITLES = {
   "/conversas": "Conversas",
   "/alertas": "Alertas",
   "/agenda": "Agenda",
+  "/clientes": "Clientes",
   "/perfil": "Perfil do atendimento",
+  "/whatsapp": "WhatsApp",
   "/base-de-conhecimento": "Base de conhecimento",
 };
 
@@ -89,10 +94,35 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
     return () => clearInterval(id);
   }, [refreshAppointmentCount]);
 
+  // Resposta da Meta sobre o nome novo do WhatsApp (aprovado para aplicar
+  // ou recusado). A consulta vai até a Meta, então é espaçada; a tela
+  // WhatsApp atualiza na hora por `onWhatsAppStatus`.
+  const [whatsappAction, setWhatsappAction] = useState(false);
+  const onWhatsAppStatus = useCallback((status) => setWhatsappAction(nameNeedsAction(status)), []);
+  useEffect(() => {
+    const refresh = () =>
+      api
+        .getWhatsApp(professional.slug)
+        .then(onWhatsAppStatus)
+        .catch(() => {});
+    refresh();
+    const id = setInterval(refresh, 5 * 60000);
+    return () => clearInterval(id);
+  }, [professional.slug, onWhatsAppStatus]);
+
   const openSimulator = useCallback(() => setSimulatorOpen(true), []);
   const context = useMemo(
-    () => ({ me, professional, setProfessional, openSimulator, logout: onLogout, refreshAlertCount, refreshAppointmentCount }),
-    [me, professional, openSimulator, onLogout, refreshAlertCount, refreshAppointmentCount]
+    () => ({
+      me,
+      professional,
+      setProfessional,
+      openSimulator,
+      logout: onLogout,
+      refreshAlertCount,
+      refreshAppointmentCount,
+      onWhatsAppStatus,
+    }),
+    [me, professional, openSimulator, onLogout, refreshAlertCount, refreshAppointmentCount, onWhatsAppStatus]
   );
 
   const sidebar = (
@@ -131,6 +161,14 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
                   title="Horários aguardando sua confirmação"
                 >
                   {pendingAppointments}
+                </span>
+              )}
+              {badge === "whatsapp" && whatsappAction && (
+                <span
+                  className="min-w-6 rounded-full bg-danger px-1.5 py-0.5 text-center text-xs font-bold text-white"
+                  title="O WhatsApp respondeu sobre o nome novo"
+                >
+                  1
                 </span>
               )}
               {badge === "alerts" && unreviewedAlerts > 0 && (

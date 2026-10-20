@@ -49,7 +49,7 @@ def test_unrelated_messages_stay_normal():
 
 @pytest.fixture
 def professional(db, monkeypatch):
-    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history: "resposta do bot")
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta do bot")
     _cleanup(db)
     db.add(models.Professional(slug=TEST_SLUG, name="Marília Rossetto"))
     db.commit()

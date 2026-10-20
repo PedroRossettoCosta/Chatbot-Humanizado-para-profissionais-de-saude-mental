@@ -1,7 +1,8 @@
 """Avisos para a profissional fora do painel (e-mail).
 
-Dois avisos: o de alerta (abaixo) e o de pedido para falar com ela
-(`notify_human_request`, no fim do arquivo).
+Avisos: o de alerta (abaixo), o de pedido para a profissional
+(`notify_human_request`: a pessoa pediu para falar com ela, ou a SelenIA
+levou um pedido com `avisar_profissional`) e os de pedido de horário.
 
 A Marília pediu para saber na hora, sem precisar estar com o painel
 aberto. O e-mail sai da conta do produto (`settings.smtp_*`) para o
@@ -30,7 +31,7 @@ from zoneinfo import ZoneInfo
 from app import models
 from app.config import settings
 from app.database import SessionLocal
-from app.models import AlertEventType, AlertLevel
+from app.models import AlertEventType, AlertLevel, AwaitingReason
 from app.services import calendar
 
 logger = logging.getLogger(__name__)
@@ -139,6 +140,30 @@ HUMAN_REQUEST_TEXT = (
     "Uma pessoa pediu para falar com você. A SelenIA avisou que você responde "
     "por este canal, e a conversa está marcada como \"Aguardando você\" no painel."
 )
+# Pedidos que a SelenIA leva com `avisar_profissional`. Só o tipo do
+# pedido, nunca o que a pessoa escreveu. A SelenIA continua respondendo
+# nessas conversas.
+ASSISTANT_REQUEST_SUBJECT = "[SelenIA] Uma pessoa aguarda uma resposta sua"
+ASSISTANT_REQUEST_TEXT = {
+    AwaitingReason.SPECIAL_HOURS: "Uma pessoa pediu um horário fora do seu horário de atendimento.",
+    AwaitingReason.PAYMENT: "Uma pessoa perguntou sobre uma forma de pagamento que não está no seu perfil.",
+    AwaitingReason.PRICE: (
+        "Uma pessoa pediu uma exceção no valor (desconto ou outro preço), ou perguntou um valor que "
+        "não está no seu perfil."
+    ),
+    AwaitingReason.OTHER: "Uma pessoa fez uma pergunta que só você pode responder.",
+}
+ASSISTANT_REQUEST_FOOTER = (
+    " A SelenIA disse que ia perguntar a você, e a conversa está marcada como "
+    "\"Aguardando você\" no painel. Ela continua tirando as outras dúvidas da pessoa."
+)
+
+
+def request_email_text(reason: str | None) -> tuple[str, str]:
+    """Assunto e texto do e-mail de pedido, conforme o motivo."""
+    if reason in ASSISTANT_REQUEST_TEXT:
+        return ASSISTANT_REQUEST_SUBJECT, ASSISTANT_REQUEST_TEXT[reason] + ASSISTANT_REQUEST_FOOTER
+    return HUMAN_REQUEST_SUBJECT, HUMAN_REQUEST_TEXT
 
 
 def notify_human_request(conversation_id: str) -> None:
@@ -159,11 +184,12 @@ def notify_human_request(conversation_id: str) -> None:
         if not professional.alert_email or not settings.smtp_host:
             logger.warning("pedido para falar com a profissional sem e-mail enviado (sem endereço ou SMTP)")
             return
+        subject, text = request_email_text(conversation.awaiting_reason)
         _send(
             _compose(
                 professional,
-                HUMAN_REQUEST_SUBJECT,
-                HUMAN_REQUEST_TEXT,
+                subject,
+                text,
                 conversation.awaiting_reply_since or models._now(),
                 conversation.contact.channel,
             )

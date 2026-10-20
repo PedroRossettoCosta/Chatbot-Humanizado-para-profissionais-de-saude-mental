@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api.js";
 import { LockIcon, TrashIcon } from "../components/icons.jsx";
+import MultiSelect from "../components/MultiSelect.jsx";
 import { Button, ErrorBox, Field, formatDateTime, inputClass } from "../components/ui.jsx";
 import { usePanel } from "../panel/PanelContext.jsx";
 
@@ -21,6 +22,7 @@ function formFrom(p) {
     audience_description: p.audience_description || "",
     service_info: p.service_info || "",
     session_minutes: p.session_minutes ? String(p.session_minutes) : "",
+    payment_methods: p.payment_methods || [],
     voice_tone: p.voice_tone || "",
     voice_examples: p.voice_examples || {},
     extra_never_say: p.extra_never_say || [],
@@ -183,6 +185,22 @@ export default function Profile() {
                 onChange={(e) => set("service_info")(e.target.value)}
               />
             </Field>
+            {/* Fora do <Field>: o rótulo envolveria a lista e um clique numa
+                opção abriria e fecharia o botão. */}
+            <div>
+              <span className="font-semibold text-slate">Formas de pagamento aceitas</span>
+              <MultiSelect
+                ariaLabel="Formas de pagamento aceitas"
+                options={guidelines.payment_options}
+                value={form.payment_methods}
+                onChange={set("payment_methods")}
+                placeholder="Escolha uma ou mais formas"
+              />
+              <span className="mt-2 block text-sm text-muted">
+                A SelenIA só informa as formas marcadas. Sem nenhuma marcada, ela pergunta a você por e-mail quando
+                alguém quiser saber como pagar.
+              </span>
+            </div>
             <Field label="Duração da sessão (minutos)" required hint="Usada pela agenda para oferecer horários.">
               <input
                 className={`${inputClass} max-w-32`}

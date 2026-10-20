@@ -146,3 +146,7 @@ Manual no simulador (conversa nova em cada caso):
   alerta (caso real do teste pelo WhatsApp: "Eu quero falar com ele não
   um robô ou ia" era tratado como simples pedido pela profissional, sem
   alerta; decisão do Pedro).
+- 19/10/2026: o motivo do pedido fica em `awaiting_reason`, e a SelenIA
+  ganha um quinto caminho para deixar a conversa aguardando, sem parar o
+  bot: a ferramenta `avisar_profissional` (ver
+  [Pedidos para a profissional](pedidos-para-a-profissional.md)).

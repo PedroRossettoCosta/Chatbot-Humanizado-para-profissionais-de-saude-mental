@@ -2,37 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api } from "../api.js";
-import { CalendarIcon, RefreshIcon, TrashIcon } from "../components/icons.jsx";
+import { CalendarIcon, RefreshIcon } from "../components/icons.jsx";
 import { Button, ErrorBox, Field, Tag, formatDateTime, inputClass } from "../components/ui.jsx";
+import WeeklyHours, { hoursFrom, problemIn } from "../components/WeeklyHours.jsx";
 import { loadGoogle } from "../google.js";
 import { usePanel } from "../panel/PanelContext.jsx";
 import WeekCalendar from "./agenda/WeekCalendar.jsx";
 
-const DAYS = [
-  { key: "mon", label: "Segunda" },
-  { key: "tue", label: "Terça" },
-  { key: "wed", label: "Quarta" },
-  { key: "thu", label: "Quinta" },
-  { key: "fri", label: "Sexta" },
-  { key: "sat", label: "Sábado" },
-  { key: "sun", label: "Domingo" },
-];
 const NEW_RANGE = { start: "09:00", end: "18:00" };
-const MAX_RANGES = 3;
-
-// Todos os dias presentes, na ordem da semana; dia sem atendimento = lista vazia.
-function hoursFrom(p) {
-  return Object.fromEntries(DAYS.map((d) => [d.key, (p.working_hours?.[d.key] || []).map((r) => ({ ...r }))]));
-}
-
-function problemIn(hours) {
-  for (const { key, label } of DAYS) {
-    const ranges = [...hours[key]].sort((a, b) => a.start.localeCompare(b.start));
-    if (ranges.some((r) => !r.start || !r.end || r.start >= r.end)) return `${label}: o início precisa ser antes do fim.`;
-    if (ranges.some((r, i) => i > 0 && ranges[i - 1].end > r.start)) return `${label}: os intervalos se sobrepõem.`;
-  }
-  return "";
-}
 
 function Card({ eyebrow, title, action, children }) {
   return (
@@ -195,7 +172,7 @@ export default function Agenda() {
   const [maxPerDay, setMaxPerDay] = useState(() => (professional.max_sessions_per_day ? String(professional.max_sessions_per_day) : ""));
   const [deciding, setDeciding] = useState(null);
   const [status, setStatus] = useState(null);
-  const [hours, setHours] = useState(() => hoursFrom(professional));
+  const [hours, setHours] = useState(() => hoursFrom(professional.working_hours));
   const [slots, setSlots] = useState(null);
   const [slotsError, setSlotsError] = useState("");
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -205,7 +182,7 @@ export default function Agenda() {
   const [error, setError] = useState("");
 
   const slug = professional.slug;
-  const original = useMemo(() => hoursFrom(professional), [professional]);
+  const original = useMemo(() => hoursFrom(professional.working_hours), [professional]);
   const originalMax = professional.max_sessions_per_day ? String(professional.max_sessions_per_day) : "";
   const dirty = JSON.stringify(hours) !== JSON.stringify(original) || maxPerDay !== originalMax;
   const maxNumber = Number(maxPerDay);
@@ -349,7 +326,7 @@ export default function Agenda() {
         max_sessions_per_day: maxPerDay ? maxNumber : null,
       });
       setProfessional(updated);
-      setHours(hoursFrom(updated));
+      setHours(hoursFrom(updated.working_hours));
       setMaxPerDay(updated.max_sessions_per_day ? String(updated.max_sessions_per_day) : "");
       setSaved(true);
       loadStatus();
@@ -540,76 +517,19 @@ export default function Agenda() {
               </Link>
               .
             </p>
-            <ul className="m-0 mt-5 divide-y divide-line p-0">
-              {DAYS.map(({ key, label }) => {
-                const ranges = hours[key];
-                const on = ranges.length > 0;
-                return (
-                  <li key={key} className="flex list-none flex-wrap items-start gap-x-4 gap-y-2 py-3">
-                    <label className="flex w-32 cursor-pointer items-center gap-3 pt-2.5 font-semibold text-slate">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5 cursor-pointer accent-[var(--color-primary)]"
-                        checked={on}
-                        onChange={(e) => changeDay(key, e.target.checked ? [{ ...NEW_RANGE }] : [])}
-                      />
-                      {label}
-                    </label>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      {!on && <p className="m-0 pt-2.5 text-sm text-muted">Não atende</p>}
-                      {ranges.map((range, i) => (
-                        <div key={i} className="flex flex-wrap items-center gap-2">
-                          <input
-                            type="time"
-                            aria-label={`${label}: início`}
-                            className={`${inputClass} mt-0 w-32 py-2`}
-                            value={range.start}
-                            onChange={(e) =>
-                              changeDay(key, ranges.map((r, j) => (j === i ? { ...r, start: e.target.value } : r)))
-                            }
-                          />
-                          <span className="text-muted">às</span>
-                          <input
-                            type="time"
-                            aria-label={`${label}: fim`}
-                            className={`${inputClass} mt-0 w-32 py-2`}
-                            value={range.end}
-                            onChange={(e) =>
-                              changeDay(key, ranges.map((r, j) => (j === i ? { ...r, end: e.target.value } : r)))
-                            }
-                          />
-                          <button
-                            type="button"
-                            onClick={() => changeDay(key, ranges.filter((_, j) => j !== i))}
-                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-muted transition-colors hover:bg-danger-soft hover:text-danger"
-                            aria-label={`Remover intervalo de ${label}`}
-                            title="Remover intervalo"
-                          >
-                            <TrashIcon size={18} />
-                          </button>
-                        </div>
-                      ))}
-                      {on && ranges.length < MAX_RANGES && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const last = ranges[ranges.length - 1];
-                            changeDay(key, [...ranges, { start: last.end, end: last.end < "20:00" ? "20:00" : "23:59" }]);
-                          }}
-                          className="cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-primary hover:underline"
-                        >
-                          + Intervalo (ex.: depois do almoço)
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="mt-5">
+              <WeeklyHours
+                hours={hours}
+                onChangeDay={changeDay}
+                newRange={NEW_RANGE}
+                offLabel="Não atende"
+                addLabel="+ Intervalo (ex.: depois do almoço)"
+              />
+            </div>
             <div className="mt-5 rounded-2xl bg-[#eff4ff] p-4">
               <Field
                 label="Máximo de sessões por dia"
-                hint="Quantas sessões a SelenIA pode deixar marcadas num mesmo dia (pedidos aguardando, confirmadas e as que você marca pelo calendário). Vazio = sem limite."
+                hint="Quantas sessões a SelenIA pode deixar marcadas num mesmo dia (pedidos aguardando, confirmadas e as que você marca pelo calendário). Não vale para os clientes especiais (tela Clientes). Vazio = sem limite."
               >
                 <input
                   type="number"

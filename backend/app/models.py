@@ -120,6 +120,18 @@ class ContactType(StrEnum):
     PATIENT = "patient"  # já iniciou atendimento
 
 
+class AwaitingReason(StrEnum):
+    """Por que a conversa ficou "Aguardando você"."""
+
+    WANTS_PROFESSIONAL = "falar_com_profissional"  # pediu para falar com ela
+    REFUSES_BOT = "recusa_bot"  # não quer falar com o bot
+    # Pedidos que a SelenIA leva pela ferramenta `avisar_profissional`:
+    SPECIAL_HOURS = "horario_especial"  # horário fora do atendimento
+    PAYMENT = "pagamento"  # forma de pagamento que a SelenIA não sabe
+    PRICE = "valor"  # desconto, outro valor, valor não informado
+    OTHER = "outro"  # outra dúvida que só ela responde
+
+
 class MessageRole(StrEnum):
     """Papel da mensagem na conversa (o mesmo vocabulário da API da Claude)."""
 
@@ -226,6 +238,10 @@ class Professional(Base):
     # Quantas sessões por dia a SelenIA pode deixar marcadas (pedidos
     # aguardando + confirmados + as marcadas pelo painel). Nulo = sem limite.
     max_sessions_per_day = Column(Integer, nullable=True)
+    # Formas de pagamento que ela aceita: lista de chaves de
+    # `guidelines.PAYMENT_METHODS` (ex.: ["pix", "credito"]). Nulo ou
+    # vazio = não informado, e a SelenIA pergunta a ela.
+    payment_methods = Column(JSON, nullable=True)
     # Cadastro em etapas: onde ela parou (1 a 7), quando aceitou as
     # regras fixas da SelenIA e quando concluiu. O painel só libera com o
     # cadastro concluído.
@@ -239,6 +255,15 @@ class Professional(Base):
     # da Meta). O webhook diz para qual número a pessoa escreveu, e é
     # assim que a mensagem chega à profissional certa.
     whatsapp_phone_number_id = Column(String(32), nullable=True, unique=True)
+    # Conexão do número pelo painel (`services/whatsapp_numbers.py`). O
+    # número fica "pendente" (já na conta da Meta, ainda sem receber
+    # mensagens) até o registro; só então vira `whatsapp_phone_number_id`.
+    whatsapp_pending_id = Column(String(32), nullable=True)
+    whatsapp_setup_step = Column(String(20), nullable=True)  # code_sent, verified
+    whatsapp_display_number = Column(String(32), nullable=True)
+    whatsapp_verified_name = Column(String(255), nullable=True)
+    # PIN da verificação em duas etapas do número, cifrado (`crypto`).
+    whatsapp_pin = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     @property
@@ -254,6 +279,25 @@ class Professional(Base):
         "CalendarConnection", back_populates="professional", uselist=False, cascade="all, delete-orphan"
     )
     appointments = relationship("Appointment", back_populates="professional", cascade="all, delete-orphan")
+
+
+class WhatsAppRegisterAttempt(Base):
+    """Cada chamada de registro de número na Meta.
+
+    A Meta aceita 10 registros por número em 72 horas; o 11º bloqueia o
+    número por mais 72 horas. Contar aqui deixa o painel parar antes.
+    """
+
+    __tablename__ = "whatsapp_register_attempts"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
+    professional_id = Column(
+        UUID(as_uuid=False), ForeignKey("professionals.id", ondelete="CASCADE"), nullable=False
+    )
+    phone_number_id = Column(String(32), nullable=False, index=True)
+    ok = Column(Boolean, nullable=False)
+    error_code = Column(String(32), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_now, nullable=False)
 
 
 class CalendarConnection(Base):
@@ -316,7 +360,24 @@ class Contact(Base):
     external_id_index = Column(String(64), nullable=False, index=True)
     # Nome que o próprio canal informa (no WhatsApp, o nome do perfil).
     display_name = Column(EncryptedText, nullable=True)
+    # Cliente ativo (tela Clientes): desde quando. Vira ativo sozinho
+    # quando a profissional confirma uma sessão pedida na conversa, ou
+    # quando ela marca no painel. Nulo = não é cliente ativo.
+    active_since = Column(DateTime(timezone=True), nullable=True)
+    # Permissão dada pela profissional para esta pessoa ter condição
+    # especial: o limite de sessões por dia não vale para ela, e nos seus
+    # dias especiais (`special_days`) ela marca em qualquer horário livre.
+    # Só vale com o cliente ativo; tirar o cliente da lista desliga a
+    # permissão e apaga os dias.
+    allow_special_hours = Column(Boolean, nullable=False, default=False, server_default=text("false"))
+    # Dias especiais desta pessoa: dias da semana (ex.: ["tue", "sat"]),
+    # escolhidos pela profissional na tela Clientes.
+    special_days = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
+
+    @property
+    def can_use_special_hours(self) -> bool:
+        return self.active_since is not None and bool(self.allow_special_hours)
 
     professional = relationship("Professional", back_populates="contacts")
     conversations = relationship("Conversation", back_populates="contact", cascade="all, delete-orphan")
@@ -340,6 +401,9 @@ class Conversation(Base):
     # `needs_attention`, que é sinal da triagem, não pedido da pessoa.
     # Sai quando ela responde ou devolve a conversa ao bot.
     awaiting_reply_since = Column(DateTime(timezone=True), nullable=True)
+    # Por que a conversa está aguardando (`AwaitingReason`): o painel e o
+    # e-mail dizem o tipo do pedido, nunca o texto da conversa.
+    awaiting_reason = Column(String(30), nullable=True)
     # Última mensagem **do contato**. Conta a janela de 24h do WhatsApp:
     # fora dela, só modelo aprovado pela Meta, que o MVP não usa.
     last_contact_message_at = Column(DateTime(timezone=True), nullable=True)
@@ -385,6 +449,14 @@ class Message(Base):
     # erro 131042, falta de forma de pagamento). O painel mostra "não
     # entregue".
     delivery_failed = Column(Boolean, nullable=False, default=False, server_default=text("false"))
+    # Foto, áudio ou documento recebido pelo WhatsApp: só a referência da
+    # Meta, nunca o arquivo. O painel busca na Meta quando a profissional
+    # abre (`whatsapp.fetch_media`); a Meta guarda por cerca de 30 dias.
+    media_type = Column(String(16), nullable=True)  # image, audio, document
+    media_id = Column(String(64), nullable=True)
+    media_mime = Column(String(100), nullable=True)
+    # Nome do arquivo do documento: pode dizer muito ("exame.pdf"), cifrado.
+    media_filename = Column(EncryptedText, nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     conversation = relationship("Conversation", back_populates="messages")

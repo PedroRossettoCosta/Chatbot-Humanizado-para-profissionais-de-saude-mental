@@ -77,7 +77,11 @@ Cada chamada da Meta (`POST /webhook/whatsapp`):
      ou pela SelenIA;
    - áudio, imagem e outros tipos ficam na conversa como "[Áudio]",
      "[Imagem]" etc., sem triagem (não há texto), e a pessoa recebe um
-     aviso fixo.
+     aviso fixo. Em foto, áudio e documento, a mensagem guarda só a
+     referência da Meta (`Message.media_*`), e o painel mostra o arquivo
+     buscando na Meta na hora em que a profissional abre a conversa
+     (`GET /conversations/{id}/messages/{message_id}/media`). Nada é
+     baixado nem guardado no servidor.
 4. Avisos de entregue e lido, reações e os outros campos assinados são
    ignorados.
 
@@ -145,7 +149,11 @@ simulador.
   alerta: a profissional só vê ao abrir a conversa. Sem avisos de
   entregue e lido, uma mensagem aceita pela Meta que não chegou ao
   celular não aparece.
-- Só texto: áudio, imagem e documento não são lidos nem triados.
+- Só texto: áudio, imagem e documento não são lidos nem triados pela
+  SelenIA. A profissional vê e ouve no painel, mas só por cerca de 30
+  dias, que é quanto a Meta guarda o arquivo; depois aparece "Arquivo
+  não disponível". Legenda de foto ou documento não é guardada nem
+  triada. Vídeo e figurinha continuam só como etiqueta.
 - O número da profissional é ligado no banco à mão até 05/10.
 - Conta Meta sem verificação: no máximo 2 números. Em produção, cada
   profissional conectaria o número na própria conta (programa de
@@ -177,3 +185,6 @@ Manual:
   Meta, resposta do painel pelo WhatsApp, túnel fixo com filtro.
 - 13/10/2026: recusa da Meta marcada como "Não entregue" na mensagem;
   mensagem enviada guarda o id da Meta.
+- 19/10/2026: foto, áudio e documento aparecem no painel, buscados na
+  Meta na hora, sem guardar o arquivo (pedido do Pedro, opção escolhida
+  pela LGPD). Migração `9c3f6b1e2a74`.

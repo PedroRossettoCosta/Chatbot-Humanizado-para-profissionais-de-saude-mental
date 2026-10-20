@@ -161,6 +161,19 @@ rotas do painel respondem 404 pelo endereço público. Os logs do
 WhatsApp registram só tipos, ids e códigos de erro, nunca o texto. Ver
 [Atendimento pelo WhatsApp](../funcionalidades/atendimento-pelo-whatsapp.md).
 
+### Fotos, áudios e documentos (19/10/2026)
+
+O que a pessoa manda além de texto não é guardado: a mensagem tem só a
+referência da Meta e, quando a profissional abre a conversa, o backend
+busca o arquivo na Meta e entrega direto ao painel, com
+`Cache-Control: private, no-store`. O arquivo fica no servidor da Meta
+pelo prazo dela (cerca de 30 dias) e some do painel depois. Foi a opção
+escolhida pelo Pedro entre guardar e buscar na hora, para o sistema não
+acumular imagens e áudios de pacientes. O nome do documento é guardado
+cifrado. Só a dona da conversa acessa a rota. Documento de tipo que o
+navegador poderia executar (ex.: HTML) vai sempre como download, nunca
+aberto no endereço do painel. A SelenIA (o modelo) não recebe o arquivo.
+
 Na tela de Conversas, o número do contato aparece mascarado na lista
 (`+55 21 •••••-4444`) e completo só na conversa aberta, onde ela pode
 precisar ligar para a pessoa numa emergência. Ver
@@ -180,6 +193,13 @@ confirma no painel, e até lá a sessão continua marcada. A SelenIA também
 não revela nada que já não esteja na própria conversa. Confirmação por
 e-mail foi descartada como solução única (o e-mail costuma estar no
 mesmo celular); uma palavra-chave combinada fica como trabalho futuro.
+
+O mesmo vale para condições diferentes: dizer na conversa "sou paciente
+especial" ou "combinei com ela" não muda nada. Dia especial só vale
+para quem a profissional marcou na tela Clientes, e a reserva confere a
+permissão de novo (teste de 18/10/2026). O e-mail de pedido para a
+profissional leva só a categoria do pedido (`awaiting_reason`), nunca o
+que a pessoa escreveu.
 
 ### Limite por contato
 
@@ -216,7 +236,13 @@ console; na Meta, "Anular tokens" no usuário de sistema). A exceção é a
 `DATA_ENCRYPTION_KEY`, que não pode ser simplesmente trocada sem
 recifrar os dados existentes.
 
-Logs **não devem registrar conteúdo de mensagem**. Se um serviço de
+O PIN da verificação em duas etapas de cada número de WhatsApp fica
+cifrado com a mesma chave (`professionals.whatsapp_pin`) e nunca sai
+na resposta da API; o código de SMS não é gravado.
+
+Logs **não devem registrar conteúdo de mensagem**. A falha da triagem
+e a recusa da resposta pelo filtro de segurança da Anthropic registram
+só o fato (e a categoria da recusa), nunca o texto. Se um serviço de
 monitoramento de erros for adotado, precisa estar configurado para
 descartar corpo de requisição — caso contrário, conversa clínica
 vazaria para um terceiro.

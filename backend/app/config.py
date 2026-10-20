@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Senha combinada com a Meta no cadastro do webhook (o desafio GET).
     whatsapp_verify_token: str = ""
     whatsapp_api_version: str = "v25.0"
+    # Conta do WhatsApp Business (WABA) onde os números das profissionais
+    # são cadastrados pelo painel. Vazio = o painel não conecta números.
+    whatsapp_business_account_id: str = ""
     # Endereço público do túnel (ex.: algo.ngrok-free.dev). Por ele, só
     # as rotas /webhook/ passam; o resto da API fica só na máquina.
     public_webhook_host: str = ""

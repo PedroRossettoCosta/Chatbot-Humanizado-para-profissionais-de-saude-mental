@@ -306,7 +306,7 @@ def test_booking_tool_only_with_permission_to_create_events(client, db, professi
 
     def fake_reply(system_prompt, history, tools=None, run_tool=None):
         calls.append((system_prompt, [t["name"] for t in tools or []]))
-        if tools and len(tools) > 1:
+        if "pedir_agendamento" in [t["name"] for t in tools or []]:
             run_tool("pedir_agendamento", {"codigo": _next_tuesday_code(), "nome": "Beatriz"})
         return "resposta do bot"
 
@@ -316,14 +316,20 @@ def test_booking_tool_only_with_permission_to_create_events(client, db, professi
 
     client.post("/chat/simulate", json={"professional_slug": TEST_SLUG, "message": "quero marcar"})
     prompt, tool_names = calls[-1]
-    assert tool_names == ["consultar_horarios_livres", "pedir_agendamento", "pedir_remarcacao", "pedir_cancelamento"]
+    assert tool_names == [
+        "avisar_profissional",
+        "consultar_horarios_livres",
+        "pedir_agendamento",
+        "pedir_remarcacao",
+        "pedir_cancelamento",
+    ]
     assert "Nunca diga que a sessão está confirmada" in prompt
     assert len(sent) == 1  # e-mail para a profissional confirmar
 
     professional.calendar_connection.scopes = f"openid email {calendar.SCOPE_FREEBUSY}"
     db.commit()
     client.post("/chat/simulate", json={"professional_slug": TEST_SLUG, "message": "quero marcar"})
-    assert calls[-1][1] == ["consultar_horarios_livres"]
+    assert calls[-1][1] == ["avisar_profissional", "consultar_horarios_livres"]
 
 
 def test_slot_list_carries_codes_and_the_pending_request(db, professional, google):

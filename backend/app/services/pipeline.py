@@ -50,6 +50,15 @@ RATE_LIMIT_TEMPLATE = (
     "ligue para o SAMU (192) ou para o CVV (188)."
 )
 
+# Texto fixo de quando o modelo não devolve resposta (recusa do filtro de
+# segurança da Anthropic, ver `llm.generate_reply`). Sem ele a pessoa
+# recebia uma mensagem vazia. A conversa fica marcada para a
+# profissional ver. Precisa da aprovação da Marília.
+NO_REPLY_TEMPLATE = (
+    "Desculpe, não consegui responder a essa mensagem. Posso ajudar com "
+    "alguma dúvida sobre o atendimento de {name}?"
+)
+
 
 @dataclass
 class Received:
@@ -76,7 +85,8 @@ class Reply:
     text: str | None = None
     handoff: str | None = None
     alert_id: str | None = None
-    # Mandar o e-mail "uma pessoa pediu para falar com você".
+    # Mandar o e-mail de pedido para a profissional (falar com ela, ou
+    # um pedido que a SelenIA levou com `avisar_profissional`).
     notify_request: bool = False
     # Pedido de horário que a SelenIA reservou nesta resposta (e-mail para
     # a profissional confirmar).
@@ -256,37 +266,63 @@ def reply(
     chunks, metadatas = rag.query(professional.slug, text)
     system_prompt = llm.build_system_prompt(professional, chunks)
     history = _reply_history(db, conversation)
-    # A agenda só entra como ferramenta quando está pronta; assim o Google
-    # só é consultado se a conversa pedir horário.
+    # `avisar_profissional` está sempre disponível: é o único jeito de a
+    # SelenIA levar um pedido à profissional. A agenda só entra como
+    # ferramenta quando está pronta; assim o Google só é consultado se a
+    # conversa pedir horário.
     booked = []
-    tools = {}
-    if calendar.is_ready(professional):
+    notified = []
+    agenda_ready = calendar.is_ready(professional)
 
-        def run_tool(name, tool_input):
-            if name == llm.BOOKING_TOOL["name"]:
-                booking = appointments.request(
-                    db, professional, conversation, tool_input.get("codigo", ""), tool_input.get("nome", "")
-                )
-            elif name == llm.RESCHEDULE_TOOL["name"]:
-                booking = appointments.request_reschedule(
-                    db, professional, conversation, tool_input.get("sessao_atual", ""), tool_input.get("novo_codigo", "")
-                )
-            elif name == llm.CANCEL_TOOL["name"]:
-                booking = appointments.request_cancel(db, professional, conversation, tool_input.get("sessao", ""))
-            else:
-                return calendar.describe_for_assistant(
-                    professional, pending=appointments.pending_note(db, conversation)
-                )
-            if booking.appointment_id:
-                booked.append(booking.appointment_id)
-            return booking.text
+    def run_tool(name, tool_input):
+        if name == llm.ASK_PROFESSIONAL_TOOL["name"]:
+            result, notify = handoff.ask_professional(db, professional, conversation, tool_input.get("motivo", ""))
+            if notify:
+                notified.append(True)
+            return result
+        if not agenda_ready:
+            return "Ferramenta indisponível."
+        if name == llm.BOOKING_TOOL["name"]:
+            booking = appointments.request(
+                db, professional, conversation, tool_input.get("codigo", ""), tool_input.get("nome", "")
+            )
+        elif name == llm.RESCHEDULE_TOOL["name"]:
+            booking = appointments.request_reschedule(
+                db, professional, conversation, tool_input.get("sessao_atual", ""), tool_input.get("novo_codigo", "")
+            )
+        elif name == llm.CANCEL_TOOL["name"]:
+            booking = appointments.request_cancel(db, professional, conversation, tool_input.get("sessao", ""))
+        else:
+            # Horário especial só para cliente ativo com a permissão
+            # (tela Clientes), nunca pelo que a pessoa diz na conversa.
+            return calendar.describe_for_assistant(
+                professional,
+                pending=appointments.pending_note(db, conversation),
+                contact=conversation.contact,
+            )
+        if booking.appointment_id:
+            booked.append(booking.appointment_id)
+        return booking.text
 
-        booking_tools = [llm.BOOKING_TOOL, llm.RESCHEDULE_TOOL, llm.CANCEL_TOOL]
-        agenda_tools = [llm.AGENDA_TOOL] + (booking_tools if calendar.can_book(professional) else [])
-        tools = dict(tools=agenda_tools, run_tool=run_tool)
+    available = [llm.ASK_PROFESSIONAL_TOOL]
+    if agenda_ready:
+        available.append(llm.AGENDA_TOOL)
+        if calendar.can_book(professional):
+            available += [llm.BOOKING_TOOL, llm.RESCHEDULE_TOOL, llm.CANCEL_TOOL]
+    tools = dict(tools=available, run_tool=run_tool)
     with llm.collect_usage() as calls:
         reply_text = llm.generate_reply(system_prompt, history, **tools)
     usage.record(db, conversation, calls)
-    conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply_text, sent_by=SentBy.BOT)
+    sent_by = SentBy.BOT
+    if not reply_text.strip():
+        reply_text = NO_REPLY_TEMPLATE.format(name=professional.name)
+        sent_by = SentBy.SYSTEM
+        conversations.mark_needs_attention(db, conversation)
+    conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply_text, sent_by=sent_by)
     sources = sorted({meta["filename"] for meta in metadatas}) if metadatas else []
-    return Reply(text=reply_text, sources=sources, appointment_id=booked[-1] if booked else None)
+    return Reply(
+        text=reply_text,
+        sources=sources,
+        appointment_id=booked[-1] if booked else None,
+        notify_request=bool(notified),
+    )
