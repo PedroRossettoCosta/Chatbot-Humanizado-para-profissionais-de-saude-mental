@@ -122,7 +122,8 @@ anterior continua valendo com as permissões novas.
 - todo início de meia em meia hora (10:00, 10:30, ...) dentro do
   horário de atendimento do dia, no fuso `AGENDA_TIMEZONE`, em que a
   sessão inteira cabe no intervalo;
-- no mínimo 12 horas de antecedência, nos próximos 14 dias;
+- no mínimo 12 horas de antecedência (menos para cliente especial, que
+  não tem mínimo), nos próximos 14 dias;
 - nada que encoste num período ocupado da agenda principal nem num
   pedido da SelenIA ainda válido (mesmo antes de o Google refletir);
 - dia que já tem `max_sessions_per_day` sessões (pedidos no prazo,
@@ -135,7 +136,10 @@ pedido que a pessoa já tiver e os horários livres, uma linha por dia
 ("terça, 29/09 (2026-09-29): 10:00, 10:30, ..."). O código para reservar
 é a data entre parênteses, a letra T e o horário (`2026-09-29T10:00`). Com a permissão de eventos, recebe também
 `pedir_agendamento(codigo, nome)`. O Google só é consultado quando ela
-usa uma ferramenta.
+usa uma ferramenta ou quando a conversa está em assunto de horário: nesse
+caso o pipeline faz a mesma consulta a cada mensagem e põe o resultado no
+fim do prompt, fora do cache (ver
+[Clientes e horário especial](clientes-e-horario-especial.md)).
 
 **Reserva** (`services/appointments.request`):
 
@@ -145,7 +149,8 @@ usa uma ferramenta.
    no Google. Se o horário não está mais livre, a SelenIA ouve "esse
    horário não está mais livre" e oferece outros.
 3. Cria o evento "Sessão (a confirmar) · nome" (amarelo) e o
-   `Appointment` provisório, válido por 24 horas.
+   `Appointment` provisório, válido por 24 horas ou até a hora da sessão,
+   o que vier antes.
 4. Uma sessão por dia por pessoa: se ela já tem, **no mesmo dia**, um
    pedido aguardando, o horário novo substitui o anterior (o anterior é
    cancelado e o evento dele sai da agenda); se já tem sessão
@@ -173,10 +178,11 @@ manda o texto fixo de recusa; a conversa segue com a SelenIA, que pode
 oferecer outros horários. No WhatsApp, o texto só sai com a janela de
 24h aberta; o painel mostra se a pessoa foi avisada.
 
-**Validade.** A cada 5 minutos (`main.py`, `EXPIRY_CHECK_SECONDS`), os
-pedidos provisórios com mais de 24 horas expiram: o evento sai da agenda
-e a profissional recebe um e-mail. A pessoa não é avisada (a janela do
-WhatsApp quase sempre já fechou). Mesmo antes da rotina passar, um
+**Validade.** A cada minuto (`main.py`, `EXPIRY_CHECK_SECONDS`), os
+pedidos provisórios vencidos (24 horas ou a hora da sessão) expiram: o evento sai da agenda
+e a profissional recebe um e-mail. A pessoa é avisada pela conversa, se
+a janela de 24h do WhatsApp ainda estiver aberta; em espera de emergência,
+o aviso não sai. O painel e o e-mail dizem se ela foi avisada. Mesmo antes da rotina passar, um
 pedido vencido não segura mais o horário e não pode ser confirmado.
 
 Arquivos: `services/calendar.py`, `services/appointments.py`,
@@ -206,6 +212,9 @@ Enviados à pessoa sem passar pelo modelo (`services/appointments.py`).
 | Recusa uma troca | "{nome} não vai conseguir atender em {quinta, 01/10 às 11:00}. Sua sessão de {terça, 29/09 às 10:00} continua marcada. Se quiser, posso ver outros horários com você." |
 | Confirma um cancelamento | "{nome} confirmou o cancelamento da sua sessão de {terça, 29/09 às 10:00}." |
 | Mantém a sessão (recusa o cancelamento) | "{nome} não confirmou o cancelamento: sua sessão de {terça, 29/09 às 10:00} continua marcada. Se precisar, fale direto com {nome} por aqui." |
+
+| Pedido vence sem decisão | "Não deu para confirmar a tempo com {nome} o seu pedido de {terça, 29/09 às 10:00}, e o horário foi liberado. Se quiser, posso ver outros horários com você." |
+| Pedido de troca vence sem decisão | "Não deu para confirmar a tempo com {nome} a troca para {quinta, 01/10 às 11:00}. Sua sessão de {terça, 29/09 às 10:00} continua marcada. Se quiser, posso ver outros horários com você." |
 
 O que a SelenIA diz ao reservar ("pedido registrado, a profissional
 confirma") vem do modelo, guiado pelo prompt (`AGENDA_BOOKING`).
@@ -271,7 +280,9 @@ minutos.
   pessoa se estranhar.
 - Se a profissional apagar o evento direto no Google, o pedido continua
   no painel; confirmar dá erro ("o evento não existe mais").
-- Pedido expirado não avisa a pessoa.
+- Pedido expirado só avisa a pessoa com a janela de 24h do WhatsApp
+  aberta; a checagem roda a cada minuto, então o aviso pode atrasar até 1
+  minuto.
 - A rotina de validade roda dentro do backend: com o backend desligado,
   os pedidos vencidos só expiram quando ele voltar (e, enquanto isso,
   já não seguram o horário nem podem ser confirmados).

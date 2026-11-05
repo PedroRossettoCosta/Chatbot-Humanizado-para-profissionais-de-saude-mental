@@ -140,7 +140,9 @@ function AppointmentCard({ item, busy, onDecide }) {
         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
           <span className="flex-1">
             {item.status === "expired" &&
-              "Ninguém decidiu em 24 horas; o horário foi liberado e a pessoa não foi avisada."}
+              (item.contact_notified
+                ? "Ninguém decidiu a tempo; o horário foi liberado e a pessoa foi avisada pela conversa."
+                : "Ninguém decidiu a tempo; o horário foi liberado e a pessoa não pôde ser avisada.")}
             {item.source === "panel" && "Marcada por você no calendário."}
             {item.source !== "panel" &&
               (item.status === "confirmed" || item.status === "rejected") &&

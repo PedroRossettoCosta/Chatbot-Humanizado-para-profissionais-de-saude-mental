@@ -10,7 +10,7 @@ Fluxo (decisão do Pedro em 28/09/2026):
 2. No painel (tela Agenda), ela confirma ou recusa. A pessoa recebe um
    texto fixo com a decisão, se a janela de 24h do WhatsApp ainda
    estiver aberta.
-3. Sem decisão em 24 horas, o pedido expira, o evento sai da agenda e a
+3. Sem decisão em 24 horas ou até a hora da sessão, o pedido expira, o evento sai da agenda e a
    profissional recebe um e-mail (`expire_overdue`, chamado a cada
    poucos minutos em `main.py`). Até lá, um pedido vencido já não
    segura o horário nem pode ser confirmado.
@@ -53,7 +53,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.config import settings
-from app.models import AppointmentStatus, Channel, MessageRole, SentBy
+from app.models import AppointmentStatus, Channel, ConversationState, MessageRole, SentBy
 from app.services import calendar, clients, conversations, whatsapp
 
 logger = logging.getLogger(__name__)
@@ -73,6 +73,17 @@ RESCHEDULE_REJECTED_MESSAGE = (
     "Se quiser, posso ver outros horários com você."
 )
 CANCEL_CONFIRMED_MESSAGE = "{name} confirmou o cancelamento da sua sessão de {when}."
+# Pedido que venceu sem decisão. Decisão do Pedro em 04/11/2026: sem
+# antecedência mínima para cliente especial, a pessoa podia ficar
+# esperando uma sessão que já tinha passado.
+EXPIRED_MESSAGE = (
+    "Não deu para confirmar a tempo com {name} o seu pedido de {when}, e o horário foi liberado. "
+    "Se quiser, posso ver outros horários com você."
+)
+RESCHEDULE_EXPIRED_MESSAGE = (
+    "Não deu para confirmar a tempo com {name} a troca para {when}. Sua sessão de {old} continua marcada. "
+    "Se quiser, posso ver outros horários com você."
+)
 CANCEL_REJECTED_MESSAGE = (
     "{name} não confirmou o cancelamento: sua sessão de {when} continua marcada. "
     "Se precisar, fale direto com {name} por aqui."
@@ -111,7 +122,7 @@ def _event_description(appointment: models.Appointment) -> str:
         origin = f"Pedido feito pelo WhatsApp.\nTelefone: {phone}"
     return (
         f"{origin}\n\nMarcado pela SelenIA. Confirme ou recuse no painel: {settings.frontend_url}/agenda\n"
-        "Sem decisão em 24 horas, este horário é liberado."
+        "Sem decisão em 24 horas ou até a hora da sessão, este horário é liberado."
     )
 
 
@@ -274,7 +285,7 @@ def request(
         ends_at=end,
         status=AppointmentStatus.TENTATIVE,
         patient_name=name,
-        expires_at=now + HOLD,
+        expires_at=min(now + HOLD, start),
     )
     appointment.conversation = conversation
     try:
@@ -405,7 +416,7 @@ def _pending(db: Session, appointment: models.Appointment) -> None:
     if appointment.status != AppointmentStatus.TENTATIVE:
         raise AppointmentError("Este pedido já foi decidido.")
     if appointment.expires_at <= models._now():
-        raise AppointmentError("Este pedido passou de 24 horas e o horário foi liberado.")
+        raise AppointmentError("Este pedido venceu e o horário foi liberado.")
 
 
 def _awaiting_cancel(appointment: models.Appointment) -> bool:
@@ -567,7 +578,7 @@ def request_reschedule(
         ends_at=end,
         status=AppointmentStatus.TENTATIVE,
         patient_name=current.patient_name,
-        expires_at=now + HOLD,
+        expires_at=min(now + HOLD, start),
         replaces_id=current.id,
     )
     appointment.conversation = conversation
@@ -637,8 +648,10 @@ def request_cancel(
 def expire_overdue(db: Session, now: datetime | None = None) -> list[str]:
     """Libera os pedidos provisórios vencidos. Devolve os ids expirados.
 
-    Não avisa a pessoa: depois de 24h, a janela do WhatsApp quase sempre
-    já fechou. A profissional recebe e-mail (quem chama envia).
+    A pessoa é avisada pela conversa, se a janela do WhatsApp ainda
+    estiver aberta (`contact_notified` guarda se chegou). A conversa em
+    espera de emergência fica sem o aviso. A profissional recebe e-mail
+    (quem chama envia).
     """
     now = now or models._now()
     query = db.query(models.Appointment).filter(
@@ -650,7 +663,25 @@ def expire_overdue(db: Session, now: datetime | None = None) -> list[str]:
         _delete_event_quietly(appointment.professional.calendar_connection, appointment.calendar_event_id)
         appointment.status = AppointmentStatus.EXPIRED
         appointment.decided_at = now
-        expired.append(appointment.id)
-    if expired:
-        db.commit()
-    return expired
+        expired.append(appointment)
+    if not expired:
+        return []
+    db.commit()
+    for appointment in expired:
+        appointment.contact_notified = _tell_expired(db, appointment)
+    db.commit()
+    return [appointment.id for appointment in expired]
+
+
+def _tell_expired(db: Session, appointment: models.Appointment) -> bool:
+    conversation = appointment.conversation
+    if conversation is None or conversation.state == ConversationState.EMERGENCY_HOLD:
+        return False
+    name = appointment.professional.name
+    when = calendar.format_slot(appointment.starts_at)
+    old = appointment.replaces
+    if old is not None and old.status == AppointmentStatus.CONFIRMED:
+        message = RESCHEDULE_EXPIRED_MESSAGE.format(name=name, when=when, old=calendar.format_slot(old.starts_at))
+    else:
+        message = EXPIRED_MESSAGE.format(name=name, when=when)
+    return _tell_contact(db, appointment, message)

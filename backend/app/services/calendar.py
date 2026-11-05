@@ -300,19 +300,20 @@ def free_slots(
     booked_per_day: dict[date, int] | None = None,
     max_per_day: int | None = None,
     whole_days: list[str] | None = None,
+    min_notice: timedelta = MIN_NOTICE,
 ) -> list[datetime]:
     """Todos os inícios de sessão livres, dentro do horário de atendimento.
 
     Um horário vale se começa na grade de 30 minutos, a sessão inteira
     cabe no intervalo de atendimento do dia, começa com pelo menos
-    `MIN_NOTICE` de antecedência e não encosta em nada ocupado da agenda.
+    `min_notice` de antecedência e não encosta em nada ocupado da agenda.
     Dias que já têm `max_per_day` sessões (`booked_per_day`) ficam de fora.
     Nos dias da semana em `whole_days` (dias especiais), vale o dia
     inteiro, da 00:00 à meia-noite seguinte.
     """
     duration = timedelta(minutes=session_minutes)
     step = timedelta(minutes=SLOT_STEP_MINUTES)
-    earliest = now + MIN_NOTICE
+    earliest = now + min_notice
     today = now.astimezone(tz).date()
 
     result = []
@@ -391,9 +392,9 @@ def available_slots(
     """Horários livres de verdade (lendo o Google). Levanta `CalendarError`.
 
     Para um `contact` com a permissão (`Contact.can_use_special_hours`),
-    os dias especiais dele ficam livres o dia inteiro e o limite de
-    sessões por dia não vale. As sessões dessa pessoa continuam contando
-    no limite para os outros.
+    os dias especiais dele ficam livres o dia inteiro e não valem o
+    limite de sessões por dia nem a antecedência mínima. As sessões dessa
+    pessoa continuam contando no limite para os outros.
     """
     if not is_ready(professional):
         raise CalendarError("Conecte a agenda e preencha o horário de atendimento.")
@@ -411,6 +412,7 @@ def available_slots(
         booked_per_day=sessions_per_day(professional, now),
         max_per_day=None if special else professional.max_sessions_per_day,
         whole_days=contact.special_days if special else None,
+        min_notice=timedelta(0) if special else MIN_NOTICE,
     )
 
 
@@ -462,7 +464,16 @@ SPECIAL_HOURS_NOTE = (
 )
 OUTSIDE_LIST_NOTE = (
     "Horário fora desta lista não é oferecido. Se a pessoa pedir outro horário (à noite, de madrugada, fora "
-    "dos dias de atendimento), não aceite nem recuse: use avisar_profissional e diga que perguntou a {name}."
+    "dos dias de atendimento), não aceite nem recuse: use avisar_profissional e diga que perguntou a {name}. "
+    "Nunca troque o pedido por um horário parecido em outro dia."
+)
+SHORT_NOTICE_NOTE = (
+    "A lista só começa {notice} horas depois de agora: pedido para agora, daqui a pouco ou hoje não está nela e "
+    "segue a regra acima."
+)
+NO_NOTICE_NOTE = (
+    "Esta pessoa não tem antecedência mínima: se pedir para agora, daqui a pouco ou hoje, ofereça o horário da "
+    "lista mais perto do que ela pediu, no mesmo dia."
 )
 
 
@@ -475,7 +486,8 @@ def describe_for_assistant(
     """Resposta da ferramenta de horários: data de hoje e os horários livres.
 
     Para um `contact` com a permissão, a lista inclui os dias especiais
-    dele inteiros e ignora o limite de sessões por dia. Nunca levanta exceção: se o Google falhar, diz isso,
+    dele inteiros e ignora o limite de sessões por dia e a antecedência
+    mínima. Nunca levanta exceção: se o Google falhar, diz isso,
     e a SelenIA responde que vai confirmar com a profissional.
     """
     now = now or models._now()
@@ -487,6 +499,10 @@ def describe_for_assistant(
         days = ", ".join(n for k, n in zip(WEEKDAYS, WEEKDAY_NAMES) if k in contact.special_days)
         today += "\n" + SPECIAL_HOURS_NOTE.format(name=professional.name, days=days)
     today += "\n" + OUTSIDE_LIST_NOTE.format(name=professional.name)
+    if contact is not None and contact.can_use_special_hours:
+        today += " " + NO_NOTICE_NOTE
+    else:
+        today += " " + SHORT_NOTICE_NOTE.format(notice=int(MIN_NOTICE.total_seconds() // 3600))
     try:
         slots = available_slots(professional, now, contact=contact)
     except CalendarError:

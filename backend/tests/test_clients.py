@@ -4,9 +4,11 @@ Caso real de 18/10/2026: o contato disse ser "um paciente especial" e
 pediu sessão às 21h. Só a profissional, no painel, dá esse acesso.
 """
 
+from datetime import timedelta
+
 from app import models
 from app.models import Channel
-from app.services import appointments, calendar, llm
+from app.services import appointments, calendar, llm, notifications, pipeline
 
 from tests.test_appointments import (  # noqa: F401  (fixtures)
     MONDAY_8AM,
@@ -122,6 +124,142 @@ def test_the_assistant_sees_special_days_only_through_the_panel_permission(clien
         "/chat/simulate", json={"professional_slug": TEST_SLUG, "message": "e agora?", "session_id": session}
     )
     assert "dias especiais (terça)" in seen[-1]
+
+
+def test_turning_on_special_mid_conversation_reaches_the_next_message_without_the_tool(
+    client, db, professional, google, monkeypatch
+):
+    """O modelo aqui nunca chama a ferramenta: a permissão tem de chegar mesmo assim."""
+    prompts = []
+
+    def fake_reply(system_prompt, history, tools=None, run_tool=None):
+        prompts.append(system_prompt)
+        return "Tenho terça, 29/09 às 10:00."
+
+    monkeypatch.setattr(llm, "generate_reply", fake_reply)
+    session = "sessao-virou-especial"
+
+    def send(message):
+        client.post(
+            "/chat/simulate", json={"professional_slug": TEST_SLUG, "message": message, "session_id": session}
+        )
+        return prompts[-1]
+
+    assert "dias especiais" not in send("quero marcar uma sessão")
+
+    contact = db.query(models.Contact).filter_by(professional_id=professional.id, channel=Channel.SIMULATOR).one()
+    client.patch(f"/clients/{contact.id}", json={"allow_special_hours": True, "special_days": SPECIAL})
+    # "pode ser" não fala de horário: vale por responder a uma oferta de horário.
+    assert "dias especiais (terça)" in send("pode ser")
+
+    client.patch(f"/clients/{contact.id}", json={"allow_special_hours": False})
+    assert "dias especiais" not in send("pode ser")
+
+
+def test_agenda_stays_out_of_the_prompt_when_the_subject_is_not_scheduling(
+    client, db, professional, google, monkeypatch
+):
+    prompts = []
+
+    def fake_reply(system_prompt, history, tools=None, run_tool=None):
+        prompts.append(system_prompt)
+        return "A abordagem é a terapia cognitivo-comportamental."
+
+    monkeypatch.setattr(llm, "generate_reply", fake_reply)
+    client.post(
+        "/chat/simulate",
+        json={"professional_slug": TEST_SLUG, "message": "qual a sua abordagem?", "session_id": "sessao-sem-horario"},
+    )
+    assert "HORÁRIOS DE AGORA" not in prompts[-1]
+
+
+def test_recognizes_the_subject_of_scheduling():
+    offer = [{"role": "assistant", "content": "Tenho quinta, 05/11 às 11:00."}]
+    greeting = [{"role": "assistant", "content": "Posso ajudar com horários e valores."}]
+    for text in ("quero marcar", "pode sr daqui 30 mins:", "tem às 21h?", "e às 21:30?", "dia 05/11", "Sábado", "MANHÃ"):
+        assert pipeline._about_scheduling(text, greeting), text
+    for text in ("sim", "pode ser", "gisele"):
+        assert pipeline._about_scheduling(text, offer), text
+        assert not pipeline._about_scheduling(text, greeting), text
+    assert not pipeline._about_scheduling("qual a sua abordagem?", greeting)
+
+
+def test_list_warns_that_short_notice_requests_are_outside_it(db, professional, google):
+    text_out = calendar.describe_for_assistant(professional, MONDAY_8AM)
+    assert "só começa 12 horas depois de agora" in text_out
+
+
+def test_special_clients_have_no_minimum_notice(db, professional, google):
+    other = _conversation(db, professional, external_id="5521911110000")
+    special = _conversation(db, professional, external_id="5521922220000")
+    special.contact.active_since = models._now()
+    special.contact.allow_special_hours = True
+    special.contact.special_days = ["mon"]
+    db.commit()
+    in_half_hour = "2026-09-28T08:30"
+
+    assert appointments.request(db, professional, other, in_half_hour, "Ana", now=MONDAY_8AM).text == appointments.TAKEN_MESSAGE
+    text_out = calendar.describe_for_assistant(professional, MONDAY_8AM, contact=special.contact)
+    assert "segunda, 28/09 (2026-09-28): 08:00, 08:30" in text_out
+    assert "não tem antecedência mínima" in text_out and "só começa 12 horas" not in text_out
+
+    booking = appointments.request(db, professional, special, in_half_hour, "Bia", now=MONDAY_8AM)
+    assert booking.appointment_id
+    # O pedido vence na hora da sessão, não 24 horas depois.
+    appointment = db.get(models.Appointment, booking.appointment_id)
+    assert appointment.expires_at == appointment.starts_at
+
+
+def test_expired_request_tells_the_person_through_the_conversation(db, professional, google):
+    conversation = _conversation(db, professional, channel=Channel.SIMULATOR)
+    booking = appointments.request(db, professional, conversation, "2026-09-29T10:00", "Ana", now=MONDAY_8AM)
+
+    assert appointments.expire_overdue(db, now=MONDAY_8AM + timedelta(days=2)) == [booking.appointment_id]
+    appointment = db.get(models.Appointment, booking.appointment_id)
+    assert appointment.contact_notified is True
+    last = db.query(models.Message).filter_by(conversation_id=conversation.id).order_by(models.Message.seq.desc()).first()
+    assert "o horário foi liberado" in last.content and last.sent_by == models.SentBy.SYSTEM
+
+
+def test_expired_request_stays_silent_with_the_whatsapp_window_closed_or_in_emergency(db, professional, google):
+    closed = _conversation(db, professional, external_id="5521911110000")
+    emergency = _conversation(db, professional, external_id="5521922220000", channel=Channel.SIMULATOR)
+    first = appointments.request(db, professional, closed, "2026-09-29T10:00", "Ana", now=MONDAY_8AM)
+    second = appointments.request(db, professional, emergency, "2026-09-29T14:00", "Bia", now=MONDAY_8AM)
+    closed.last_contact_message_at = models._now() - timedelta(days=2)
+    emergency.state = models.ConversationState.EMERGENCY_HOLD
+    db.commit()
+    before = db.query(models.Message).count()
+
+    appointments.expire_overdue(db, now=MONDAY_8AM + timedelta(days=2))
+    assert db.get(models.Appointment, first.appointment_id).contact_notified is False
+    assert db.get(models.Appointment, second.appointment_id).contact_notified is False
+    assert db.query(models.Message).count() == before
+
+
+def test_short_notice_request_emails_right_away_even_in_session(db, professional, google, monkeypatch):
+    conversation = _conversation(db, professional)
+    calls = []
+    monkeypatch.setattr(
+        notifications, "_notify_appointment", lambda *args, hold=True: calls.append(hold)
+    )
+    regular = appointments.request(db, professional, conversation, _next_tuesday_code(), "Ana")
+    notifications.notify_appointment_request(regular.appointment_id)
+    appointment = db.get(models.Appointment, regular.appointment_id)
+    appointment.starts_at = models._now() + timedelta(minutes=30)
+    db.commit()
+    notifications.notify_appointment_request(regular.appointment_id)
+    assert calls == [True, False]
+
+
+def test_no_minimum_notice_also_applies_outside_special_days(db, professional, google):
+    conversation = _conversation(db, professional)
+    conversation.contact.active_since = models._now()
+    conversation.contact.allow_special_hours = True
+    db.commit()
+    # Sem dia especial, segue o atendimento de segunda (10h às 16h), já hoje.
+    slots = calendar.available_slots(professional, MONDAY_8AM, contact=conversation.contact)
+    assert slots[0].astimezone(calendar._tz()).strftime("%d/%m %H:%M") == "28/09 10:00"
 
 
 def test_confirming_a_session_makes_the_person_an_active_client(client, db, professional, google, no_real_whatsapp):

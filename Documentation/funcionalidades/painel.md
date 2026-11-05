@@ -28,7 +28,10 @@ vieram primeiro, para ele testar antes das que dependem de backend novo
   [Conversas](conversas.md).
 - **Barra do topo:** o botão **Entrar em consulta** (50 minutos, 1h30
   ou até desligar). Ligado, mostra "Em consulta até HH:MM", **+15 min**
-  e **Encerrar**. Ao lado, o nome, o e-mail e **Sair**.
+  e **Encerrar**. Com o Google Agenda conectado, liga sozinho durante um
+  compromisso e mostra "Em consulta até HH:MM · pela agenda", sem
+  **Encerrar** (desde 03/11/2026; ver
+  [Handoff e "Em consulta"](handoff-e-em-consulta.md)). Ao lado, o nome, o e-mail e **Sair**.
 - **Perfil do atendimento** (`/perfil`): os mesmos campos do cadastro
   numa página, com um índice à esquerda. Nada é gravado até **Salvar
   alterações**, na barra que aparece embaixo quando há mudança; **Descartar**

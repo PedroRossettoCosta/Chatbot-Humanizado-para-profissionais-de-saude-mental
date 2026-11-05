@@ -13,8 +13,9 @@ bot em silêncio):
 4. o contato pede para falar **com a profissional** ("quero falar com o
    Pedro"), com o botão "Em consulta" desligado.
 
-Com o botão "Em consulta" ligado, o pedido do caminho 4 não muda o
-estado: a SelenIA avisa que a profissional está em atendimento e oferece
+Com a profissional em consulta (botão "Em consulta" ou compromisso no
+Google Agenda, ver `services/availability.py`), o pedido do caminho 4 não
+muda o estado: a SelenIA avisa que a profissional está em atendimento e oferece
 ajuda. Quem recusou o bot não recebe essa oferta de ajuda, porque acabou
 de dizer que não quer.
 
@@ -46,7 +47,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.models import AlertEventType, AlertLevel, AwaitingReason, ConversationState, MessageRole, SentBy
-from app.services import conversations
+from app.services import availability, conversations
 from app.services.triage import normalize
 
 # Forma neutra de gênero ("{name}" e não "ela"), porque vale para
@@ -58,6 +59,12 @@ IN_SESSION_MESSAGE = (
     "{name} está em atendimento agora e responde assim que terminar. "
     "Enquanto isso, posso te ajudar com alguma dúvida?"
 )
+# Com o fim previsto (botão com duração ou compromisso na agenda), a
+# pessoa sabe a partir de quando esperar a resposta (Pedro, 03/11/2026).
+IN_SESSION_UNTIL_MESSAGE = (
+    "{name} está em atendimento até as {until} e responde por aqui depois disso. "
+    "Enquanto isso, posso te ajudar com alguma dúvida?"
+)
 BOT_REFUSED_MESSAGE = (
     "Entendo, e tudo bem preferir conversar com uma pessoa. Vou parar por "
     "aqui e avisar {name}, que responde pessoalmente por este canal assim "
@@ -67,6 +74,11 @@ BOT_REFUSED_IN_SESSION_MESSAGE = (
     "Entendo, e tudo bem preferir conversar com uma pessoa. Vou parar por "
     "aqui e avisar {name}, que está em atendimento agora e responde "
     "pessoalmente por este canal assim que terminar."
+)
+BOT_REFUSED_IN_SESSION_UNTIL_MESSAGE = (
+    "Entendo, e tudo bem preferir conversar com uma pessoa. Vou parar por "
+    "aqui e avisar {name}, que está em atendimento até as {until} e "
+    "responde pessoalmente por este canal depois disso."
 )
 
 
@@ -135,11 +147,19 @@ def handle_human_request(
     user_message: models.Message,
     request: HumanRequest,
 ) -> tuple[str, models.SafetyAlert | None]:
-    """Responde ao pedido. Devolve o texto enviado ao contato e o alerta, se houver."""
-    in_session = professional.is_in_session
+    """Responde ao pedido. Devolve o texto enviado ao contato e o alerta, se houver.
+
+    "Em consulta" vem do botão ou da agenda (`services/availability.py`).
+    """
+    now_status = availability.current(professional)
+    in_session = now_status.in_session
+    until = availability.format_until(now_status.until) if now_status.until else None
     alert = None
     if request == HumanRequest.REFUSES_BOT:
-        template = BOT_REFUSED_IN_SESSION_MESSAGE if in_session else BOT_REFUSED_MESSAGE
+        if in_session:
+            template = BOT_REFUSED_IN_SESSION_UNTIL_MESSAGE if until else BOT_REFUSED_IN_SESSION_MESSAGE
+        else:
+            template = BOT_REFUSED_MESSAGE
         alert = conversations.raise_safety_alert(
             db,
             conversation,
@@ -151,7 +171,7 @@ def handle_human_request(
         conversation.state = ConversationState.HUMAN
         reason = AwaitingReason.REFUSES_BOT
     elif in_session:
-        template = IN_SESSION_MESSAGE
+        template = IN_SESSION_UNTIL_MESSAGE if until else IN_SESSION_MESSAGE
         reason = AwaitingReason.WANTS_PROFESSIONAL
     else:
         template = HANDOFF_MESSAGE
@@ -162,7 +182,7 @@ def handle_human_request(
     # A recusa do bot é o motivo mais forte: não é trocada por um pedido.
     if conversation.awaiting_reason != AwaitingReason.REFUSES_BOT:
         conversation.awaiting_reason = reason
-    reply = template.format(name=professional.name)
+    reply = template.format(name=professional.name, until=until)
     conversations.record_message(db, conversation, MessageRole.ASSISTANT, reply, sent_by=SentBy.SYSTEM)
     return reply, alert
 

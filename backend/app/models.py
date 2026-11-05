@@ -226,6 +226,11 @@ class Professional(Base):
     # ligado o dia inteiro). Ver `is_in_session`.
     in_session_since = Column(DateTime(timezone=True), nullable=True)
     in_session_until = Column(DateTime(timezone=True), nullable=True)
+    # Avisos por e-mail guardados durante uma consulta (botão ou agenda):
+    # quando o primeiro foi guardado. Ao fim da consulta sai um e-mail só,
+    # com o resumo, e o campo volta a nulo (`notifications.send_held_notices`).
+    # Alertas de segurança nunca esperam. Decisão do Pedro, 03/11/2026.
+    held_notices_since = Column(DateTime(timezone=True), nullable=True)
     # Duração de uma sessão, em minutos. A agenda usa para montar os
     # horários oferecidos; o texto livre de `service_info` não serve
     # para isso.
@@ -268,9 +273,31 @@ class Professional(Base):
 
     @property
     def is_in_session(self) -> bool:
+        """Só o botão. Para saber se ela está em consulta de fato (botão
+        ou agenda), use `services/availability.current`."""
         if self.in_session_since is None:
             return False
         return self.in_session_until is None or self.in_session_until > _now()
+
+    # Botão ou agenda, para o painel (`schemas.ProfessionalOut`). A leitura
+    # da agenda fica em memória por um minuto (`availability.CACHE_SECONDS`).
+    @property
+    def availability(self):
+        from app.services import availability  # evita importação circular
+
+        return availability.current(self)
+
+    @property
+    def session_active(self) -> bool:
+        return self.availability.in_session
+
+    @property
+    def session_until(self) -> datetime | None:
+        return self.availability.until
+
+    @property
+    def session_source(self) -> str | None:
+        return self.availability.source
 
     documents = relationship("Document", back_populates="professional", cascade="all, delete-orphan")
     contacts = relationship("Contact", back_populates="professional", cascade="all, delete-orphan")

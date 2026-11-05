@@ -46,6 +46,14 @@ O pedido para falar com a profissional não é alerta de segurança
 responder, e **não entra em trilha**; se falhar, só vai para o log
 (`notify_human_request`).
 
+**Em consulta, os pedidos esperam** (decisão do Pedro, 03/11/2026): com
+a profissional em consulta (botão ou Google Agenda), os e-mails de
+pedido e de pedido de horário não saem na hora; quando a consulta acaba,
+(menos pedido de horário para daqui a menos de 12 horas, que sai na
+hora) sai um e-mail só, "Enquanto você atendia, N pessoas ficaram aguardando
+você". Os alertas de segurança desta página nunca esperam. Detalhes em
+[Handoff e "Em consulta"](handoff-e-em-consulta.md).
+
 O corpo traz: o que aconteceu e o que a SelenIA fez, horário de Brasília,
 canal e o link do painel.
 

@@ -13,6 +13,7 @@ Nenhuma das duas envia nada: devolvem o que foi decidido, e quem chamou
 entrega pelo canal (resposta HTTP do simulador ou API da Meta).
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import timedelta
 
@@ -21,7 +22,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.config import settings
 from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
-from app.services import appointments, calendar, conversations, guidelines, handoff, llm, rag, triage, usage
+from app.services import appointments, availability, calendar, conversations, guidelines, handoff, llm, rag, triage, usage
 
 HISTORY_LIMIT = 12
 
@@ -58,6 +59,31 @@ NO_REPLY_TEMPLATE = (
     "Desculpe, não consegui responder a essa mensagem. Posso ajudar com "
     "alguma dúvida sobre o atendimento de {name}?"
 )
+
+
+# Assunto de horário: com isso na mensagem, ou com um horário na última
+# resposta da SelenIA ("pode ser", "sim"), o pipeline consulta a agenda
+# sozinho. As palavras são comparadas depois de `triage.normalize`; o que
+# tem número, no texto original, porque a pontuação faz parte. Errar para
+# mais só custa uma consulta ao Google.
+SCHEDULING_WORDS = re.compile(
+    r"\b(marca\w*|agenda\w*|desmarc\w*|remarc\w*|reagend\w*|cancel\w*|horario\w*|sess\w+|consulta\w*|"
+    r"vaga\w*|encaixe\w*|disponivel|disponiveis|livre\w*|hoje|amanha|semana\w*|daqui|agora|"
+    r"manha|tarde|noite|madrugada|segunda|terca|quarta|quinta|sexta|sabado|domingo|especial|especiais)\b"
+)
+SCHEDULING_NUMBERS = re.compile(
+    r"\b\d{1,2}\s*(h|hs|hrs|horas?|min|mins|minutos?)\b|\b\d{1,2}:\d{2}\b|\b\d{1,2}/\d{1,2}\b", re.I
+)
+# Sem ignorar maiúsculas: "reserv" não pode casar com um nome próprio.
+SCHEDULING_REPLY = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{1,2}/\d{1,2}\b|\breserv")
+
+
+def _about_scheduling(text: str, history: list[dict]) -> bool:
+    """A mensagem fala de horário, ou responde a uma oferta de horário."""
+    if SCHEDULING_WORDS.search(triage.normalize(text)) or SCHEDULING_NUMBERS.search(text):
+        return True
+    last_reply = next((m["content"] for m in reversed(history) if m["role"] == MessageRole.ASSISTANT), "")
+    return bool(SCHEDULING_REPLY.search(last_reply))
 
 
 @dataclass
@@ -264,7 +290,6 @@ def reply(
         )
 
     chunks, metadatas = rag.query(professional.slug, text)
-    system_prompt = llm.build_system_prompt(professional, chunks)
     history = _reply_history(db, conversation)
     # `avisar_profissional` está sempre disponível: é o único jeito de a
     # SelenIA levar um pedido à profissional. A agenda só entra como
@@ -273,6 +298,22 @@ def reply(
     booked = []
     notified = []
     agenda_ready = calendar.is_ready(professional)
+
+    def agenda_text():
+        # Horário especial só para cliente ativo com a permissão (tela
+        # Clientes), nunca pelo que a pessoa diz na conversa.
+        return calendar.describe_for_assistant(
+            professional,
+            pending=appointments.pending_note(db, conversation),
+            contact=conversation.contact,
+        )
+
+    # Em assunto de horário, a agenda e a permissão do painel são lidas de
+    # novo a cada mensagem, sem depender de o modelo chamar a ferramenta:
+    # ele podia repetir a lista de antes, de quando a pessoa ainda não
+    # era cliente especial (pedido do Pedro, 04/11/2026).
+    agenda_now = agenda_text() if agenda_ready and _about_scheduling(text, history) else None
+    system_prompt = llm.build_system_prompt(professional, chunks, availability.current(professional), agenda_now)
 
     def run_tool(name, tool_input):
         if name == llm.ASK_PROFESSIONAL_TOOL["name"]:
@@ -293,13 +334,7 @@ def reply(
         elif name == llm.CANCEL_TOOL["name"]:
             booking = appointments.request_cancel(db, professional, conversation, tool_input.get("sessao", ""))
         else:
-            # Horário especial só para cliente ativo com a permissão
-            # (tela Clientes), nunca pelo que a pessoa diz na conversa.
-            return calendar.describe_for_assistant(
-                professional,
-                pending=appointments.pending_note(db, conversation),
-                contact=conversation.contact,
-            )
+            return agenda_text()
         if booking.appointment_id:
             booked.append(booking.appointment_id)
         return booking.text

@@ -166,3 +166,49 @@ mesmos números e mesmas divergências. A separação não piorou nada.
 - 40 mensagens, uma rotuladora (a própria cliente, que é parente do
   autor), mensagens isoladas sem histórico e uma única execução.
 - O mesmo autor escreveu as mensagens e o prompt.
+
+## Reexecução de 03/11/2026 e camada 1 sozinha
+
+Mesmo conjunto, mesmo modelo (`claude-opus-5`, esforço baixo), com a
+triagem atual (janela curta de histórico, mensagens quebradas, risco
+antigo sem contaminar). Saída bruta em
+[resultados-testes/2026-11-03-triagem.md](resultados-testes/2026-11-03-triagem.md).
+
+**Camadas 1 + 2:** números idênticos ao v1 (29/40, mesma matriz, mesmas
+11 divergências). As mudanças na triagem desde 23/09 não alteraram o
+resultado neste conjunto.
+
+**Estabilidade:** três execuções seguidas no mesmo dia deram o mesmo
+nível nas 40 mensagens (as três saídas estão no relatório). Neste
+conjunto, a classificação da camada 2 não variou entre execuções. Isso
+mede a repetição, não o acerto: as 11 divergências também se repetem.
+
+**Camada 1 sozinha** (só as regras, sem chamar o modelo; é o que um bot
+de palavras-chave conseguiria):
+
+| Métrica | Camada 1 sozinha | Camadas 1 + 2 |
+|---|---|---|
+| Concordância exata com a Marília | 15/40 | 29/40 |
+| Emergências reconhecidas como E | 4/10 | 9/10 |
+| Risco (D ou E) sem nenhum alerta | 11/17 | 1/17 |
+| Alerta em mensagem N ou S (alarme falso) | 1 | 5 |
+| Texto de emergência enviado sem ser E | 0 | 1 |
+
+Matriz da camada 1 sozinha (linha = Marília, coluna = sistema):
+
+| | N | S | D | E |
+|---|---|---|---|---|
+| **N** | 9 | 0 | 1 | 0 |
+| **S** | 13 | 0 | 0 | 0 |
+| **D** | 5 | 0 | 2 | 0 |
+| **E** | 6 | 0 | 0 | 4 |
+
+Leitura: as regras são precisas (quase nunca alarmam à toa), mas deixam
+passar 11 das 17 mensagens de risco, incluindo 6 emergências escritas
+sem as palavras previstas (ex.: 9, 21, 24, 30, 34). O modelo troca
+alguns alarmes falsos por pegar quase todo o risco. Cuidados ao citar:
+
+- A camada 1 não tem nível S por desenho (sofrimento intenso só vem da
+  camada 2), então os 13 S → N são esperados, não falha das regras.
+- As regras foram escritas por quem viu os rótulos (os itens 7 e 31
+  viraram regra), o que favorece a camada 1 neste conjunto.

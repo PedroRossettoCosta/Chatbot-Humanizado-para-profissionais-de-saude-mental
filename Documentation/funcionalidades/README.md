@@ -16,7 +16,7 @@ commit (regra em [`CLAUDE.md`](../../CLAUDE.md)).
 | [Base de conhecimento](base-de-conhecimento.md) | Funcionando | Documentos que a SelenIA usa para responder (RAG): enviar e remover |
 | [Triagem de segurança](triagem-de-seguranca.md) | Funcionando | Detecta risco em cada mensagem antes do modelo responder, em duas camadas |
 | [Perfil e regras da SelenIA](perfil-e-regras-da-maria.md) | Funcionando | Tom de voz, exemplos, valores e a lista fixa do que a SelenIA nunca diz |
-| [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano ("Aguardando você"); recusa do bot |
+| [Handoff e "Em consulta"](handoff-e-em-consulta.md) | Funcionando | A profissional assume a conversa; pedido de humano ("Aguardando você"); recusa do bot; "Em consulta" pelo botão ou pela agenda, com o horário para o contato e resumo por e-mail no fim |
 | [Login com Google](login-com-google.md) | Funcionando | Entrada no painel pela conta Google, só para convidados; rotas protegidas |
 | [Cadastro em etapas](cadastro-em-etapas.md) | Funcionando | 7 etapas depois do primeiro login; o painel só abre com o cadastro concluído |
 | [Agenda](agenda.md) | Funcionando; textos fixos sem aprovação | Conectar o Google Agenda, horário de atendimento, horários livres, reserva provisória pela SelenIA e confirmar/recusar no painel |

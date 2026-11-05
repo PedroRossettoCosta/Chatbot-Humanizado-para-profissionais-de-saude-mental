@@ -90,13 +90,40 @@ TOM DE VOZ
 {context_header}
 Use as informações abaixo, extraídas dos documentos de {name}, para responder com precisão. Se o contexto não cobrir a pergunta, diga que não tem certeza.
 
-{context}
+{context}{in_session}{agenda_now}
 """
 
 # Tudo antes deste título é igual de uma mensagem para outra da mesma
 # profissional e vai para o cache do prompt; os trechos do RAG, que
 # mudam a cada pergunta, vêm depois dele.
 CONTEXT_HEADER = "CONTEXTO DA BASE DE CONHECIMENTO"
+
+# "Em consulta" agora (botão ou agenda, `services/availability.py`). Fica
+# no fim, depois dos trechos do RAG, na parte do prompt que não entra no
+# cache: muda ao longo do dia. Sem consulta, a seção não aparece.
+# Decisão do Pedro em 03/11/2026: no teste, a pessoa perguntou "ela tem
+# horário agora?" com o botão ligado e a SelenIA não sabia de nada.
+IN_SESSION_UNTIL = """
+
+AGORA
+{name} está em atendimento agora, até as {until} (horário de Brasília). Se a pessoa perguntar se pode falar com {name} agora, se {name} está disponível ou quando vai ter resposta, diga que {name} está em atendimento até as {until} e responde por esta conversa depois disso. Não diga mais nada sobre o que {name} está fazendo. Isso não muda os horários livres para sessão: para eles, use a ferramenta como sempre."""
+IN_SESSION_OPEN = """
+
+AGORA
+{name} está em atendimento agora, sem horário certo para terminar. Se a pessoa perguntar se pode falar com {name} agora, se {name} está disponível ou quando vai ter resposta, diga que {name} está em atendimento e responde por esta conversa assim que terminar, sem prometer prazo. Não diga mais nada sobre o que {name} está fazendo. Isso não muda os horários livres para sessão: para eles, use a ferramenta como sempre."""
+
+# Consulta da agenda feita pelo pipeline para esta mensagem, quando a
+# conversa está em assunto de horário (`pipeline._about_scheduling`). Fica
+# no fim, fora do cache, porque muda a cada mensagem. Decisão do Pedro em
+# 04/11/2026: a condição de cliente especial pode mudar no meio da
+# conversa e não pode depender de o modelo lembrar de chamar a ferramenta.
+AGENDA_NOW = """
+
+HORÁRIOS DE AGORA
+Consulta da agenda feita para esta mensagem, já com as condições que {name} deu a esta pessoa no painel. Ela vale mais do que qualquer horário ou condição que apareça antes nesta conversa, porque o painel pode ter mudado. Responda sobre horários com base nela. Não precisa chamar consultar_horarios_livres de novo, a não ser que uma reserva seja recusada.
+<agenda_agora>
+{agenda}
+</agenda_agora>"""
 
 DEFAULT_VOICE_TONE = "Acolhedor, claro e profissional."
 NO_CONTEXT_MESSAGE = "(nenhum documento relevante encontrado na base de conhecimento)"
@@ -303,7 +330,19 @@ def _format_agenda(professional) -> str:
     return AGENDA_NONE.format(name=name)
 
 
-def build_system_prompt(professional, context_chunks: list[str]) -> str:
+def _format_in_session(name: str, now_status) -> str:
+    if now_status is None or not now_status.in_session:
+        return ""
+    if now_status.until is None:
+        return IN_SESSION_OPEN.format(name=name)
+    until = now_status.until.astimezone(calendar._tz()).strftime("%H:%M")
+    return IN_SESSION_UNTIL.format(name=name, until=until)
+
+
+def build_system_prompt(professional, context_chunks: list[str], now_status=None, agenda_now: Optional[str] = None) -> str:
+    """`now_status`: `availability.Availability` de agora, ou None (fora de consulta).
+    `agenda_now`: resposta de `calendar.describe_for_assistant` para esta
+    mensagem, ou None se a conversa não está em assunto de horário."""
     name = professional.name
     pronouns = guidelines.PRONOUNS.get(professional.pronouns or "", guidelines.PRONOUNS[guidelines.DEFAULT_PRONOUNS])
     return SYSTEM_TEMPLATE.format(
@@ -320,6 +359,8 @@ def build_system_prompt(professional, context_chunks: list[str]) -> str:
         examples=_format_examples(name, professional.voice_examples),
         context_header=CONTEXT_HEADER,
         context=_format_context(context_chunks),
+        in_session=_format_in_session(name, now_status),
+        agenda_now=AGENDA_NOW.format(name=name, agenda=agenda_now) if agenda_now else "",
     )
 
 

@@ -59,7 +59,9 @@ Paciente escreve
 │  resposta       │   agenda pronta, a Claude pode consultar os
 │                 │   horários livres e reservar um horário
 │                 │   provisório, por ferramentas, antes de
-│                 │   responder. A ferramenta avisar_profissional
+│                 │   responder. Em assunto de horário, a agenda
+│                 │   e a permissão do painel já entram no prompt
+│                 │   a cada mensagem. A ferramenta avisar_profissional
 │                 │   está sempre lá: é o único jeito de a
 │                 │   SelenIA levar um pedido à profissional.
 └────────┬────────┘
@@ -131,18 +133,28 @@ alteração.
 | `triage.py` | Triagem de segurança: regras fixas (camada 1) e decisão final com o modelo (camada 2) |
 | `guidelines.py` | Regras fixas do produto: nome da SelenIA, perguntas de tom, lista "nunca dizer" |
 | `handoff.py` | Assumir, devolver, responder pelo painel, pedido de humano, recusa do bot, "Em consulta", pedido levado pela SelenIA (`ask_professional`) com o motivo |
+| `availability.py` | Em consulta agora e até quando: botão "Em consulta" primeiro, depois um intervalo ocupado no Google Agenda (livre/ocupado, em memória por um minuto). Usado pelo handoff, pelo prompt, pelos e-mails e pelo painel |
 | `alerts.py` | Tela de Alertas: trilha em linguagem da profissional, visto (uma vez) e revisado |
-| `notifications.py` | E-mail de alerta (com registro na trilha), de pedido para a profissional (texto por motivo) e de pedidos de horário |
+| `notifications.py` | E-mail de alerta (com registro na trilha), de pedido para a profissional (texto por motivo) e de pedidos de horário; em consulta, os pedidos esperam e saem num resumo no fim (`send_held_notices`) |
 | `auth.py` | Login com Google, lista de convidados, sessões, `current_user` e limite de tentativas |
 | `onboarding.py` | Cadastro em etapas: o que é obrigatório, aceite das regras e conclusão |
 
 ### Tarefas em segundo plano
 
-Além das respostas a requisições, o backend roda uma rotina a cada 5
-minutos (`main.py`, `_expiry_loop`) que expira os pedidos de horário
-provisórios com mais de 24 horas e avisa a profissional por e-mail. Com
-mais de um processo, essa rotina precisa rodar em um só (ou virar um
-agendador externo).
+Além das respostas a requisições, o backend roda duas rotinas
+(`main.py`):
+
+- a cada 5 minutos, `_expiry_loop` expira os pedidos de horário
+  provisórios com mais de 24 horas e avisa a profissional por e-mail;
+- a cada minuto, `_held_notices_loop` confere quem saiu de consulta e
+  manda o e-mail de resumo dos avisos guardados
+  (`notifications.send_held_notices`, desde 03/11/2026).
+
+Com mais de um processo, essas rotinas precisam rodar em um só (ou virar
+um agendador externo). A leitura da agenda para o "Em consulta" fica em
+memória por processo (`availability.CACHE_SECONDS`); com mais de um
+processo, cada um lê o Google por conta própria, o que só custa
+chamadas a mais.
 
 ## 4. O canal é desacoplado do núcleo
 

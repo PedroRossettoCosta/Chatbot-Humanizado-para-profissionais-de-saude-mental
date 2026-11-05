@@ -17,9 +17,13 @@ function formatTime(iso) {
   });
 }
 
-// Botão "Em consulta" da barra do topo (protótipo: Conversas). Enquanto
-// ligado, quem pedir para falar com a profissional recebe um aviso fixo
-// e a SelenIA segue ajudando. Ver funcionalidades/handoff-e-em-consulta.md.
+// Botão "Em consulta" da barra do topo (protótipo: Conversas). Liga
+// sozinho quando há um compromisso agora no Google Agenda
+// (`in_session_source` = "agenda"); o botão serve para sessão fora da
+// agenda ou para estender. Em consulta, quem pedir para falar com a
+// profissional fica sabendo até que horas ela atende, a SelenIA segue
+// ajudando e os e-mails de pedido esperam o fim da consulta.
+// Ver funcionalidades/handoff-e-em-consulta.md.
 export default function InSessionControl() {
   const { professional, setProfessional } = usePanel();
   const [open, setOpen] = useState(false);
@@ -57,10 +61,15 @@ export default function InSessionControl() {
   };
 
   if (professional.in_session) {
+    const fromAgenda = professional.in_session_source === "agenda";
     return (
       <div className="flex items-center gap-2">
-        <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold tracking-wide text-white">
+        <span
+          className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold tracking-wide text-white"
+          title={fromAgenda ? "Ligado pelo compromisso que está acontecendo agora no seu Google Agenda." : undefined}
+        >
           EM CONSULTA {professional.in_session_until ? `ATÉ ${formatTime(professional.in_session_until)}` : ""}
+          {fromAgenda ? " · PELA AGENDA" : ""}
         </span>
         {professional.in_session_until && (
           <button
@@ -72,14 +81,18 @@ export default function InSessionControl() {
             +15 min
           </button>
         )}
-        <button
-          type="button"
-          onClick={end}
-          disabled={busy}
-          className="cursor-pointer rounded-xl border-0 bg-danger-soft px-3 py-1.5 text-sm font-semibold text-danger hover:bg-[#fde2e2]"
-        >
-          Encerrar
-        </button>
+        {/* O compromisso da agenda acaba sozinho no horário; "+15 min"
+            passa para o botão manual e estende. */}
+        {!fromAgenda && (
+          <button
+            type="button"
+            onClick={end}
+            disabled={busy}
+            className="cursor-pointer rounded-xl border-0 bg-danger-soft px-3 py-1.5 text-sm font-semibold text-danger hover:bg-[#fde2e2]"
+          >
+            Encerrar
+          </button>
+        )}
         {error && <span className="text-xs text-danger">{error}</span>}
       </div>
     );
@@ -109,8 +122,9 @@ export default function InSessionControl() {
             </button>
           ))}
           <p className="m-0 mt-2 border-t border-line px-2 pt-2 text-xs leading-relaxed text-muted">
-            Quem pedir para falar com você recebe um aviso de que você está em atendimento, e a SelenIA segue ajudando.
-            Emergências continuam gerando alerta na hora.
+            Com a agenda conectada, isto liga sozinho durante os seus compromissos. Em consulta, quem pedir para falar
+            com você fica sabendo até que horas você atende, a SelenIA segue ajudando e os e-mails de pedidos chegam
+            num resumo só, no fim. Alertas de segurança continuam chegando na hora.
           </p>
           {error && <p className="m-0 mt-2 px-2 text-xs text-danger">{error}</p>}
         </div>

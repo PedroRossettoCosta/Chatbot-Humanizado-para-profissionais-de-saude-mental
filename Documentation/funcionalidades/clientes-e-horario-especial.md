@@ -1,6 +1,6 @@
 # Clientes e horário especial
 
-> Situação: funcionando. Última atualização: 19/10/2026.
+> Situação: funcionando. Última atualização: 04/11/2026.
 
 ## O que é
 
@@ -34,6 +34,12 @@ madrugada. Logo depois, ainda em 19/10, o Pedro pediu que os dias não
 fossem iguais para todos: cada cliente especial tem os seus, escolhidos
 ao ligar a condição especial daquela pessoa.
 
+Em 04/11/2026, testando pelo simulador, o Pedro pediu que a SelenIA
+olhasse a condição especial toda vez que o assunto fosse marcar horário,
+porque a profissional pode ligar a condição com a conversa já em
+andamento. Até ali, a leitura só acontecia se o modelo decidisse chamar a
+ferramenta, e ele podia repetir uma lista de mensagens anteriores.
+
 ## Como usar
 
 1. Menu **Clientes**.
@@ -64,14 +70,26 @@ ao ligar a condição especial daquela pessoa.
   se ele for cliente especial. A reserva (`pedir_agendamento`,
   `pedir_remarcacao`) confere de novo com a mesma regra, então um código
   de horário fora do expediente é recusado para quem não tem a permissão.
+- **Em assunto de horário, a leitura não depende do modelo**: a cada
+  mensagem, o pipeline consulta a agenda e a permissão do painel e põe o
+  resultado no fim do prompt, na seção "HORÁRIOS DE AGORA", que vale mais
+  do que o que foi dito antes na conversa. Ligar ou desligar a condição
+  no meio da conversa vale já na mensagem seguinte. Conta como assunto de
+  horário a mensagem que fala disso (`pipeline._about_scheduling`) e a
+  resposta a uma oferta ("pode ser", "sim", logo depois de a SelenIA
+  citar um horário).
 - Para quem não tem a permissão, a lista diz à SelenIA que horário fora
   dela não é oferecido. Se a pessoa insistir, a SelenIA usa
   `avisar_profissional` (ver [Pedidos para a profissional](pedidos-para-a-profissional.md)).
 - O prompt manda não aceitar "sou paciente especial" ou "combinei com
   ela" como permissão: só vale o que as ferramentas mostram.
-- Continuam valendo nos dias especiais: o que já está ocupado na agenda,
-  a antecedência mínima de 12 horas e a regra de uma sessão por pessoa
-  por dia.
+- Continuam valendo nos dias especiais: o que já está ocupado na agenda
+  e a regra de uma sessão por pessoa por dia.
+- A **antecedência mínima de 12 horas** não vale para cliente especial,
+  em nenhum dia (decisão do Pedro, 04/11/2026): "daqui a 30 minutos" entra
+  se houver horário livre. Fora dos dias especiais dela, continua valendo
+  o expediente daquele dia. O pedido provisório vence na hora da sessão,
+  se isso vier antes das 24 horas.
 - O **máximo de sessões por dia** não vale para cliente especial, em
   nenhum dia, mesmo sem dia especial marcado (decisão do Pedro,
   19/10/2026): um dia cheio continua aberto para essa pessoa. As sessões
@@ -113,6 +131,16 @@ conversa. Só a dona da conta vê e muda os contatos dela.
   dia). Ela continua oferecendo no máximo 3 de cada vez.
 - Conversas do simulador também aparecem (com a etiqueta "Teste"), para
   dar para testar a permissão sem WhatsApp.
+- Sem antecedência mínima, um pedido em cima da hora pode vencer sem a
+  profissional ver. Por isso, pedido com menos de 12 horas manda o e-mail
+  na hora, mesmo "Em consulta", e quem pediu é avisado pela conversa se o
+  pedido vencer.
+- A grade continua de 30 minutos e a sessão precisa acabar no mesmo dia:
+  num dia especial, o último início é 23:00 para sessão de 50 minutos.
+- O assunto de horário é reconhecido por palavras. Uma mensagem que fuja
+  delas, sem oferta de horário logo antes, volta a depender de o modelo
+  chamar a ferramenta. A reserva continua conferindo a permissão de novo,
+  então isso nunca libera um horário indevido.
 
 ## Como testar
 
@@ -120,7 +148,9 @@ Automático: `backend/tests/test_clients.py` (dia especial abre o dia todo,
 cada cliente com os seus dias, limite por dia não vale para quem tem a
 permissão,
 permissão só com cliente ativo, a SelenIA só vê o horário especial pela
-permissão do painel, confirmação de sessão torna a pessoa ativa, tirar e
+permissão do painel, ligar e desligar a condição no meio da conversa
+chega à mensagem seguinte sem o modelo chamar a ferramenta, assunto de
+horário reconhecido, confirmação de sessão torna a pessoa ativa, tirar e
 pôr na lista, validação).
 
 Manual no simulador:
@@ -132,6 +162,8 @@ Manual no simulador:
 3. Em Clientes ativos, ligue **Cliente especial** nela e clique em
    **Terça**.
 4. No simulador, peça de novo. Agora 21h aparece entre as opções.
+5. Na mesma conversa, desligue **Cliente especial** e peça 21h outra vez.
+   A SelenIA já não oferece esse horário.
 
 ## Histórico
 
@@ -147,3 +179,14 @@ Manual no simulador:
   (`Contact.special_days`), escolhidos no cartão da pessoa; sai o quadro
   único da profissional. Migração `4e1a7c2d9b85` copia os dias que a
   profissional tinha para quem já tinha a permissão.
+- 04/11/2026: em assunto de horário, a agenda e a permissão são lidas a
+  cada mensagem pelo pipeline, sem depender da ferramenta (pedido do
+  Pedro). A lista passa a avisar que pedido em cima da hora fica fora
+  dela, depois de a SelenIA trocar "daqui 30 mins" por 23:00 do dia
+  seguinte no teste.
+- 04/11/2026: a antecedência mínima deixa de valer para cliente especial
+  (decisão do Pedro). Todo pedido provisório passa a vencer na hora da
+  sessão, se isso vier antes das 24 horas.
+- 04/11/2026: pedido em cima da hora não espera o resumo do fim da
+  consulta, e a pessoa é avisada pela conversa quando um pedido vence
+  (pedido do Pedro).

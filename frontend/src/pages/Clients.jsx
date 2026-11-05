@@ -81,7 +81,7 @@ function ClientRow({ client, busy, onChange }) {
               <span className="block font-semibold text-slate">Cliente especial</span>
               <span className="block text-sm text-muted">
                 O limite de sessões por dia não vale para esta pessoa. Nos dias marcados abaixo, a SelenIA oferece a ela
-                qualquer horário livre do dia, até fora do seu expediente.
+                qualquer horário livre do dia, até fora do seu expediente, sem antecedência mínima.
               </span>
             </span>
           </label>

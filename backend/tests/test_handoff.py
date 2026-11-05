@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 
 from app import models
 from app.models import AlertEventType, AlertLevel, ConversationState, SentBy
-from app.services import handoff, llm
+from app.services import availability, handoff, llm
 
 TEST_SLUG = "test-pytest-handoff"
 
@@ -34,6 +34,10 @@ def _send(client, text, session_id=None):
 
 
 PROF = models.Professional(slug="x", name="Marília Rossetto")
+
+
+def _hhmm(iso: str) -> str:
+    return availability.format_until(datetime.fromisoformat(iso))
 
 
 @pytest.mark.parametrize(
@@ -87,15 +91,23 @@ def test_ignores_other_messages(text):
     assert handoff.classify_request(text, PROF) is None
 
 
-@pytest.mark.parametrize("in_session", [False, True])
-def test_bot_refusal_stops_bot_and_alerts_without_emergency_text(db, client, professional, in_session):
-    if in_session:
-        client.put(f"/professionals/{TEST_SLUG}/in-session", json={"minutes": 50})
+@pytest.mark.parametrize("session", ["off", "open", "timed"])
+def test_bot_refusal_stops_bot_and_alerts_without_emergency_text(db, client, professional, session):
+    until = None
+    if session == "open":
+        client.put(f"/professionals/{TEST_SLUG}/in-session", json={"minutes": None})
+    elif session == "timed":
+        on = client.put(f"/professionals/{TEST_SLUG}/in-session", json={"minutes": 50}).json()
+        until = _hhmm(on["in_session_until"])
     first = _send(client, "oi")
 
     refused = _send(client, "não quero falar com robô", first["session_id"])
-    expected = handoff.BOT_REFUSED_IN_SESSION_MESSAGE if in_session else handoff.BOT_REFUSED_MESSAGE
-    assert refused["reply"] == expected.format(name="Marília Rossetto")
+    expected = {
+        "off": handoff.BOT_REFUSED_MESSAGE,
+        "open": handoff.BOT_REFUSED_IN_SESSION_MESSAGE,
+        "timed": handoff.BOT_REFUSED_IN_SESSION_UNTIL_MESSAGE,
+    }[session]
+    assert refused["reply"] == expected.format(name="Marília Rossetto", until=until)
     assert "192" not in refused["reply"] and "188" not in refused["reply"]
     assert refused["state"] == ConversationState.HUMAN
     assert _send(client, "alô?", first["session_id"])["reply"] is None
@@ -121,11 +133,15 @@ def test_human_request_hands_over_and_silences_bot(client, professional):
 
 
 def test_in_session_offers_help_and_keeps_bot(client, professional):
-    assert client.put(f"/professionals/{TEST_SLUG}/in-session", json={"minutes": 50}).json()["in_session"]
+    on = client.put(f"/professionals/{TEST_SLUG}/in-session", json={"minutes": 50}).json()
+    assert on["in_session"] and on["in_session_source"] == "manual"
 
     first = _send(client, "oi")
     asked = _send(client, "posso falar com ela?", first["session_id"])
-    assert asked["reply"] == handoff.IN_SESSION_MESSAGE.format(name="Marília Rossetto")
+    # Com duração, a pessoa fica sabendo até que horas (Pedro, 03/11/2026).
+    assert asked["reply"] == handoff.IN_SESSION_UNTIL_MESSAGE.format(
+        name="Marília Rossetto", until=_hhmm(on["in_session_until"])
+    )
     assert asked["state"] == ConversationState.ACTIVE
     conversation = client.get(f"/conversations/{first['conversation_id']}").json()
     assert conversation["awaiting_reply_since"]
@@ -178,3 +194,10 @@ def test_release_after_emergency_is_audited(db, client, professional):
     assert conversation.state == ConversationState.ACTIVE
     [alert] = conversation.alerts
     assert AlertEventType.BOT_RELEASED in [e.event_type for e in alert.events]
+
+
+def test_in_session_until_turned_off_has_no_time(client, professional):
+    client.put(f"/professionals/{TEST_SLUG}/in-session", json={"minutes": None})
+    first = _send(client, "oi")
+    asked = _send(client, "posso falar com ela?", first["session_id"])
+    assert asked["reply"] == handoff.IN_SESSION_MESSAGE.format(name="Marília Rossetto")

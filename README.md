@@ -122,7 +122,9 @@ Funcionando:
 - **Perfil e regras da SelenIA**: tom de voz, exemplos, valores na
   primeira resposta e a lista fixa do que ela nunca diz.
 - **Handoff**: a profissional assume, responde e devolve ao bot; pedido
-  de humano, recusa do bot e botão "Em consulta".
+  de humano, recusa do bot e "Em consulta", que liga sozinho pelo Google
+  Agenda (ou pelo botão), diz ao contato até que horas ela atende e
+  junta os e-mails de pedido num resumo no fim da consulta.
 - **Alerta por e-mail** para a profissional, sem conteúdo da conversa;
   também quando alguém pede para falar com ela ou quando a SelenIA leva
   um pedido que só ela decide (`avisar_profissional`: horário fora do

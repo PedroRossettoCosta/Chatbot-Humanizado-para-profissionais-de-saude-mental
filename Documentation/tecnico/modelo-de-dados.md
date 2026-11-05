@@ -60,6 +60,7 @@ A profissional dona da conta. É a raiz do isolamento multi-tenant.
 | `alert_email` | texto, opcional | Onde ela recebe os alertas por e-mail. Quem envia é a conta do produto (SMTP no `.env`) |
 | `in_session_since` | data, opcional | Botão "Em consulta" ligado desde. Nulo = desligado |
 | `in_session_until` | data, opcional | Fim automático do "Em consulta". Nulo com `in_session_since` preenchido = até ela desligar |
+| `held_notices_since` | data, opcional | Avisos por e-mail guardados durante uma consulta (botão ou agenda): horário do pedido mais antigo guardado. Ao fim da consulta sai um e-mail de resumo e volta a nulo (`notifications.send_held_notices`). Desde 03/11/2026 |
 | `pronouns` | texto, opcional | Como a SelenIA fala dela com o paciente: `feminine`, `masculine` ou `neutral` (`guidelines.PRONOUNS`). Nulo = neutro |
 | `session_minutes` | inteiro, opcional | Duração da sessão (15 a 240). A agenda usa para montar os horários |
 | `max_sessions_per_day` | inteiro, opcional | Quantas sessões por dia a SelenIA pode deixar marcadas (1 a 20). Nulo = sem limite |

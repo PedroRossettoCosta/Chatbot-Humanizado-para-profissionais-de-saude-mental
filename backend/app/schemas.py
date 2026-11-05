@@ -121,10 +121,13 @@ class ProfessionalOut(BaseModel):
     service_info: Optional[str] = None
     voice_examples: Optional[dict[str, VoiceExample]] = None
     extra_never_say: Optional[list[str]] = None
-    # Botão "Em consulta". `in_session_until` nulo com `in_session`
-    # verdadeiro = ligado até ela desligar.
-    in_session: bool = Field(validation_alias="is_in_session")
-    in_session_until: Optional[datetime] = None
+    # Em consulta agora, pelo botão ou pela agenda
+    # (`services/availability.py`). `in_session_until` nulo com
+    # `in_session` verdadeiro = botão ligado até ela desligar.
+    # `in_session_source`: "manual" (botão) ou "agenda" (Google Agenda).
+    in_session: bool = Field(validation_alias="session_active")
+    in_session_until: Optional[datetime] = Field(default=None, validation_alias="session_until")
+    in_session_source: Optional[str] = Field(default=None, validation_alias="session_source")
     session_minutes: Optional[int] = None
     working_hours: Optional[dict[str, list[TimeRange]]] = None
     max_sessions_per_day: Optional[int] = None

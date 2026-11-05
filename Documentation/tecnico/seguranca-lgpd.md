@@ -285,6 +285,12 @@ identificador do Google.
   revoga a permissão no Google e apaga a linha.
 - Para a Claude vão só horários livres, calculados no backend. Os
   intervalos ocupados não são gravados.
+- **"Em consulta" pela agenda** (03/11/2026): o backend usa o mesmo
+  livre/ocupado para saber se há um compromisso agora. O intervalo fica
+  só em memória, por um minuto; ao contato e à Claude vai apenas "em
+  atendimento até HH:MM", nunca o que ela está fazendo. O e-mail de
+  resumo do fim da consulta leva só o tipo de cada pedido e quantas
+  pessoas, sem conteúdo de conversa, como os outros e-mails.
 
 ## 8. O que ainda falta
 

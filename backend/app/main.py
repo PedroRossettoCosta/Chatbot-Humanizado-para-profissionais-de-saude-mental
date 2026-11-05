@@ -19,9 +19,10 @@ from app.routers import alerts, assistant, auth, calendar, chat, clients, conver
 
 logger = logging.getLogger(__name__)
 
-# De quanto em quanto tempo os pedidos de horário vencidos (24h sem
-# decisão) são liberados da agenda.
-EXPIRY_CHECK_SECONDS = 300
+# De quanto em quanto tempo os pedidos de horário vencidos (sem decisão
+# em 24h ou até a hora da sessão) são liberados da agenda. Curto porque a
+# pessoa é avisada aqui, e um pedido em cima da hora vence logo.
+EXPIRY_CHECK_SECONDS = 60
 
 
 def _expire_appointments() -> None:
@@ -43,11 +44,26 @@ async def _expiry_loop() -> None:
         await asyncio.sleep(EXPIRY_CHECK_SECONDS)
 
 
+# De quanto em quanto tempo confere se alguma consulta acabou, para
+# mandar o resumo dos avisos guardados (`notifications.send_held_notices`).
+HELD_NOTICES_CHECK_SECONDS = 60
+
+
+async def _held_notices_loop() -> None:
+    while True:
+        try:
+            await run_in_threadpool(notifications.send_held_notices)
+        except Exception:
+            logger.exception("falha ao mandar o resumo do fim da consulta")
+        await asyncio.sleep(HELD_NOTICES_CHECK_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    task = asyncio.create_task(_expiry_loop())
+    tasks = [asyncio.create_task(_expiry_loop()), asyncio.create_task(_held_notices_loop())]
     yield
-    task.cancel()
+    for task in tasks:
+        task.cancel()
 
 
 app = FastAPI(title="SelenIA — Assistente para profissionais de saúde mental", lifespan=lifespan)
