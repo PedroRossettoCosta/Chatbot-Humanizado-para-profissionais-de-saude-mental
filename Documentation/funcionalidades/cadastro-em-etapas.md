@@ -35,7 +35,8 @@ Decisões:
    (feminino, masculino ou neutro, só pelo nome) e e-mail para alertas
    (nome e e-mail já vêm da conta Google).
 2. **Atendimento:** especialidade e público, informações do serviço
-   (modalidade, frequência, valor, pagamento) e duração da sessão.
+   (modalidade, frequência, valor), formas de pagamento aceitas
+   (obrigatório, desde 05/11/2026) e duração da sessão.
 3. **Tom de voz:** o tom e, para cada uma das 3 perguntas, uma resposta
    boa e uma ruim. "Ver um exemplo" mostra uma de cada.
 4. **Regras da SelenIA:** leia as 11 regras de "nunca dizer" e os 5
@@ -142,3 +143,5 @@ Manual:
   cadastro já existe; bandeira do +55 desenhada (o Windows não mostra
   emoji de bandeira).
 - 13/10/2026: etapa 6 conecta o número de verdade (SMS ou ligação, código e registro), com as telas C7 e C8; "Conectar depois" continua.
+- 05/11/2026: formas de pagamento aceitas entram na etapa 2, como campo
+  obrigatório, e no resumo da revisão (pedido do Pedro).

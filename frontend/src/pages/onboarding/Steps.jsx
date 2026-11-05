@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 
+import MultiSelect from "../../components/MultiSelect.jsx";
 import { Button, ErrorBox, Field, formatDateTime, inputClass } from "../../components/ui.jsx";
 import WhatsAppConnect from "../../components/WhatsAppConnect.jsx";
 
@@ -113,9 +114,10 @@ export function StepData({ professional, me, guidelines, drafts, setDraft, save,
 }
 
 // Etapa 2 — Seu atendimento (C2)
-export function StepService({ professional, drafts, setDraft, save, goTo, busy, error }) {
+export function StepService({ professional, guidelines, drafts, setDraft, save, goTo, busy, error }) {
   const [audience, setAudience] = useDraft(drafts, setDraft, "audience_description", professional.audience_description || "");
   const [serviceInfo, setServiceInfo] = useDraft(drafts, setDraft, "service_info", professional.service_info || "");
+  const [payments, setPayments] = useDraft(drafts, setDraft, "payment_methods", professional.payment_methods || []);
   const [minutes, setMinutes] = useDraft(
     drafts,
     setDraft,
@@ -128,7 +130,15 @@ export function StepService({ professional, drafts, setDraft, save, goTo, busy, 
 
   function submit(event) {
     event.preventDefault();
-    save({ audience_description: audience.trim(), service_info: serviceInfo.trim(), session_minutes: minutesNumber }, 3);
+    save(
+      {
+        audience_description: audience.trim(),
+        service_info: serviceInfo.trim(),
+        payment_methods: payments,
+        session_minutes: minutesNumber,
+      },
+      3
+    );
   }
 
   return (
@@ -150,16 +160,31 @@ export function StepService({ professional, drafts, setDraft, save, goTo, busy, 
         <Field
           label="Informações do serviço"
           required
-          hint="Inclua modalidade, frequência, valor e forma de pagamento. A SelenIA informa o valor já na primeira pergunta sobre preço."
+          hint="Inclua modalidade, frequência e valor. A SelenIA informa o valor já na primeira pergunta sobre preço."
         >
           <textarea
             className={`${inputClass} min-h-28`}
             value={serviceInfo}
             onChange={(e) => setServiceInfo(e.target.value)}
-            placeholder="Ex.: online pelo Google Meet, sessões semanais, R$ 200 por sessão, pagamento no Pix"
+            placeholder="Ex.: online pelo Google Meet, sessões semanais, R$ 200 por sessão"
             required
           />
         </Field>
+        {/* Fora do <Field>: o rótulo envolveria a lista e um clique numa
+            opção abriria e fecharia o botão. */}
+        <div>
+          <span className="font-semibold text-slate">
+            Formas de pagamento aceitas <span className="text-danger">*</span>
+          </span>
+          <MultiSelect
+            ariaLabel="Formas de pagamento aceitas"
+            options={guidelines.payment_options}
+            value={payments}
+            onChange={setPayments}
+            placeholder="Escolha uma ou mais formas"
+          />
+          <span className="mt-2 block text-sm text-muted">A SelenIA só informa as formas marcadas.</span>
+        </div>
         <Field label="Duração da sessão (minutos)" required hint="Usada pela agenda para oferecer horários.">
           <div className="flex items-center gap-3">
             <input
@@ -178,7 +203,10 @@ export function StepService({ professional, drafts, setDraft, save, goTo, busy, 
         <ErrorBox>{error}</ErrorBox>
       </div>
       <StepFooter step={2} onBack={() => goTo(1)}>
-        <Button type="submit" disabled={busy || !audience.trim() || !serviceInfo.trim() || !validMinutes}>
+        <Button
+          type="submit"
+          disabled={busy || !audience.trim() || !serviceInfo.trim() || !payments.length || !validMinutes}
+        >
           {busy ? "Salvando..." : "Continuar →"}
         </Button>
       </StepFooter>
@@ -501,7 +529,11 @@ export function StepReview({ professional, guidelines, goTo, complete, busy, err
       body: (
         <p className="m-0 line-clamp-3 text-slate">
           {professional.audience_description} • Sessões de {professional.session_minutes} minutos •{" "}
-          {professional.service_info}
+          {professional.service_info} • Pagamento:{" "}
+          {guidelines.payment_options
+            .filter((o) => professional.payment_methods?.includes(o.key))
+            .map((o) => o.label)
+            .join(", ")}
         </p>
       ),
     },

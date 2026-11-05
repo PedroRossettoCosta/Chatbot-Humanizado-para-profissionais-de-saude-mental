@@ -132,7 +132,7 @@ Funcionando:
 - **Clientes**: lista de clientes ativos (entra sozinho ao confirmar uma
   sessão), tirar e pôr na lista, e permissão para marcar nos horários
   especiais, fora do expediente, que a profissional define.
-- **Formas de pagamento** no Perfil (escolha múltipla), informadas pela
+- **Formas de pagamento** obrigatórias no cadastro e no Perfil (escolha múltipla), informadas pela
   SelenIA quando perguntam como pagar.
 - **Login com Google**, só para e-mails convidados, com todas as rotas
   de gestão protegidas e cada profissional vendo só os próprios dados.

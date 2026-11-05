@@ -9,6 +9,7 @@ COMPLETE_PROFILE = {
     "pronouns": "feminine",
     "audience_description": "Psicanalista; adultos.",
     "service_info": "Online, R$ 200 por sessão.",
+    "payment_methods": ["pix"],
     "session_minutes": 50,
     "voice_tone": "acolhedor",
     "voice_examples": {
@@ -52,8 +53,17 @@ def test_cannot_complete_with_missing_fields(client, db):
     assert response.status_code == 422
     missing = response.json()["detail"]["missing"]
     assert "Duração da sessão" in missing
+    assert "Formas de pagamento aceitas" in missing
     assert "Como a SelenIA fala de você" in missing
     assert "Aceite das regras da SelenIA" in missing
+    _cleanup(db)
+
+
+def test_payment_methods_cannot_be_emptied(client, db):
+    _cleanup(db)
+    client.post("/professionals", json={"slug": TEST_SLUG, "name": "Teste Cadastro"})
+    assert client.patch(f"/professionals/{TEST_SLUG}", json={"payment_methods": []}).status_code == 422
+    assert client.patch(f"/professionals/{TEST_SLUG}", json={"payment_methods": ["pix"]}).status_code == 200
     _cleanup(db)
 
 

@@ -83,6 +83,7 @@ export default function Profile() {
     form.alert_email.trim() &&
     form.audience_description.trim() &&
     form.service_info.trim() &&
+    form.payment_methods.length > 0 &&
     Number.isInteger(minutes) &&
     minutes >= 15 &&
     minutes <= 240 &&
@@ -188,7 +189,9 @@ export default function Profile() {
             {/* Fora do <Field>: o rótulo envolveria a lista e um clique numa
                 opção abriria e fecharia o botão. */}
             <div>
-              <span className="font-semibold text-slate">Formas de pagamento aceitas</span>
+              <span className="font-semibold text-slate">
+                Formas de pagamento aceitas <span className="text-danger">*</span>
+              </span>
               <MultiSelect
                 ariaLabel="Formas de pagamento aceitas"
                 options={guidelines.payment_options}
@@ -196,9 +199,10 @@ export default function Profile() {
                 onChange={set("payment_methods")}
                 placeholder="Escolha uma ou mais formas"
               />
-              <span className="mt-2 block text-sm text-muted">
-                A SelenIA só informa as formas marcadas. Sem nenhuma marcada, ela pergunta a você por e-mail quando
-                alguém quiser saber como pagar.
+              <span className={`mt-2 block text-sm ${form.payment_methods.length ? "text-muted" : "text-danger"}`}>
+                {form.payment_methods.length
+                  ? "A SelenIA só informa as formas marcadas."
+                  : "Escolha ao menos uma forma para salvar. A SelenIA só informa as formas marcadas."}
               </span>
             </div>
             <Field label="Duração da sessão (minutos)" required hint="Usada pela agenda para oferecer horários.">

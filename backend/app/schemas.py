@@ -53,6 +53,9 @@ class _AssistantProfile(BaseModel):
     def only_known_payment_methods(cls, value):
         if value is None:
             return value
+        # Campo obrigatório: dá para trocar as formas, não para ficar sem nenhuma.
+        if not value:
+            raise ValueError("Escolha ao menos uma forma de pagamento.")
         unknown = set(value) - set(guidelines.PAYMENT_METHODS)
         if unknown:
             raise ValueError(f"Forma de pagamento desconhecida: {', '.join(sorted(unknown))}")

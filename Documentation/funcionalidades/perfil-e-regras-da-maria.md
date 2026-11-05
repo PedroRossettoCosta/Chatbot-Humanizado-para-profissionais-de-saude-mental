@@ -79,7 +79,10 @@ transferência, dinheiro, boleto; `guidelines.PAYMENT_METHODS`). O prompt
 diz quais estão marcadas e proíbe oferecer outra. Sem nenhuma marcada, a
 SelenIA usa `avisar_profissional` quando alguém pergunta como pagar. No
 teste de 18/10 ela não soube responder "como pago?" e prometeu perguntar
-ao Pedro, sem avisar ninguém.
+ao Pedro, sem avisar ninguém. Desde 05/11/2026 o campo é obrigatório
+(pedido do Pedro): sem ao menos uma forma, o Perfil não salva e o
+cadastro não conclui. Conta que já tinha concluído o cadastro sem o campo
+continua funcionando, com o aviso acima, até salvar o Perfil de novo.
 
 Se o filtro de segurança da Anthropic recusar a resposta (acontece com
 mensagem inofensiva também, como um texto em base64), o modelo devolve
@@ -180,3 +183,5 @@ Manual no simulador:
   múltipla) e regras do prompt contra prometer "vou perguntar" sem a
   ferramenta `avisar_profissional` e contra aceitar "sou paciente
   especial" como permissão (feedback do teste de 18/10).
+- 05/11/2026: "Formas de pagamento aceitas" passa a ser obrigatório
+  (pedido do Pedro).

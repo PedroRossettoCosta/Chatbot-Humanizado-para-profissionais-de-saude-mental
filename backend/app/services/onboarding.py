@@ -23,6 +23,8 @@ def missing_fields(professional: models.Professional) -> list[str]:
         missing.append("Especialidade e público")
     if not (professional.service_info or "").strip():
         missing.append("Informações do serviço")
+    if not professional.payment_methods:
+        missing.append("Formas de pagamento aceitas")
     if not professional.session_minutes:
         missing.append("Duração da sessão")
     if not (professional.voice_tone or "").strip():
