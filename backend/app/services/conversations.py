@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app import models
-from app.models import AlertLevel, Channel, ConversationState, MessageRole, SentBy
+from app.models import AlertEventType, AlertLevel, Channel, ConversationState, MessageRole, SentBy
 from app.services import crypto
 
 # Regra da Meta: fora das 24h depois da última mensagem do contato, só
@@ -180,31 +180,53 @@ def recent_history(db: Session, conversation: models.Conversation, limit: int) -
     return [{"role": m.role, "content": m.content} for m in reversed(messages)]
 
 
+def _recent_within(
+    db: Session,
+    conversation: models.Conversation,
+    limit: int,
+    within: timedelta,
+    skip: set[str],
+    role: str | None = None,
+) -> list[models.Message]:
+    """As até `limit` mensagens mais novas, da mais antiga para a mais
+    nova, só as que chegaram dentro de `within` antes da mais nova. As de
+    `skip` ficam de fora e não ocupam lugar no limite."""
+    query = db.query(models.Message).filter_by(conversation_id=conversation.id)
+    if role:
+        query = query.filter_by(role=role)
+    rows = query.order_by(models.Message.seq.desc()).limit(limit + len(skip)).all()
+    if not rows:
+        return []
+    newest = rows[0].created_at
+    kept = [m for m in rows if m.id not in skip and newest - m.created_at <= within][:limit]
+    return list(reversed(kept))
+
+
 def recent_history_within(
-    db: Session, conversation: models.Conversation, limit: int, within: timedelta
+    db: Session,
+    conversation: models.Conversation,
+    limit: int,
+    within: timedelta,
+    skip: set[str] | None = None,
 ) -> list[dict]:
     """Como `recent_history`, mas só o que chegou dentro de `within`
     antes da mensagem mais nova.
 
     É o contexto da camada 2 da triagem: o bastante para ler uma frase
     quebrada em mensagens seguidas, sem que um assunto de meia hora atrás
-    mude a leitura da mensagem de agora.
+    mude a leitura da mensagem de agora. `skip`: ids de mensagens que não
+    entram (ver `handled_emergency_message_ids`).
     """
-    messages = (
-        db.query(models.Message)
-        .filter_by(conversation_id=conversation.id)
-        .order_by(models.Message.seq.desc())
-        .limit(limit)
-        .all()
-    )
-    if not messages:
-        return []
-    newest = messages[0].created_at
-    return [{"role": m.role, "content": m.content} for m in reversed(messages) if newest - m.created_at <= within]
+    messages = _recent_within(db, conversation, limit, within, skip or set())
+    return [{"role": m.role, "content": m.content} for m in messages]
 
 
 def recent_contact_texts(
-    db: Session, conversation: models.Conversation, limit: int, within: timedelta
+    db: Session,
+    conversation: models.Conversation,
+    limit: int,
+    within: timedelta,
+    skip: set[str] | None = None,
 ) -> list[str]:
     """Últimas mensagens do contato, da mais antiga para a mais nova.
 
@@ -212,17 +234,47 @@ def recent_contact_texts(
     junta mensagens seguidas ("eu to pensando" / "em me matar"), não uma
     frase de hoje com outra de ontem.
     """
-    messages = (
-        db.query(models.Message)
-        .filter_by(conversation_id=conversation.id, role=MessageRole.USER)
-        .order_by(models.Message.seq.desc())
-        .limit(limit)
+    messages = _recent_within(db, conversation, limit, within, skip or set(), role=MessageRole.USER)
+    return [m.content for m in messages]
+
+
+def handled_emergency_message_ids(
+    db: Session, conversation: models.Conversation, emergency_text: str
+) -> set[str]:
+    """Mensagens de uma emergência que a profissional já tratou.
+
+    Quando ela libera a SelenIA depois de uma emergência, cada alerta da
+    conversa ganha o evento `BOT_RELEASED`. A mensagem que disparou esses
+    alertas e o texto fixo de emergência enviado até a liberação não voltam
+    para a triagem: sem isso, um "oi" logo depois era lido junto com a
+    mensagem de risco (frase quebrada) e disparava a emergência de novo
+    (caso real, 14/11/2026, decisão do Pedro). As outras mensagens
+    anteriores continuam como contexto.
+    """
+    released = (
+        db.query(models.SafetyAlert.message_id, models.SafetyAlertEvent.created_at)
+        .join(models.SafetyAlertEvent, models.SafetyAlertEvent.alert_id == models.SafetyAlert.id)
+        .filter(
+            models.SafetyAlert.conversation_id == conversation.id,
+            models.SafetyAlertEvent.event_type == AlertEventType.BOT_RELEASED,
+        )
         .all()
     )
-    if not messages:
-        return []
-    newest = messages[0].created_at
-    return [m.content for m in reversed(messages) if newest - m.created_at <= within]
+    if not released:
+        return set()
+    ids = {message_id for message_id, _ in released}
+    last_release = max(at for _, at in released)
+    fixed_texts = (
+        db.query(models.Message)
+        .filter(
+            models.Message.conversation_id == conversation.id,
+            models.Message.sent_by == SentBy.SYSTEM,
+            models.Message.created_at <= last_release,
+        )
+        .all()
+    )
+    ids.update(m.id for m in fixed_texts if m.content == emergency_text)
+    return ids
 
 
 def contact_messages_last_hour(db: Session, conversation: models.Conversation) -> int:

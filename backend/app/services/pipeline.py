@@ -189,8 +189,17 @@ def _triage(
     # janela da camada 1: com o histórico inteiro, uma emergência de meia
     # hora antes fazia um pedido de horário virar emergência (caso real,
     # 30/09/2026, decisão do Pedro).
-    history = conversations.recent_history_within(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
-    recent = conversations.recent_contact_texts(db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW)
+    # Depois que a profissional libera a SelenIA após uma emergência, a
+    # mensagem de risco e o texto fixo de emergência não entram mais: aquele
+    # risco já foi tratado. O resto continua como contexto, e um sinal
+    # novo (na própria mensagem ou em frase quebrada) dispara normalmente.
+    handled = conversations.handled_emergency_message_ids(db, conversation, triage.EMERGENCY_MESSAGE)
+    history = conversations.recent_history_within(
+        db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW, skip=handled
+    )
+    recent = conversations.recent_contact_texts(
+        db, conversation, FRAGMENT_MESSAGES, FRAGMENT_WINDOW, skip=handled
+    )
     if result.rate_limited:
         risk = triage.check_rules(text, previous=recent[:-1])
     else:

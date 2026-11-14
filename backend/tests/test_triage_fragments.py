@@ -96,3 +96,71 @@ def test_messages_far_apart_are_not_joined(db, client, professional):
 
     second = _send(client, "em me matar", first["session_id"])
     assert second["triage_level"] == "normal"
+
+
+def _model_reads_context(monkeypatch):
+    """Camada 2 que, como o modelo real, lê as mensagens recentes juntas:
+    vê "me matar" em qualquer ponto do histórico e classifica emergência."""
+
+    def classify(history, audience=None):
+        risky = any("me matar" in m["content"] for m in history if m["role"] == MessageRole.USER)
+        return llm.RiskClassification(nivel="emergencia" if risky else "normal", justificativa="teste")
+
+    monkeypatch.setattr(llm, "classify_risk", classify)
+
+
+def test_released_emergency_is_not_triggered_again_by_a_greeting(db, client, professional, monkeypatch):
+    # Caso real (14/11/2026): a profissional resolveu o alerta e liberou a
+    # SelenIA; um "oi" um minuto depois era lido junto com a mensagem de
+    # risco e disparava a emergência de novo.
+    _model_reads_context(monkeypatch)
+    first = _send(client, "to pensando em me matar")
+    assert first["state"] == ConversationState.EMERGENCY_HOLD
+
+    client.post(f"/conversations/{first['conversation_id']}/release")
+    second = _send(client, "oi", first["session_id"])
+
+    assert second["triage_level"] == "normal"
+    assert second["state"] == ConversationState.ACTIVE
+    assert second["reply"] == "resposta do bot"
+    db.expire_all()
+    assert len(db.get(models.Conversation, first["conversation_id"]).alerts) == 1
+
+
+def test_new_broken_signal_after_release_still_triggers(db, client, professional):
+    first = _send(client, "quero me matar")
+    assert first["state"] == ConversationState.EMERGENCY_HOLD
+    client.post(f"/conversations/{first['conversation_id']}/release")
+
+    assert _send(client, "eu to pensando", first["session_id"])["triage_level"] == "normal"
+    again = _send(client, "em me matar", first["session_id"])
+
+    assert again["triage_level"] == AlertLevel.EMERGENCY
+    assert again["state"] == ConversationState.EMERGENCY_HOLD
+    db.expire_all()
+    alerts = db.get(models.Conversation, first["conversation_id"]).alerts
+    assert sorted(a.trigger for a in alerts) == ["camada1:suicidio", "camada1:suicidio:juntas"]
+
+
+def test_release_keeps_the_rest_of_the_context_for_triage(db, client, professional, monkeypatch):
+    # Só a mensagem de risco e o texto fixo de emergência saem do contexto
+    # depois da liberação; o que a pessoa disse antes continua.
+    seen = []
+
+    def classify(history, audience=None):
+        seen.append([m["content"] for m in history])
+        return llm.RiskClassification(nivel="normal", justificativa="teste")
+
+    monkeypatch.setattr(llm, "classify_risk", classify)
+    first = _send(client, "meu nome é Ana")
+    risky = _send(client, "to pensando em me matar", first["session_id"])
+    assert risky["state"] == ConversationState.EMERGENCY_HOLD
+
+    client.post(f"/conversations/{first['conversation_id']}/release")
+    _send(client, "oi", first["session_id"])
+
+    context = seen[-1]
+    assert "meu nome é Ana" in context
+    assert context[-1] == "oi"
+    assert "to pensando em me matar" not in context
+    assert triage.EMERGENCY_MESSAGE not in context
