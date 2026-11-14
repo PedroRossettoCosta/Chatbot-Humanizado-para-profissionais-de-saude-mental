@@ -1,0 +1,11 @@
+# Nunca vai para a imagem: segredos, dados locais e ambiente de dev
+.env
+secrets/
+backups/
+chroma_data/
+.venv/
+venv/
+.pytest_cache/
+**/__pycache__/
+**/*.pyc
+**/*.log

@@ -26,7 +26,9 @@ from app.config import settings  # noqa: E402
 from app.database import Base  # noqa: E402
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# `%` é especial para o configparser do Alembic (senhas com caracteres
+# codificados na URL quebrariam a leitura).
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
