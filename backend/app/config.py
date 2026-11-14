@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from: str = ""
+    # Chave de API da Brevo (começa com "xkeysib-"). Preenchida, o e-mail
+    # sai pela API HTTPS da Brevo em vez de SMTP: a Railway bloqueia SMTP
+    # fora do plano Pro. O remetente continua sendo `smtp_from` (precisa
+    # estar confirmado na Brevo). Vazia, vale o SMTP de sempre.
+    brevo_api_key: str = ""
     # Login com o Google (só identidade: nome, e-mail e foto). O Client ID
     # não é segredo; vai para o navegador pelo `GET /auth/config`.
     google_client_id: str = ""

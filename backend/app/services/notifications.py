@@ -36,7 +36,10 @@ recusa do bot) nunca esperam.
 import logging
 import smtplib
 from email.message import EmailMessage
+from email.utils import parseaddr
 from zoneinfo import ZoneInfo
+
+import requests
 
 from app import models
 from app.config import settings
@@ -96,7 +99,42 @@ def _compose(professional, subject, explanation, when, channel) -> EmailMessage:
     return message
 
 
+BREVO_URL = "https://api.brevo.com/v3/smtp/email"
+
+
+def email_configured() -> bool:
+    """Há como mandar e-mail: pela API da Brevo ou por SMTP."""
+    return bool(settings.brevo_api_key or settings.smtp_host)
+
+
 def _send(message: EmailMessage) -> None:
+    if settings.brevo_api_key:
+        _send_brevo(message)
+    else:
+        _send_smtp(message)
+
+
+def _send_brevo(message: EmailMessage) -> None:
+    """Envio pela API HTTPS da Brevo (funciona onde SMTP é bloqueado)."""
+    name, address = parseaddr(message["From"])
+    sender = {"email": address, "name": name or "SelenIA"}
+    response = requests.post(
+        BREVO_URL,
+        headers={"api-key": settings.brevo_api_key, "accept": "application/json"},
+        json={
+            "sender": sender,
+            "to": [{"email": parseaddr(message["To"])[1]}],
+            "subject": message["Subject"],
+            "textContent": message.get_content(),
+        },
+        timeout=20,
+    )
+    # Sem o corpo da resposta no erro: pode repetir dados do envio.
+    if response.status_code >= 300:
+        raise RuntimeError(f"Brevo respondeu {response.status_code}")
+
+
+def _send_smtp(message: EmailMessage) -> None:
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20) as smtp:
         smtp.starttls()
         if settings.smtp_user:
@@ -136,8 +174,8 @@ def notify_alert(alert_id: str) -> None:
         failure = None
         if not professional.alert_email:
             failure = "sem e-mail de alerta configurado"
-        elif not settings.smtp_host:
-            failure = "envio de e-mail não configurado (SMTP)"
+        elif not email_configured():
+            failure = "envio de e-mail não configurado (Brevo ou SMTP)"
         else:
             try:
                 _send(build_email(alert, professional))
@@ -207,7 +245,7 @@ def notify_human_request(conversation_id: str) -> None:
         if conversation is None:
             return
         professional = conversation.professional
-        if not professional.alert_email or not settings.smtp_host:
+        if not professional.alert_email or not email_configured():
             logger.warning("pedido para falar com a profissional sem e-mail enviado (sem endereço ou SMTP)")
             return
         if _hold_if_in_session(db, professional, conversation.awaiting_reply_since):
@@ -265,7 +303,7 @@ def _notify_appointment(appointment_id: str, subject: str, text: str, when_field
         if appointment is None:
             return
         professional = appointment.professional
-        if not professional.alert_email or not settings.smtp_host:
+        if not professional.alert_email or not email_configured():
             logger.warning("aviso de pedido de horário sem e-mail enviado (sem endereço ou SMTP)")
             return
         if hold and _hold_if_in_session(db, professional, getattr(appointment, when_field)):
@@ -418,7 +456,7 @@ def send_held_notices() -> None:
             if availability.current(professional).in_session:
                 continue
             people, lines = held_summary(db, professional)
-            if people and professional.alert_email and settings.smtp_host:
+            if people and professional.alert_email and email_configured():
                 try:
                     _send(build_held_email(professional, people, lines))
                 except Exception:
