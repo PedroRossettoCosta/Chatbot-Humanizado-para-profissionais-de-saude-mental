@@ -98,6 +98,13 @@ def test_messages_far_apart_are_not_joined(db, client, professional):
     assert second["triage_level"] == "normal"
 
 
+def _review_and_release(client, db, conversation_id):
+    db.expire_all()
+    for alert in db.get(models.Conversation, conversation_id).alerts:
+        client.post(f"/alerts/{alert.id}/review", json={})
+    assert client.post(f"/conversations/{conversation_id}/release").status_code == 200
+
+
 def _model_reads_context(monkeypatch):
     """Camada 2 que, como o modelo real, lê as mensagens recentes juntas:
     vê "me matar" em qualquer ponto do histórico e classifica emergência."""
@@ -117,7 +124,7 @@ def test_released_emergency_is_not_triggered_again_by_a_greeting(db, client, pro
     first = _send(client, "to pensando em me matar")
     assert first["state"] == ConversationState.EMERGENCY_HOLD
 
-    client.post(f"/conversations/{first['conversation_id']}/release")
+    _review_and_release(client, db, first["conversation_id"])
     second = _send(client, "oi", first["session_id"])
 
     assert second["triage_level"] == "normal"
@@ -130,7 +137,7 @@ def test_released_emergency_is_not_triggered_again_by_a_greeting(db, client, pro
 def test_new_broken_signal_after_release_still_triggers(db, client, professional):
     first = _send(client, "quero me matar")
     assert first["state"] == ConversationState.EMERGENCY_HOLD
-    client.post(f"/conversations/{first['conversation_id']}/release")
+    _review_and_release(client, db, first["conversation_id"])
 
     assert _send(client, "eu to pensando", first["session_id"])["triage_level"] == "normal"
     again = _send(client, "em me matar", first["session_id"])
@@ -156,7 +163,7 @@ def test_release_keeps_the_rest_of_the_context_for_triage(db, client, profession
     risky = _send(client, "to pensando em me matar", first["session_id"])
     assert risky["state"] == ConversationState.EMERGENCY_HOLD
 
-    client.post(f"/conversations/{first['conversation_id']}/release")
+    _review_and_release(client, db, first["conversation_id"])
     _send(client, "oi", first["session_id"])
 
     context = seen[-1]

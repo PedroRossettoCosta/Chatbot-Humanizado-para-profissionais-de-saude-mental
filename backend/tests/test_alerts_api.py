@@ -88,6 +88,7 @@ def test_review_is_recorded_once_with_note(client, professional):
 def test_release_from_alert_screen_enters_the_trail(client, professional):
     _send(client, "to pensando em me matar")
     [alert] = _list(client)
+    client.post(f"/alerts/{alert['id']}/review", json={})
     client.post(f"/conversations/{alert['conversation_id']}/release")
 
     opened = client.get(f"/alerts/{alert['id']}").json()

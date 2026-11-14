@@ -410,7 +410,14 @@ function ConversationView({ conversationId, onChanged }) {
               Devolver à SelenIA
             </Button>
           )}
+          {c.state === "emergency_hold" && c.unreviewed_alert_id && (
+            // Depois de uma emergência, só libera com o alerta revisado.
+            <Button className="!px-4 !py-2 text-sm" onClick={() => navigate(`/alertas/${c.unreviewed_alert_id}`)}>
+              Revisar alerta
+            </Button>
+          )}
           {c.state === "emergency_hold" &&
+            !c.unreviewed_alert_id &&
             (confirmRelease ? (
               <span className="flex flex-wrap items-center justify-end gap-2 text-sm text-slate">
                 A SelenIA volta a responder aqui. Liberar?
@@ -435,8 +442,8 @@ function ConversationView({ conversationId, onChanged }) {
           <AlertIcon size={20} className="mt-0.5 shrink-0" />
           <p className="m-0">
             <strong>Emergência{c.latest_alert ? ` às ${time(c.latest_alert.created_at)}` : ""}.</strong> A pessoa
-            recebeu a mensagem fixa (SAMU 192, CVV 188) e a SelenIA está pausada nesta conversa até você liberar. Você
-            pode escrever para a pessoa normalmente.
+            recebeu a mensagem fixa (SAMU 192, CVV 188) e a SelenIA está pausada nesta conversa até você liberar
+            {c.unreviewed_alert_id ? ", depois de revisar o alerta" : ""}. Você pode escrever para a pessoa normalmente.
           </p>
         </div>
       )}

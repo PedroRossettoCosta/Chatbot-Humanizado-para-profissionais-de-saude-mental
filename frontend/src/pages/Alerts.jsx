@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api } from "../api.js";
 import { AlertIcon, ArrowLeftIcon, BellIcon, ChatIcon, LockIcon } from "../components/icons.jsx";
-import { Button, ErrorBox, Tag, formatDateTime, formatTime, inputClass, shortWhen } from "../components/ui.jsx";
+import { Button, ErrorBox, Tag, formatDateTime, formatTime, shortWhen } from "../components/ui.jsx";
 import { usePanel } from "../panel/PanelContext.jsx";
 
 const REFRESH_MS = 10000;
@@ -176,7 +176,6 @@ function AlertView({ alertId, onChanged }) {
   const { refreshAlertCount } = usePanel();
   const navigate = useNavigate();
   const [alert, setAlert] = useState(null);
-  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [error, setError] = useState("");
@@ -207,8 +206,7 @@ function AlertView({ alertId, onChanged }) {
     setBusy(true);
     setError("");
     try {
-      setAlert(await api.reviewAlert(alertId, note.trim()));
-      setNote("");
+      setAlert(await api.reviewAlert(alertId));
       onChanged();
       refreshAlertCount();
     } catch (err) {
@@ -298,7 +296,10 @@ function AlertView({ alertId, onChanged }) {
               </p>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-              {confirmRelease ? (
+              {alert.status === "new" ? (
+                // Só libera depois de revisar (botão logo abaixo).
+                <span className="text-sm text-slate">Marque o alerta como revisado, abaixo, para poder liberar.</span>
+              ) : confirmRelease ? (
                 <>
                   <span className="text-sm text-slate">A SelenIA volta a responder nesta conversa. Liberar?</span>
                   <Button className="!px-3 !py-1.5 text-sm" disabled={busy} onClick={release}>
@@ -356,19 +357,8 @@ function AlertView({ alertId, onChanged }) {
         {/* Revisão */}
         {alert.status === "new" ? (
           <section className="rounded-2xl bg-[#f8faff] p-4">
-            <label className="block">
-              <span className="font-semibold text-slate">Anotação da revisão (opcional)</span>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={2}
-                maxLength={1000}
-                placeholder="Ex.: liguei para a pessoa; a triagem exagerou; já é paciente..."
-                className={inputClass}
-              />
-            </label>
-            <p className="m-0 mt-2 text-xs text-muted">
-              Não escreva dados clínicos aqui: a anotação fica na trilha, sem cifra.
+            <p className="m-0 text-sm text-slate">
+              Revise o que aconteceu na conversa. Depois de marcar como revisado, você pode liberar a SelenIA.
             </p>
             <div className="mt-3 flex justify-end">
               <Button disabled={busy} onClick={review}>

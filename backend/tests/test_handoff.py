@@ -180,6 +180,44 @@ def test_professional_reply_takes_over_and_release_gives_back(client, profession
     assert _send(client, "e o valor?", first["session_id"])["reply"] == "resposta do bot"
 
 
+def _review_all(client, db, conversation_id):
+    db.expire_all()
+    for alert in db.get(models.Conversation, conversation_id).alerts:
+        assert client.post(f"/alerts/{alert.id}/review", json={}).status_code == 200
+
+
+def test_release_after_emergency_needs_review_first(db, client, professional):
+    first = _send(client, "to pensando em me matar")
+    conversation_id = first["conversation_id"]
+
+    opened = client.get(f"/conversations/{conversation_id}").json()
+    assert opened["unreviewed_alert_id"]
+    refused = client.post(f"/conversations/{conversation_id}/release")
+    assert refused.status_code == 409
+    assert "Revise o alerta" in refused.json()["detail"]
+    db.expire_all()
+    assert db.get(models.Conversation, conversation_id).state == ConversationState.EMERGENCY_HOLD
+
+    _review_all(client, db, conversation_id)
+    assert client.get(f"/conversations/{conversation_id}").json()["unreviewed_alert_id"] is None
+    released = client.post(f"/conversations/{conversation_id}/release")
+    assert released.status_code == 200
+    assert released.json()["state"] == ConversationState.ACTIVE
+
+
+def test_every_emergency_alert_must_be_reviewed(db, client, professional):
+    # Duas emergências na mesma conversa: revisar só a primeira não basta.
+    first = _send(client, "to pensando em me matar")
+    _send(client, "tomei todos os remedios da caixa", first["session_id"])
+    db.expire_all()
+    older, newer = sorted(db.get(models.Conversation, first["conversation_id"]).alerts, key=lambda a: a.created_at)
+    client.post(f"/alerts/{older.id}/review", json={})
+
+    opened = client.get(f"/conversations/{first['conversation_id']}").json()
+    assert opened["unreviewed_alert_id"] == newer.id
+    assert client.post(f"/conversations/{first['conversation_id']}/release").status_code == 409
+
+
 def test_release_after_emergency_is_audited(db, client, professional):
     first = _send(client, "to pensando em me matar")
     assert first["state"] == ConversationState.EMERGENCY_HOLD
@@ -188,6 +226,7 @@ def test_release_after_emergency_is_audited(db, client, professional):
     taken = client.post(f"/conversations/{first['conversation_id']}/take-over").json()
     assert taken["state"] == ConversationState.EMERGENCY_HOLD
 
+    _review_all(client, db, first["conversation_id"])
     client.post(f"/conversations/{first['conversation_id']}/release")
     db.expire_all()
     conversation = db.get(models.Conversation, first["conversation_id"])

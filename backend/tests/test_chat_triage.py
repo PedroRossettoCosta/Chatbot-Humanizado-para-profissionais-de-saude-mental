@@ -155,7 +155,7 @@ def test_layer2_reads_the_last_three_messages_together(client, db, monkeypatch):
 
 def _emergency_then_release(client, db, monkeypatch, minutes_ago):
     """Emergência, a profissional libera, e a pessoa volta a escrever."""
-    from app.services import handoff
+    from app.services import alerts, handoff
 
     _cleanup(db)
     histories = []
@@ -170,6 +170,8 @@ def _emergency_then_release(client, db, monkeypatch, minutes_ago):
     _send(client, "to pensando em me matar", first["session_id"])
     professional = db.query(models.Professional).filter_by(slug=TEST_SLUG).one()
     conversation = professional.conversations[0]
+    for alert in conversation.alerts:
+        alerts.mark_reviewed(db, alert, None)
     handoff.release(db, conversation)
     for message in conversation.messages:
         message.created_at -= timedelta(minutes=minutes_ago)

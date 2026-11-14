@@ -47,7 +47,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.models import AlertEventType, AlertLevel, AwaitingReason, ConversationState, MessageRole, SentBy
-from app.services import availability, conversations
+from app.services import alerts, availability, conversations
 from app.services.triage import normalize
 
 # Forma neutra de gênero ("{name}" e não "ela"), porque vale para
@@ -239,13 +239,29 @@ def take_over(db: Session, conversation: models.Conversation) -> None:
         db.commit()
 
 
+class UnreviewedEmergency(Exception):
+    """A conversa tem alerta de emergência sem revisão: não pode liberar."""
+
+
+def unreviewed_emergency(conversation: models.Conversation) -> models.SafetyAlert | None:
+    """O alerta de emergência mais antigo da conversa ainda sem revisão."""
+    pending = [
+        a for a in conversation.alerts if a.level == AlertLevel.EMERGENCY and not alerts.reviewed_event(a)
+    ]
+    return min(pending, key=lambda a: a.created_at, default=None)
+
+
 def release(db: Session, conversation: models.Conversation) -> None:
     """Devolve a conversa ao bot.
 
-    Se ela estava em espera de emergência, a liberação entra na trilha de
-    auditoria de cada alerta da conversa: fica registrado quando e por
-    quem o bot voltou a falar depois de um disparo.
+    Depois de uma emergência, só libera com todos os alertas de
+    emergência da conversa revisados: a profissional olha o que aconteceu
+    antes de a SelenIA voltar a falar (decisão do Pedro, 14/11/2026). A
+    liberação entra na trilha de auditoria de cada alerta da conversa:
+    fica registrado quando e por quem o bot voltou a falar.
     """
+    if conversation.state == ConversationState.EMERGENCY_HOLD and unreviewed_emergency(conversation):
+        raise UnreviewedEmergency()
     if conversation.state == ConversationState.EMERGENCY_HOLD:
         for alert in conversation.alerts:
             db.add(

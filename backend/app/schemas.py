@@ -308,6 +308,9 @@ class ConversationSummary(_ConversationBase):
 
 class ConversationOut(_ConversationBase):
     latest_alert: Optional[AlertBrief] = None
+    # Alerta de emergência ainda sem revisão: enquanto houver, a SelenIA
+    # não pode ser liberada nesta conversa (o painel leva até ele).
+    unreviewed_alert_id: Optional[str] = None
     messages: list[MessageOut] = []
 
 

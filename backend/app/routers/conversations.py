@@ -53,9 +53,11 @@ def _detail(conversation: models.Conversation) -> schemas.ConversationOut:
     """A conversa aberta, com o número completo: numa emergência ela
     pode precisar ligar para a pessoa."""
     latest = max(conversation.alerts, key=lambda a: a.created_at, default=None)
+    pending = handoff.unreviewed_emergency(conversation)
     return schemas.ConversationOut(
         **_base(conversation, full_phone=True),
         latest_alert=schemas.AlertBrief(level=latest.level, created_at=latest.created_at) if latest else None,
+        unreviewed_alert_id=pending.id if pending else None,
         messages=[schemas.MessageOut.model_validate(m) for m in conversation.messages],
     )
 
@@ -185,7 +187,12 @@ def release(
     user: models.User = Depends(auth.current_user),
 ):
     conversation = _get(db, conversation_id, user)
-    handoff.release(db, conversation)
+    try:
+        handoff.release(db, conversation)
+    except handoff.UnreviewedEmergency:
+        raise HTTPException(
+            status_code=409, detail="Revise o alerta de emergência antes de liberar a SelenIA."
+        )
     return _detail(conversation)
 
 
