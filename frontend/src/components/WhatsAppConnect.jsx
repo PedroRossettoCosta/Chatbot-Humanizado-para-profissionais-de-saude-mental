@@ -206,10 +206,10 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
                 da conta da SelenIA na Meta. Peça isso ao suporte da SelenIA depois de remover.
               </li>
             </ul>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button
-                variant="danger"
-                className="px-4 py-2 text-sm"
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                className="cursor-pointer rounded-lg border border-danger/30 bg-danger/10 px-2.5 py-0.5 text-sm text-danger hover:bg-danger/15 disabled:opacity-50"
                 disabled={busy}
                 onClick={async () => {
                   const number = status.display_number || "O número";
@@ -228,10 +228,15 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
                 }}
               >
                 {busy ? "Removendo..." : "Sim, remover número"}
-              </Button>
-              <Button variant="ghost" className="px-4 py-2 text-sm" disabled={busy} onClick={() => setConfirmRemove(false)}>
+              </button>
+              <button
+                type="button"
+                className="cursor-pointer border-0 bg-transparent p-0 text-sm text-muted underline disabled:opacity-50"
+                disabled={busy}
+                onClick={() => setConfirmRemove(false)}
+              >
                 Cancelar
-              </Button>
+              </button>
             </div>
           </div>
         ) : (
