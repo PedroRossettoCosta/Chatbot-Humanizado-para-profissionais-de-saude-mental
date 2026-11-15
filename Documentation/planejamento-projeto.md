@@ -149,9 +149,9 @@ Depois de 09/10 (rumo à defesa em 13/11): PIX fino, retenção agendada e log d
 
 ### Trabalhos futuros (fora do escopo da defesa)
 
-- Cadastro self-service e multi-tenant completo de profissionais (com Google OAuth por profissional)
+- Cadastro aberto e multi-tenant completo de profissionais (o MVP já tem login com Google e cadastro em etapas, mas só para e-mails autorizados)
 - Cobrança/assinatura (ex.: integração com Stripe)
-- Onboarding self-service do WhatsApp — Meta oferece um caminho para isso via o programa **"Provedor de Tecnologia"** (Embedded Signup), permitindo que cada profissional conecte seu próprio número sem passar pelo console de desenvolvedor manualmente
+- Onboarding self-service do WhatsApp — Meta oferece um caminho para isso via o programa **"Provedor de Tecnologia"** (Embedded Signup), permitindo que cada profissional conecte seu próprio número sem passar pelo console de desenvolvedor manualmente. Exige verificação do negócio (CNPJ) e revisão do app. No MVP a profissional já adiciona um número pelo painel (API da Meta, código por SMS), mas o número sai do app do celular e a conta aceita no máximo 2 números sem verificação
 - Instagram e TikTok, follow-up automático de leads, dashboard de métricas, app mobile/PWA
 
 ---

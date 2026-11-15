@@ -33,6 +33,12 @@ que "companion" quer dizer exatamente esse escopo.
 
 ## 2. O que tem dentro de `Documentation/TCC App Design`
 
+> **Atualização de 27/09/2026:** os exports descritos abaixo foram
+> substituídos pelo protótipo do MVP
+> (`stitch_maria_assistente_terap_utica_mvp/`). O conteúdo atual está
+> no [README da pasta](TCC%20App%20Design/README.md); esta seção fica
+> como registro do design do produto completo.
+
 É um export do **Stitch** (ferramenta de design da Google — gera UI a
 partir de prompt, já em Tailwind). Cada tela vem em uma pasta assim:
 
