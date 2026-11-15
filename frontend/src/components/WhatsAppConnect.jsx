@@ -247,9 +247,9 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
             >
               Trocar o nome
             </button>
-            <Button
-              variant="danger"
-              className="ml-auto px-4 py-2 text-sm"
+            <button
+              type="button"
+              className="cursor-pointer rounded-lg border border-danger/30 bg-danger/10 px-2.5 py-0.5 text-sm text-danger hover:bg-danger/15 disabled:opacity-50"
               disabled={busy}
               onClick={() => {
                 setError("");
@@ -258,7 +258,7 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
               }}
             >
               Remover número
-            </Button>
+            </button>
 
           </div>
         )}
