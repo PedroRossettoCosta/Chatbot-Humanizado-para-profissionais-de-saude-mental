@@ -397,3 +397,9 @@ de rotas, falha fechada, assinatura do webhook.
 5. **Quando fazer o deploy na nuvem.** Em 25/09 ficou decidido seguir
    sem deploy (plano B), com o código pronto para a nuvem. Falta decidir
    quando e onde. Afeta D6, D8 e o recebimento real pelo WhatsApp.
+
+**Resolvida em 15/11 (Pedro):** sessão confirmada ganha um link do
+Google Meet, criado no evento da agenda da profissional e enviado à
+pessoa junto da confirmação. Na troca, a data antiga sai com o link
+dela e a nova ganha outro; no cancelamento, a mensagem avisa que o link
+não vale mais. Detalhes em [Agenda](funcionalidades/agenda.md).

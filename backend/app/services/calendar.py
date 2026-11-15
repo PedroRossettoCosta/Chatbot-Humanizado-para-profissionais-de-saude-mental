@@ -14,7 +14,9 @@ Como funciona:
    título, a descrição ou os convidados de um evento, que podem ter
    nome de paciente. Para **reservar**, pede também `calendar.events`,
    usada só para criar, atualizar e apagar os eventos que ela mesma
-   cria (`services/appointments.py`). Sem ela, a SelenIA só consulta.
+   cria (`services/appointments.py`), e para pôr nesses eventos o link
+   do Google Meet quando a sessão é confirmada (`add_meet`). Sem ela, a
+   SelenIA só consulta.
 4. `free_slots` cruza o horário de atendimento (`working_hours`), a
    duração da sessão e os intervalos ocupados. A SelenIA consulta isso
    por uma ferramenta, só quando a conversa pede horário
@@ -235,6 +237,34 @@ def create_event(connection: models.CalendarConnection, body: dict) -> str:
 
 def update_event(connection: models.CalendarConnection, event_id: str, body: dict) -> None:
     _events_call(connection, "PATCH", f"{_EVENTS_URL}/{event_id}", body)
+
+
+def add_meet(connection: models.CalendarConnection, event_id: str, request_id: str) -> str | None:
+    """Pede ao Google um link do Meet para o evento e devolve o link.
+
+    Usa a mesma permissão de eventos: o Meet é criado na conta Google da
+    profissional, que fica como organizadora da chamada. `request_id`
+    identifica o pedido no Google, para que repetir a chamada não crie
+    um segundo link. Devolve nulo se o Google ainda não montou a sala.
+    """
+    url = f"{_EVENTS_URL}/{event_id}?conferenceDataVersion=1"
+    body = {"conferenceData": {"createRequest": {"requestId": request_id, "conferenceSolutionKey": {"type": "hangoutsMeet"}}}}
+    event = _events_call(connection, "PATCH", url, body)
+    link = meet_link(event)
+    if link is None:
+        # A sala às vezes fica "pending" na primeira resposta; uma leitura
+        # logo depois costuma já trazer o link.
+        link = meet_link(_events_call(connection, "GET", f"{_EVENTS_URL}/{event_id}"))
+    return link
+
+
+def meet_link(event: dict) -> str | None:
+    if event.get("hangoutLink"):
+        return event["hangoutLink"]
+    for entry in (event.get("conferenceData") or {}).get("entryPoints", []):
+        if entry.get("entryPointType") == "video" and entry.get("uri"):
+            return entry["uri"]
+    return None
 
 
 def delete_event(connection: models.CalendarConnection, event_id: str) -> None:

@@ -260,3 +260,29 @@ def test_list_events_reads_timed_all_day_and_skips_cancelled(monkeypatch):
     assert events[0]["title"] == "Sessão" and events[0]["starts_at"] == _at(29, 10)
     assert events[1]["all_day"] and events[1]["title"] == "(sem título)" and not events[1]["busy"]
     assert "singleEvents=true" in urls[0] and "%2B" not in urls[0]  # UTC-3 vira "-03:00", sem "+"
+
+
+def test_add_meet_asks_google_for_a_meet_and_reads_the_link(monkeypatch):
+    calls = []
+
+    def fake_call(connection, method, url, body=None):
+        calls.append((method, url, body))
+        return {"hangoutLink": "https://meet.google.com/abc-defg-hij"}
+
+    monkeypatch.setattr(calendar, "_events_call", fake_call)
+    assert calendar.add_meet(None, "evento-1", "selenia-1") == "https://meet.google.com/abc-defg-hij"
+    method, url, body = calls[0]
+    assert method == "PATCH" and url.endswith("/evento-1?conferenceDataVersion=1")
+    request = body["conferenceData"]["createRequest"]
+    assert request["requestId"] == "selenia-1" and request["conferenceSolutionKey"]["type"] == "hangoutsMeet"
+
+
+def test_add_meet_reads_the_event_again_while_the_room_is_pending(monkeypatch):
+    pending = {"conferenceData": {"createRequest": {"status": {"statusCode": "pending"}}}}
+    ready = {"conferenceData": {"entryPoints": [
+        {"entryPointType": "phone", "uri": "tel:+55-11-0000"},
+        {"entryPointType": "video", "uri": "https://meet.google.com/xyz-abcd-efg"},
+    ]}}
+    answers = [pending, ready]
+    monkeypatch.setattr(calendar, "_events_call", lambda c, method, url, body=None: answers.pop(0))
+    assert calendar.add_meet(None, "evento-1", "selenia-1") == "https://meet.google.com/xyz-abcd-efg"

@@ -48,6 +48,16 @@ def google(monkeypatch):
     monkeypatch.setattr(calendar, "create_event", create)
     monkeypatch.setattr(calendar, "update_event", lambda c, event_id, body: state.updated.append((event_id, body)))
     monkeypatch.setattr(calendar, "delete_event", lambda c, event_id: state.deleted.append(event_id))
+    state.meet = "https://meet.google.com/abc-defg-hij"
+    state.meet_requests = []
+
+    def add_meet(connection, event_id, request_id):
+        state.meet_requests.append((event_id, request_id))
+        if isinstance(state.meet, Exception):
+            raise state.meet
+        return state.meet
+
+    monkeypatch.setattr(calendar, "add_meet", add_meet)
     return state
 
 
@@ -271,8 +281,25 @@ def test_approve_confirms_the_event_and_tells_the_person(client, db, professiona
     assert event_id == "evento-1" and event["summary"] == "Sessão · Beatriz"
     sent = no_real_whatsapp[-1][1]["text"]["body"]
     assert sent.startswith("Sua sessão com Ana Reserva está confirmada para")
+    # O link do Meet vai no mesmo texto e fica guardado na sessão.
+    assert google.meet_requests == [("evento-1", f"selenia-{booking.appointment_id}")]
+    assert sent.endswith("é só entrar por este link: https://meet.google.com/abc-defg-hij")
+    assert body["meet_link"] == "https://meet.google.com/abc-defg-hij"
+    # A SelenIA sabe o link se a pessoa perguntar depois.
+    assert "https://meet.google.com/abc-defg-hij" in appointments.pending_note(db, conversation)
 
     assert client.post(f"/calendar/appointments/{booking.appointment_id}/reject").status_code == 409
+
+
+def test_a_meet_failure_does_not_stop_the_confirmation(client, db, professional, google, no_real_whatsapp):
+    google.meet = calendar.CalendarError("O Google Agenda recusou a alteração agora. Tente de novo.")
+    conversation = _conversation(db, professional)
+    booking = appointments.request(db, professional, conversation, _next_tuesday_code(), "Beatriz")
+
+    body = client.post(f"/calendar/appointments/{booking.appointment_id}/approve").json()
+    assert body["status"] == "confirmed" and body["meet_link"] is None
+    sent = no_real_whatsapp[-1][1]["text"]["body"]
+    assert sent.startswith("Sua sessão com Ana Reserva está confirmada") and "meet.google.com" not in sent
 
 
 def test_reject_frees_the_slot_even_with_the_whatsapp_window_closed(client, db, professional, google, no_real_whatsapp):
@@ -473,6 +500,9 @@ def test_reschedule_keeps_the_old_session_until_the_professional_confirms(
     assert db.get(models.Appointment, booking.appointment_id).status == AppointmentStatus.CONFIRMED
     assert old.calendar_event_id in google.deleted
     assert _last_text(no_real_whatsapp).startswith("Ana Reserva confirmou a troca")
+    # A data antiga sai da agenda com o link dela; a nova ganha outro.
+    assert "O link da data anterior não vale mais" in _last_text(no_real_whatsapp)
+    assert google.meet_requests[-1][1] == f"selenia-{booking.appointment_id}"
 
 
 def test_rejected_reschedule_leaves_the_old_session(client, db, professional, google, no_real_whatsapp):
@@ -515,6 +545,7 @@ def test_cancel_of_a_confirmed_session_waits_for_the_professional(client, db, pr
     assert session.status == AppointmentStatus.CANCELLED
     assert session.calendar_event_id in google.deleted
     assert _last_text(no_real_whatsapp).startswith("Ana Reserva confirmou o cancelamento")
+    assert _last_text(no_real_whatsapp).endswith(appointments.MEET_CANCELLED_MESSAGE)  # o evento e o link saíram
 
 
 def test_rejected_cancel_keeps_the_session(client, db, professional, google, no_real_whatsapp):

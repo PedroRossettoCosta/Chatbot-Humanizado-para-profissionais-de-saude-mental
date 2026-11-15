@@ -28,6 +28,11 @@ procurar atendimento, e a SelenIA não sabia responder.
   conta na janela do Google e pronto, sem copiar ID de agenda nem mexer
   no compartilhamento. O horário de atendimento fica no banco, para a
   SelenIA consultar.
+- **15/11/2026 (Pedro):** ao confirmar uma sessão, a SelenIA cria um
+  link do **Google Meet** no evento e o envia à pessoa junto da
+  confirmação, para ela saber onde entrar no dia e horário marcados.
+  Remarcar troca o link (a data antiga sai da agenda com o dela);
+  cancelar avisa que o link não vale mais.
 - **Permissão mínima para ler (28/09/2026):** só livre/ocupado. Para
   oferecer horário basta saber o que está ocupado; o nome de um evento
   pode ser o de um paciente e não tem por que chegar ao sistema.
@@ -99,7 +104,10 @@ A tela tem três abas: **Calendário**, **Pedidos de horário** e
    Aguardando**, com o número no menu, e você recebe um e-mail. Clique
    em **Confirmar horário** ou **Recusar**. A pessoa recebe a resposta
    pela conversa; se a janela de 24h do WhatsApp já tiver fechado, a
-   tela avisa para você falar com ela.
+   tela avisa para você falar com ela. Ao confirmar, o evento ganha um
+   link do **Google Meet**, que vai na mesma mensagem; na sessão
+   confirmada, **Abrir Google Meet ↗** abre a sala. Você é a
+   organizadora: no horário, entre pelo link e admita a pessoa.
 7. Para trocar de conta, **Trocar de conta**; para tirar o acesso,
    **Desconectar**.
 
@@ -210,7 +218,9 @@ Enviados à pessoa sem passar pelo modelo (`services/appointments.py`).
 | Profissional recusa | "{nome da profissional} não vai conseguir atender em {terça, 29/09 às 10:00}. Se quiser, posso ver outros horários com você." |
 | Confirma uma troca | "{nome} confirmou a troca: sua sessão passou de {terça, 29/09 às 10:00} para {quinta, 01/10 às 11:00}. Até lá!" |
 | Recusa uma troca | "{nome} não vai conseguir atender em {quinta, 01/10 às 11:00}. Sua sessão de {terça, 29/09 às 10:00} continua marcada. Se quiser, posso ver outros horários com você." |
-| Confirma um cancelamento | "{nome} confirmou o cancelamento da sua sessão de {terça, 29/09 às 10:00}." |
+| Junto da confirmação, com o link do Meet | "A sessão é online, pelo Google Meet. No dia e horário marcados, é só entrar por este link: {link}" |
+| Junto da troca confirmada, com o link novo | "A sessão é online, pelo Google Meet. O link da data anterior não vale mais: no dia e horário novos, é só entrar por este link: {link}" |
+| Confirma um cancelamento | "{nome} confirmou o cancelamento da sua sessão de {terça, 29/09 às 10:00}." Se a sessão tinha Meet, acrescenta: "O link do Google Meet desta sessão não vale mais." |
 | Mantém a sessão (recusa o cancelamento) | "{nome} não confirmou o cancelamento: sua sessão de {terça, 29/09 às 10:00} continua marcada. Se precisar, fale direto com {nome} por aqui." |
 
 | Pedido vence sem decisão | "Não deu para confirmar a tempo com {nome} o seu pedido de {terça, 29/09 às 10:00}, e o horário foi liberado. Se quiser, posso ver outros horários com você." |
@@ -261,6 +271,11 @@ minutos.
   vão para logs e não passam pela SelenIA.
 - Desconectar revoga a permissão no Google e apaga a conexão.
 - As rotas conferem se o pedido é da profissional logada (404 se não é).
+- **Link do Meet (15/11/2026):** criado na conta Google da profissional,
+  que organiza a chamada; quem tem o link pede para entrar e ela admite.
+  O link vai à pessoa pelo WhatsApp, fica em `appointments.meet_link` e
+  entra no contexto da SelenIA (só o da própria pessoa), para ela
+  responder se a pessoa perguntar de novo. Não vai para logs.
 
 ## Limitações e pendências
 
@@ -293,6 +308,15 @@ minutos.
   Google não entram na conta, só ocupam o horário.
 - Pelo calendário do painel ainda não dá para mover nem apagar eventos;
   isso é feito no Google Agenda.
+- **Meet em toda sessão confirmada:** ainda não há opção para quem
+  atende presencialmente; a mensagem diz que a sessão é online. Texto
+  pendente de aprovação da Marília.
+- Se o Google não criar o link (falha ou demora), a sessão é confirmada
+  mesmo assim e a mensagem sai sem link; a profissional manda o link
+  pela conversa. Sessões confirmadas antes de 15/11/2026 e as marcadas
+  pelo painel não têm link.
+- Apagar o evento tira o Meet da agenda, mas o Google pode manter a sala
+  acessível por um tempo; quem entrar fica esperando ser admitido.
 - Com o máximo de sessões por dia, se a própria pessoa troca de horário
   num dia que ficou cheio por causa do pedido dela mesma, o novo horário
   é recusado.
@@ -307,7 +331,9 @@ mesma pessoa no mesmo dia, uma sessão por dia com vários dias
 permitidos, teto de pedidos pendentes por pessoa, remarcar e cancelar (confirmar, recusar, regras, desistência), pedido vencido, limite por dia, confirmar e recusar com e
 sem janela do WhatsApp, e-mail, ferramenta só com a permissão de
 eventos, sessão e compromisso marcados pelo painel, calendário da
-semana).
+semana, link do Meet na confirmação, na troca e no cancelamento, e
+confirmação sem link quando o Google falha). `test_calendar.py` cobre o
+pedido do Meet ao Google e a leitura do link com a sala ainda pendente.
 
 Manual:
 1. Com o `GOOGLE_CLIENT_SECRET` no `.env` e o backend reiniciado, abra
@@ -319,7 +345,9 @@ Manual:
 4. Confira: evento amarelo "Sessão (a confirmar) · nome" no Google
    Agenda; pedido em **Aguardando**, com o número no menu; e-mail.
 5. Clique em **Confirmar horário**: o evento fica verde, e a mensagem de
-   confirmação aparece na conversa (tela Conversas).
+   confirmação aparece na conversa (tela Conversas), com o link do
+   Meet. O evento no Google mostra "Participar com o Google Meet", e o
+   pedido confirmado tem **Abrir Google Meet ↗**.
 6. Repita e clique em **Recusar**: o evento sai da agenda.
 7. Peça de novo o mesmo horário: ele não aparece mais (se confirmado).
 
@@ -347,3 +375,8 @@ Manual:
   A grade `WeeklyHours.jsx` voltou a ser só da Agenda. O máximo de
   sessões por dia não vale para quem tem essa permissão. Os dias
   especiais são de cada cliente (`available_slots(..., contact=)`).
+- 15/11/2026: link do Google Meet criado ao confirmar a sessão e
+  enviado à pessoa com a confirmação; a troca confirmada leva um link
+  novo, e o cancelamento avisa que o link não vale mais. Botão **Abrir
+  Google Meet** no painel. Campo `appointments.meet_link` (migração
+  `d4a8c2e7f513`).

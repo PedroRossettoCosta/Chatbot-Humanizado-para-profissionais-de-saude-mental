@@ -582,6 +582,10 @@ class Appointment(Base):
     # Se a mensagem de confirmação ou recusa chegou à pessoa. Falso quando
     # a janela de 24h do WhatsApp já fechou ou o envio falhou.
     contact_notified = Column(Boolean, nullable=True)
+    # Link do Google Meet da sessão, criado no evento quando a profissional
+    # confirma (`appointments._add_meet`) e enviado à pessoa junto da
+    # confirmação. Nulo se o Google não criou o link.
+    meet_link = Column(String(255), nullable=True)
     # Remarcar e cancelar como pedido (Pedro, 12/10/2026). No pedido de
     # troca, a sessão que ele substitui quando a profissional confirmar.
     replaces_id = Column(UUID(as_uuid=False), ForeignKey("appointments.id", ondelete="SET NULL"), nullable=True)

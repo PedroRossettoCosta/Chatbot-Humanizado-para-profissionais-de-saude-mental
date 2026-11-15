@@ -150,6 +150,11 @@ function AppointmentCard({ item, busy, onDecide }) {
                 ? "A pessoa foi avisada pela conversa."
                 : "A pessoa não pôde ser avisada automaticamente (janela de 24h do WhatsApp fechada). Avise pela conversa ou por telefone.")}
           </span>
+          {item.status === "confirmed" && item.meet_link && (
+            <a href={item.meet_link} target="_blank" rel="noreferrer" className="font-semibold text-primary">
+              Abrir Google Meet ↗
+            </a>
+          )}
           {item.conversation_id && (
             <Link to={`/conversas/${item.conversation_id}`} className="font-semibold text-primary">
               Ver conversa →

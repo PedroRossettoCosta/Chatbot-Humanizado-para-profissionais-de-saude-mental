@@ -403,6 +403,8 @@ class AppointmentOut(BaseModel):
     expires_at: Optional[datetime] = None
     decided_at: Optional[datetime] = None
     contact_notified: Optional[bool] = None
+    # Link do Google Meet, quando a sessão confirmada tem um.
+    meet_link: Optional[str] = None
     # "new" (horário novo), "reschedule" (troca de uma sessão) ou "cancel"
     # (a pessoa pediu para cancelar esta sessão confirmada).
     kind: str = "new"

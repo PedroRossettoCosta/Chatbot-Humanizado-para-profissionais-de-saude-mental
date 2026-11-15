@@ -164,6 +164,8 @@ Funcionando:
   profissional confirma ou recusa no painel (24h de validade), e a
   pessoa recebe a resposta pela conversa. Remarcar e cancelar também
   vão pela conversa, sempre como pedido que a profissional confirma.
+  Ao confirmar, o evento ganha um link do Google Meet, enviado à pessoa
+  com a confirmação (um link novo na troca).
 - **Limites por pessoa**: até 4 pedidos de horário aguardando
   confirmação e 50 mensagens por hora; acima disso, a SelenIA pausa as
   respostas àquela pessoa (a triagem por regras continua) e marca a

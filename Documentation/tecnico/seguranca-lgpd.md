@@ -43,6 +43,11 @@ Cifrados no banco (Fernet, chave simétrica em `DATA_ENCRYPTION_KEY`):
   (`calendar_connections.refresh_token`)
 - nome que a pessoa deu ao pedir horário (`appointments.patient_name`)
 
+O link do Google Meet da sessão (`appointments.meet_link`, desde
+15/11/2026) fica em texto puro: não identifica a pessoa, e quem entra
+pelo link precisa ser admitido pela profissional, organizadora da sala
+na conta Google dela.
+
 Quem olha o PostgreSQL direto vê apenas cifras. A aplicação decifra de
 forma transparente, pelo tipo `EncryptedText`.
 

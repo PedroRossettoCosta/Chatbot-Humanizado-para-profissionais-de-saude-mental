@@ -63,6 +63,15 @@ HOLD = timedelta(hours=24)
 # Textos fixos enviados à pessoa quando a profissional decide. Não passam
 # pelo modelo. Pendentes de aprovação da Marília.
 CONFIRMED_MESSAGE = "Sua sessão com {name} está confirmada para {when}. Até lá!"
+# Vai junto da confirmação (e da troca confirmada) quando o Google criou o
+# link do Meet. Decisão do Pedro em 15/11/2026.
+MEET_MESSAGE = "A sessão é online, pelo Google Meet. No dia e horário marcados, é só entrar por este link: {link}"
+# Na troca, a data antiga sai da agenda com o link dela; a nova ganha outro.
+MEET_RESCHEDULE_MESSAGE = (
+    "A sessão é online, pelo Google Meet. O link da data anterior não vale mais: "
+    "no dia e horário novos, é só entrar por este link: {link}"
+)
+MEET_CANCELLED_MESSAGE = "O link do Google Meet desta sessão não vale mais."
 REJECTED_MESSAGE = (
     "{name} não vai conseguir atender em {when}. "
     "Se quiser, posso ver outros horários com você."
@@ -177,7 +186,8 @@ def pending_note(db: Session, conversation: models.Conversation, now: datetime |
             state = f"aguardando confirmação, troca da sessão de {calendar.format_slot(a.replaces.starts_at)}"
         else:
             state = "aguardando confirmação"
-        lines.append(f"- {when} ({state}) [código {calendar.slot_code(a.starts_at)}]")
+        meet = f" (link do Google Meet: {a.meet_link})" if a.status == AppointmentStatus.CONFIRMED and a.meet_link else ""
+        lines.append(f"- {when} ({state}){meet} [código {calendar.slot_code(a.starts_at)}]")
     return (
         "Esta pessoa já tem:\n" + "\n".join(lines) + "\n"
         "Ela pode ter uma sessão por dia: um pedido novo num dia que ainda aguarda confirmação troca o "
@@ -434,6 +444,8 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
         db.commit()
         when = calendar.format_slot(appointment.starts_at)
         message = CANCEL_CONFIRMED_MESSAGE.format(name=professional.name, when=when)
+        if appointment.meet_link:
+            message += " " + MEET_CANCELLED_MESSAGE
         appointment.contact_notified = _tell_contact(db, appointment, message)
         db.commit()
         return appointment
@@ -446,6 +458,7 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
         calendar.update_event(connection, appointment.calendar_event_id, _event_body(appointment, confirmed=True))
     except calendar.CalendarError as err:
         raise AppointmentError(str(err))
+    _add_meet(connection, appointment)
     now = models._now()
     appointment.status = AppointmentStatus.CONFIRMED
     appointment.decided_at = now
@@ -466,9 +479,25 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
         )
     else:
         message = CONFIRMED_MESSAGE.format(name=professional.name, when=when)
+    if appointment.meet_link:
+        template = MEET_RESCHEDULE_MESSAGE if old is not None and old.meet_link else MEET_MESSAGE
+        message += "\n\n" + template.format(link=appointment.meet_link)
     appointment.contact_notified = _tell_contact(db, appointment, message)
     db.commit()
     return appointment
+
+
+def _add_meet(connection, appointment: models.Appointment) -> None:
+    """Põe o link do Meet no evento confirmado. Uma falha não impede a
+    confirmação: a sessão fica marcada e a mensagem sai sem o link."""
+    if appointment.meet_link:
+        return
+    try:
+        appointment.meet_link = calendar.add_meet(connection, appointment.calendar_event_id, f"selenia-{appointment.id}")
+    except calendar.CalendarError:
+        logger.warning("não foi possível criar o link do Meet da sessão")
+    if not appointment.meet_link:
+        logger.warning("o Google não devolveu o link do Meet da sessão")
 
 
 def reject(db: Session, appointment: models.Appointment) -> models.Appointment:

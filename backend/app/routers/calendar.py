@@ -98,6 +98,7 @@ def _appointment_out(appointment: models.Appointment) -> schemas.AppointmentOut:
         expires_at=appointment.expires_at,
         decided_at=appointment.decided_at,
         contact_notified=appointment.contact_notified,
+        meet_link=appointment.meet_link,
         kind="cancel" if appointment.cancel_requested_at else "reschedule" if appointment.replaces_id else "new",
         replaces_label=calendar.format_slot(appointment.replaces.starts_at) if appointment.replaces else None,
         awaiting_decision=appointment.status == models.AppointmentStatus.TENTATIVE

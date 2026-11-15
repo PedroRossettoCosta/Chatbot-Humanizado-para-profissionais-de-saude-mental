@@ -292,6 +292,7 @@ Um pedido de horário reservado pela SelenIA e espelhado no Google Agenda
 | `expires_at` | data, opcional | Fim da reserva provisória (24h depois do pedido) |
 | `decided_at` | data, opcional | Quando foi confirmado, recusado, expirou ou foi cancelado |
 | `contact_notified` | booleano, opcional | Se o texto fixo da decisão chegou à pessoa (falso com a janela do WhatsApp fechada) |
+| `meet_link` | texto (255), opcional | Link do Google Meet criado no evento quando a profissional confirma; vai à pessoa com a confirmação. Migração `d4a8c2e7f513` |
 | `replaces_id` | FK para `appointments`, opcional | No pedido de troca: a sessão que sai quando a profissional confirmar. Migração `8b3f6a2d9c15` |
 | `cancel_requested_at` | data, opcional | A pessoa pediu para cancelar esta sessão confirmada; vale só quando a profissional confirmar |
 | `created_at` | data | |
