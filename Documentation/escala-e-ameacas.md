@@ -55,10 +55,18 @@ WABA **por profissional** (cifrados), em vez do token global; inscrever
 o app nos webhooks de cada WABA. O caminho da mensagem quase não muda:
 o webhook já roteia por `phone_number_id`.
 
-**Custo da Meta:** desde julho de 2025 a cobrança é por mensagem de
-modelo, e responder dentro da janela de 24h é grátis. Como o paciente
-sempre inicia a conversa, o custo de WhatsApp tende a zero. Conferir a
-tabela vigente antes de qualquer plano de preço.
+**Custo da Meta:** desde 01/10/2026 a Meta cobra por mensagem também
+as mensagens de serviço (as respostas dentro da janela de 24h, que eram
+grátis desde 01/11/2024). Cada número tem **1.000 mensagens de serviço
+grátis por mês**; a cobrança começa na 1.001ª, e só com forma de
+pagamento cadastrada (sem ela, o que passa de 1.000 não é enviado).
+Contam as respostas da SelenIA, as da profissional pelo painel e os
+textos fixos (aviso de IA, emergência, confirmações, link do Meet). Com
+um número por profissional, um consultório cheio (cerca de 280 respostas
+por mês, mais os textos fixos) fica dentro da franquia. Em escala, cada
+profissional precisa de forma de pagamento na própria conta para não
+travar no limite. Conferir a tabela vigente antes de qualquer plano de
+preço.
 
 ## 2. Infraestrutura
 
