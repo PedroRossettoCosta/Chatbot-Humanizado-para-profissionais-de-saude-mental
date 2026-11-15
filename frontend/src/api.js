@@ -80,6 +80,7 @@ export const api = {
   endSession: (slug) => request(`/professionals/${slug}/in-session`, { method: "DELETE" }),
   listConversations: (slug) => request(`/conversations?professional_slug=${encodeURIComponent(slug)}`),
   getConversation: (conversationId) => request(`/conversations/${conversationId}`),
+  markConversationRead: (conversationId) => request(`/conversations/${conversationId}/read`, { method: "POST" }),
   listAlerts: (slug) => request(`/alerts?professional_slug=${encodeURIComponent(slug)}`),
   getAlert: (alertId) => request(`/alerts/${alertId}`),
   viewAlert: (alertId) => request(`/alerts/${alertId}/view`, { method: "POST" }),

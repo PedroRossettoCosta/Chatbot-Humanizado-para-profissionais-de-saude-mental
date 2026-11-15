@@ -3,7 +3,8 @@
 // código por SMS ou ligação, confirmar o código e registrar. O backend
 // faz as chamadas (`services/whatsapp_numbers.py`); aqui só a conversa
 // com a profissional. Depois de conectado, dá para trocar o nome que
-// aparece ou desconectar o número para pôr outro.
+// aparece ou remover o número (botão vermelho, com confirmação na própria
+// tela); sem número, a tela volta ao formulário para conectar outro.
 
 import { useEffect, useState } from "react";
 
@@ -62,6 +63,8 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
   const [notice, setNotice] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removed, setRemoved] = useState("");
 
   function update(next) {
     // Abrir a tela já conta como ver a recusa do nome.
@@ -191,8 +194,48 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
               </Button>
             </div>
           </div>
+        ) : confirmRemove ? (
+          <div className="mt-4 rounded-2xl border border-danger/40 bg-white px-5 py-4">
+            <p className="m-0 font-semibold text-danger">Remover {status.display_number || "este número"} da SelenIA?</p>
+            <ul className="m-0 mt-2 space-y-1 pl-5 text-sm leading-relaxed text-slate">
+              <li>A SelenIA para de receber e responder mensagens neste número na hora.</li>
+              <li>As conversas, os alertas e os clientes continuam no painel.</li>
+              <li>Depois, dá para conectar outro número, ou este mesmo de novo.</li>
+              <li>
+                Para o número voltar a funcionar no aplicativo do WhatsApp do celular, ele também precisa ser apagado
+                da conta da SelenIA na Meta. Peça isso ao suporte da SelenIA depois de remover.
+              </li>
+            </ul>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
+                variant="danger"
+                className="px-4 py-2 text-sm"
+                disabled={busy}
+                onClick={async () => {
+                  const number = status.display_number || "O número";
+                  setBusy(true);
+                  setError("");
+                  try {
+                    update(await api.disconnectWhatsApp(slug));
+                    setConfirmRemove(false);
+                    setRemoved(`${number} foi removido. A SelenIA não responde mais por ele.`);
+                  } catch (e) {
+                    setError(e.message);
+                    api.getWhatsApp(slug).then(update).catch(() => {});
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                {busy ? "Removendo..." : "Sim, remover número"}
+              </Button>
+              <Button variant="ghost" className="px-4 py-2 text-sm" disabled={busy} onClick={() => setConfirmRemove(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
         ) : (
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
             <button
               type="button"
               className="cursor-pointer border-0 bg-transparent p-0 text-primary underline disabled:opacity-50"
@@ -204,23 +247,19 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
             >
               Trocar o nome
             </button>
-            <button
-              type="button"
-              className="cursor-pointer border-0 bg-transparent p-0 text-muted underline disabled:opacity-50"
+            <Button
+              variant="danger"
+              className="ml-auto px-4 py-2 text-sm"
               disabled={busy}
               onClick={() => {
-                if (
-                  window.confirm(
-                    `Desconectar ${status.display_number || "este número"}? A SelenIA para de responder por ele na hora. ` +
-                      "As conversas antigas continuam no painel. Para cadastrar outro número, pode ser preciso apagar " +
-                      "este no WhatsApp Manager da Meta."
-                  )
-                )
-                  run(() => api.disconnectWhatsApp(slug), "Número desconectado. Agora você pode conectar outro.");
+                setError("");
+                setNotice("");
+                setConfirmRemove(true);
               }}
             >
-              Trocar o número
-            </button>
+              Remover número
+            </Button>
+
           </div>
         )}
         {notice && <p className="m-0 mt-3 text-sm text-primary">{notice}</p>}
@@ -329,6 +368,11 @@ export default function WhatsAppConnect({ slug, defaultName, onStatus }) {
 
   return (
     <div className="space-y-6">
+      {removed && (
+        <p className="m-0 rounded-2xl bg-primary-soft px-5 py-4 text-sm text-primary" role="status">
+          {removed} Para conectar outro número, preencha abaixo.
+        </p>
+      )}
       <div className="flex gap-3 rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4">
         <span aria-hidden="true">⚠️</span>
         <div className="text-sm leading-relaxed text-[#92400e]">

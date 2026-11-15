@@ -403,3 +403,12 @@ Google Meet, criado no evento da agenda da profissional e enviado à
 pessoa junto da confirmação. Na troca, a data antiga sai com o link
 dela e a nova ganha outro; no cancelamento, a mensagem avisa que o link
 não vale mais. Detalhes em [Agenda](funcionalidades/agenda.md).
+
+**Resolvida em 15/11 (Pedro):** o menu Conversas mostra quantas
+mensagens das pessoas a profissional ainda não leu, como o menu Alertas
+faz com os alertas sem revisar; cada conversa da lista mostra o dela.
+Detalhes em [Conversas](funcionalidades/conversas.md).
+
+**Resolvida em 15/11 (Pedro):** a tela WhatsApp ganha o botão vermelho
+**Remover número**, com confirmação na própria tela. Detalhes em
+[Conectar o WhatsApp](funcionalidades/conectar-whatsapp.md).

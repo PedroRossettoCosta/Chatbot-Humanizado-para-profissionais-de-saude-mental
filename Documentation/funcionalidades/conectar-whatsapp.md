@@ -26,6 +26,12 @@ Decisões:
   trabalho futuro.
 - **Sem verificar a empresa antes da defesa** (Pedro, 26/09/2026): a
   conta fica limitada a 2 números, o suficiente para o MVP.
+- **Remover número com botão vermelho** (Pedro, 15/11/2026): o
+  "Trocar o número" era um link cinza com a caixa de confirmação do
+  navegador, fácil de não achar. Com profissionais testando com o
+  próprio número, tirar o número da SelenIA precisa ser óbvio e
+  explicar o que acontece, inclusive que o número só volta ao
+  aplicativo do WhatsApp depois de apagado na Meta.
 - **Prevista para 05/10, construída em 13/10** (atraso da semana 3). Na
   ordem de corte, é o terceiro item: sem o chip, a demo usa o número já
   conectado.
@@ -62,9 +68,16 @@ etapa do código.
   aplicar o nome aprovado, ou ao abrir a tela, no caso de recusa. Não
   precisa esperar a análise para usar o app: até lá tudo funciona com o
   nome antigo.
-- **Trocar o número**: depois de confirmar, a SelenIA para de responder
-  por aquele número na hora e a tela volta para conectar outro. As
-  conversas antigas continuam no painel.
+- **Remover número** (botão vermelho): abre, na própria tela, uma
+  confirmação que explica o que acontece. Em **Sim, remover número**, a
+  SelenIA para de receber e responder por aquele número na hora, e a
+  tela volta ao formulário de conectar, com o aviso de que o número foi
+  removido. As conversas, os alertas e os clientes continuam no painel.
+  **Cancelar** fecha a confirmação sem mudar nada.
+- Para o número voltar a funcionar no **aplicativo do WhatsApp** do
+  celular, ele precisa também ser apagado da conta da SelenIA na Meta,
+  no WhatsApp Manager. Isso não dá para fazer pelo painel: quem
+  administra a conta da Meta (hoje o Pedro) apaga depois.
 
 ## Como funciona
 
@@ -134,9 +147,11 @@ mexe no número dela.
 
 - **Teste real feito em 19/10/2026** com o número da Marília: conectou depois de dois tropeços que viraram
   correção (limite de 2 números da conta e "número não verificado" no
-  registro). Trocar o nome e trocar o número ainda não foram usados de
+  registro). Trocar o nome e remover o número ainda não foram usados de
   verdade, só com a Meta simulada.
-- **Trocar o número** desliga o número da Cloud API (`deregister`), mas
+- Remover guarda o PIN de duas etapas do número (cifrado): se o mesmo
+  número for conectado de novo, a Meta pede o PIN que já estava nele.
+- **Remover número** desliga o número da Cloud API (`deregister`), mas
   não apaga da conta da Meta: apagar é só pelo WhatsApp Manager. Como a
   conta sem verificação de empresa comporta 2 números, para cadastrar
   outro pode ser preciso apagar o antigo lá antes.
@@ -155,7 +170,8 @@ Automático: `tests/test_whatsapp_numbers.py` (formatos de número, fluxo
 completo até o registro, código errado, reenvio por ligação, número já
 na conta, número já verificado, limite de registros, bloqueio da Meta
 explicado e contado, número de outra conta, profissional já conectada,
-cancelar, servidor sem WABA, número ligado à mão).
+cancelar, servidor sem WABA, número ligado à mão, remover libera para
+outro número).
 
 Manual, com o chip (precisa de um número que nunca esteve no WhatsApp):
 1. Use uma conta sem número conectado: a conta `pedro-costa` já tem o
@@ -166,6 +182,10 @@ Manual, com o chip (precisa de um número que nunca esteve no WhatsApp):
 4. De outro celular, mande "oi" para o número novo: a SelenIA responde e
    a conversa aparece em Conversas, na conta nova.
 5. Anote qualquer erro da Meta (mensagem e código) para ajustar a tela.
+6. **Remover número**: confira o texto da confirmação, clique em
+   **Cancelar** (nada muda) e depois em **Sim, remover número**. A tela
+   volta ao formulário com o aviso; mande "oi" para o número: a SelenIA
+   não responde mais.
 
 ## Histórico
 
@@ -189,3 +209,8 @@ Manual, com o chip (precisa de um número que nunca esteve no WhatsApp):
   (`GET /professionals/{slug}/whatsapp`); antes dizia sempre "Não
   conectado".
 - 19/10/2026: teste real feito (número da Marília conectado).
+- 15/11/2026: **Remover número** vira botão vermelho, com confirmação na
+  própria tela (no lugar do link "Trocar o número" e da caixa do
+  navegador), explicando o que acontece e que o número só volta ao
+  aplicativo do WhatsApp depois de apagado na Meta; aviso depois de
+  remover.

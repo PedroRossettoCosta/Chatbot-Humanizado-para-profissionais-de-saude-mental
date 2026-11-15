@@ -99,3 +99,30 @@ def test_history_respects_order_and_limit(db):
     assert [m["content"] for m in completo] == ["primeira", "segunda", "terceira"]
 
     _cleanup(db)
+
+
+def test_unread_count_until_the_professional_opens_the_conversation(client, db):
+    _cleanup(db)
+    professional = _professional(db)
+    contato = conversations.get_or_create_contact(db, professional, Channel.WHATSAPP, TELEFONE)
+    conversa, _ = conversations.get_or_create_conversation(db, contato)
+    conversations.record_message(db, conversa, MessageRole.USER, "oi")
+    conversations.record_message(db, conversa, MessageRole.ASSISTANT, "Olá!", sent_by=SentBy.BOT)
+    conversations.record_message(db, conversa, MessageRole.USER, "queria saber o valor")
+
+    def listed():
+        [item] = client.get(f"/conversations?professional_slug={TEST_SLUG}").json()
+        return item["unread_count"]
+
+    # Só as mensagens da pessoa contam, não as respostas da SelenIA.
+    assert listed() == 2
+    assert client.post(f"/conversations/{conversa.id}/read").status_code == 204
+    assert listed() == 0
+    conversations.record_message(db, conversa, MessageRole.USER, "obrigada")
+    assert listed() == 1
+
+    _cleanup(db)
+
+
+def test_mark_read_needs_an_existing_conversation(client):
+    assert client.post("/conversations/00000000-0000-0000-0000-000000000000/read").status_code == 404

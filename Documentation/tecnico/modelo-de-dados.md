@@ -148,6 +148,7 @@ Uma thread de atendimento entre um contato e a profissional.
 | `contact_type` | texto | `lead` ou `patient` |
 | `created_at` | data | |
 | `last_message_at` | data | Base do corte da política de retenção e da ordem da lista de Conversas |
+| `read_at` | data, opcional | Até quando a profissional já viu a conversa no painel; mensagens do contato depois disto são as não lidas. Migração `e6b1f3a9c824` (as conversas existentes começaram como lidas) |
 
 ### Os três estados
 

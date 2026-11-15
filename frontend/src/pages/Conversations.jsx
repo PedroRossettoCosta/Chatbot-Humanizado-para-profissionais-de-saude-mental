@@ -195,7 +195,9 @@ export default function Conversations() {
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="truncate font-semibold text-ink">{c.contact_name}</span>
                     {c.last_message_at && (
-                      <span className="shrink-0 text-xs text-muted">{shortWhen(c.last_message_at)}</span>
+                      <span className={`shrink-0 text-xs ${c.unread_count > 0 ? "font-semibold text-primary" : "text-muted"}`}>
+                        {shortWhen(c.last_message_at)}
+                      </span>
                     )}
                   </div>
                   {c.contact_phone && c.contact_phone !== c.contact_name && (
@@ -208,7 +210,17 @@ export default function Conversations() {
                       </Tag>
                     ))}
                   </div>
-                  <p className="m-0 mt-2 line-clamp-2 text-sm leading-snug text-slate">{preview(c.last_message)}</p>
+                  <div className="mt-2 flex items-start gap-2">
+                    <p className="m-0 line-clamp-2 flex-1 text-sm leading-snug text-slate">{preview(c.last_message)}</p>
+                    {c.unread_count > 0 && c.id !== conversationId && (
+                      <span
+                        className="min-w-6 shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-center text-xs font-bold text-white"
+                        title="Mensagens ainda não lidas"
+                      >
+                        {c.unread_count}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
             </li>
@@ -303,7 +315,7 @@ function Bubble({ message, conversationId }) {
 }
 
 function ConversationView({ conversationId, onChanged }) {
-  const { professional } = usePanel();
+  const { professional, refreshUnreadCount } = usePanel();
   const navigate = useNavigate();
   const [conversation, setConversation] = useState(null);
   const [reply, setReply] = useState("");
@@ -328,6 +340,37 @@ function ConversationView({ conversationId, onChanged }) {
     const id = setInterval(load, CONVERSATION_REFRESH_MS);
     return () => clearInterval(id);
   }, [load]);
+
+  // Conversa aberta e visível na tela: o que chegou deixa de contar como
+  // não lido. Marca ao abrir, quando chega mensagem nova e quando ela
+  // volta para a aba do painel (aba em segundo plano não conta como lida).
+  const markedCount = useRef(-1);
+  const markRead = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    api
+      .markConversationRead(conversationId)
+      .then(() => {
+        refreshUnreadCount();
+        onChanged();
+      })
+      .catch(() => {});
+  }, [conversationId, refreshUnreadCount, onChanged]);
+  useEffect(() => {
+    const count = conversation?.messages.length;
+    if (count === undefined || count === markedCount.current || document.visibilityState !== "visible") return;
+    markedCount.current = count;
+    markRead();
+  }, [conversation, markRead]);
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        markedCount.current = conversation?.messages.length ?? -1;
+        markRead();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [conversation, markRead]);
 
   // Desce para o fim ao abrir e quando chega mensagem nova.
   useEffect(() => {

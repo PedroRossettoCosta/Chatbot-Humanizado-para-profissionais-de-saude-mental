@@ -31,6 +31,11 @@ responde e devolve para a SelenIA.
   modelo de mensagem aprovado e pago. O MVP não usa modelos (decisão de
   26/09/2026, junto com os alertas só por e-mail e painel), então a
   tela trava a resposta em vez de deixar a mensagem se perder.
+- **Mensagens não lidas (Pedro, 15/11/2026):** o menu **Conversas**
+  mostra quantas mensagens das pessoas a profissional ainda não viu,
+  como o menu Alertas mostra os alertas sem revisar. Sem isso, uma
+  mensagem nova numa conversa comum (que não pede atenção) passava
+  despercebida.
 
 ## Como usar
 
@@ -51,6 +56,12 @@ responde e devolve para a SelenIA.
 - A ordem é: emergência, aguardando você, necessita atenção, depois as
   mais recentes.
 - Busca pelo nome ou pelos números, e filtros por situação.
+- **Não lidas:** o menu **Conversas** mostra, num número azul, quantas
+  mensagens das pessoas você ainda não viu, somando todas as conversas.
+  Cada conversa da lista mostra o número dela, e a hora fica em azul.
+  Abrir a conversa marca tudo como lido; enquanto ela estiver aberta na
+  tela, o que chega já conta como lido. Só as mensagens da pessoa
+  contam, não as respostas da SelenIA.
 
 **Conversa aberta** (à direita; no celular, tela cheia com a seta de
 voltar):
@@ -74,6 +85,15 @@ voltar):
   completo e o alerta mais recente (para a faixa de emergência).
 - A lista é relida a cada 10 segundos e a conversa aberta a cada 5
   (sem tempo real no MVP).
+- **Não lidas** (`conversations.read_at`): `POST /conversations/{id}/read`
+  grava a hora em que ela viu a conversa. A lista devolve
+  `unread_count`, as mensagens do contato (`role = user`) depois dessa
+  hora, contadas numa consulta só para todas as conversas. O painel
+  chama a rota ao abrir a conversa, quando chega mensagem nova com ela
+  aberta e quando ela volta para a aba do painel; com a aba em segundo
+  plano, nada é marcado como lido. O número do menu soma a lista, relida
+  a cada 10 segundos (`PanelLayout.jsx`). As conversas que já existiam
+  em 15/11/2026 começaram como lidas (migração `e6b1f3a9c824`).
 - **Aguardando você** (`awaiting_reply_since`): marcado por
   `handoff.handle_human_request` quando a pessoa pede a profissional ou
   recusa a SelenIA. Sai quando ela responde ou devolve a conversa.
@@ -128,7 +148,11 @@ Não se aplica. O e-mail usa a mesma conta de envio e o mesmo
 - Sem retomar conversa fora das 24h (exigiria modelo de mensagem pago,
   trabalho futuro).
 - Sem anexos: só texto, nos dois sentidos.
-- Sem aviso de entregue ou lido.
+- Sem aviso de entregue ou lido para a pessoa (o "lido" é só do lado
+  do painel).
+- O lido é por conversa, não por aparelho: abrir no celular marca como
+  lido no computador também. Abrir a conversa conta como ler, mesmo sem
+  rolar até o fim.
 - O e-mail de pedido não tem trilha de envio como o de alerta; a falha
   só vai para o log.
 
@@ -136,6 +160,8 @@ Não se aplica. O e-mail usa a mesma conta de envio e o mesmo
 
 Automático: `tests/test_inbox.py` (ordem da lista, "Aguardando você",
 e-mail uma vez só, janela de 24h, número mascarado),
+`tests/test_conversations.py` (contagem de não lidas, só mensagens da
+pessoa, zera ao abrir, volta a contar com mensagem nova),
 `tests/test_handoff.py`, `tests/test_auth.py` (lista de outra
 profissional dá 404).
 
@@ -149,6 +175,9 @@ Manual:
    vermelho. Teste **Liberar a SelenIA**.
 4. Estreite a janela até a largura de celular: lista e conversa, uma
    de cada vez.
+5. Com outra conversa aberta, mande mensagens pelo simulador: o menu
+   Conversas e a conversa na lista mostram o número. Abra a conversa:
+   os dois zeram.
 
 ## Histórico
 
@@ -164,3 +193,6 @@ Manual:
   no próprio painel e documentos abrem ou baixam pelo nome. O arquivo é
   buscado na Meta na hora; depois de cerca de 30 dias aparece "Arquivo
   não disponível".
+- 15/11/2026: mensagens não lidas, com o número no menu Conversas e em
+  cada conversa da lista (`conversations.read_at`, rota
+  `POST /conversations/{id}/read`).

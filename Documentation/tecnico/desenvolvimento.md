@@ -190,7 +190,7 @@ pytest -k blind_index             # só os testes cujo nome casa
 | Arquivo | Cobre |
 |---|---|
 | `test_crypto.py` | Cifragem, decifragem e índice cego |
-| `test_conversations.py` | Contato reaproveitado, isolamento por canal, cifragem em repouso, histórico |
+| `test_conversations.py` | Contato reaproveitado, isolamento por canal, cifragem em repouso, histórico, mensagens não lidas (contagem e marcar como lida) |
 | `test_professionals_api.py` | Cadastro, slug duplicado, slug inválido |
 | `test_text_extraction.py` | Divisão do texto em trechos |
 | `test_chat_disclaimer.py` | Aviso de IA na primeira mensagem, e não nas seguintes |

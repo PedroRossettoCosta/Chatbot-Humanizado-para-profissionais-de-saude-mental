@@ -117,3 +117,4 @@ Manual:
 - 27/09/2026: Alertas no menu, com o número de alertas sem revisar.
 - 28/09/2026: Agenda sai do "Em breve" e abre a tela nova ([agenda](agenda.md)).
 - 13/10/2026: WhatsApp sai do "Em breve" e abre a tela de conectar o número ([conectar o WhatsApp](conectar-whatsapp.md)).
+- 15/11/2026: Conversas no menu, com o número de mensagens ainda não lidas.

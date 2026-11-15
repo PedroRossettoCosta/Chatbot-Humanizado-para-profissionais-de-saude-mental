@@ -437,6 +437,10 @@ class Conversation(Base):
     contact_type = Column(String(20), nullable=False, default=ContactType.LEAD)
     created_at = Column(DateTime(timezone=True), default=_now)
     last_message_at = Column(DateTime(timezone=True), default=_now)
+    # Até quando a profissional já viu a conversa no painel. Mensagens do
+    # contato depois disto contam como não lidas (número no menu
+    # Conversas e em cada conversa). Nulo = nunca aberta: tudo não lido.
+    read_at = Column(DateTime(timezone=True), nullable=True)
 
     professional = relationship("Professional", back_populates="conversations")
     contact = relationship("Contact", back_populates="conversations")

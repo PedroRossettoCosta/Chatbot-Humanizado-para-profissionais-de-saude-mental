@@ -22,7 +22,7 @@ import Simulator from "./Simulator.jsx";
 // Menu do protótipo. As telas marcadas `soon` ainda não existem: aparecem
 // para mostrar a estrutura, mas não abrem (entram nos dias do plano).
 const NAV = [
-  { label: "Conversas", icon: ChatIcon, to: "/conversas" },
+  { label: "Conversas", icon: ChatIcon, to: "/conversas", badge: "unread" },
   { label: "Alertas", icon: BellIcon, to: "/alertas", badge: "alerts" },
   { label: "Agenda", icon: CalendarIcon, to: "/agenda", badge: "appointments" },
   { label: "Clientes", icon: UsersIcon, to: "/clientes" },
@@ -79,6 +79,21 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
     return () => clearInterval(id);
   }, [refreshAlertCount]);
 
+  // Mensagens das pessoas que ela ainda não viu, no número do menu. A tela
+  // Conversas chama `refreshUnreadCount` ao marcar uma conversa como lida.
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const refreshUnreadCount = useCallback(() => {
+    api
+      .listConversations(professional.slug)
+      .then((list) => setUnreadMessages(list.reduce((total, c) => total + (c.unread_count || 0), 0)))
+      .catch(() => {});
+  }, [professional.slug]);
+  useEffect(() => {
+    refreshUnreadCount();
+    const id = setInterval(refreshUnreadCount, 10000);
+    return () => clearInterval(id);
+  }, [refreshUnreadCount]);
+
   // Pedidos de horário aguardando confirmação, no número do menu. A tela
   // Agenda chama `refreshAppointmentCount` ao confirmar ou recusar.
   const [pendingAppointments, setPendingAppointments] = useState(0);
@@ -120,9 +135,10 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
       logout: onLogout,
       refreshAlertCount,
       refreshAppointmentCount,
+      refreshUnreadCount,
       onWhatsAppStatus,
     }),
-    [me, professional, openSimulator, onLogout, refreshAlertCount, refreshAppointmentCount, onWhatsAppStatus]
+    [me, professional, openSimulator, onLogout, refreshAlertCount, refreshAppointmentCount, refreshUnreadCount, onWhatsAppStatus]
   );
 
   const sidebar = (
@@ -155,6 +171,14 @@ export default function PanelLayout({ me, onLogout, startWithSimulator }) {
             >
               <Icon />
               <span className="flex-1">{label}</span>
+              {badge === "unread" && unreadMessages > 0 && (
+                <span
+                  className="min-w-6 rounded-full bg-primary px-1.5 py-0.5 text-center text-xs font-bold text-white"
+                  title="Mensagens ainda não lidas"
+                >
+                  {unreadMessages}
+                </span>
+              )}
               {badge === "appointments" && pendingAppointments > 0 && (
                 <span
                   className="min-w-6 rounded-full bg-warning-soft px-1.5 py-0.5 text-center text-xs font-bold text-[#92400e]"

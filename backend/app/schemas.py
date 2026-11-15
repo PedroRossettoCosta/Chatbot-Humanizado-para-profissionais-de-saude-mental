@@ -304,6 +304,9 @@ class _ConversationBase(BaseModel):
 
 class ConversationSummary(_ConversationBase):
     last_message: Optional[LastMessageOut] = None
+    # Mensagens do contato que chegaram depois da última vez que a
+    # profissional abriu a conversa.
+    unread_count: int = 0
 
 
 class ConversationOut(_ConversationBase):

@@ -148,6 +148,7 @@ Funcionando:
 - **Conversas** no computador e no celular: quem precisa da
   profissional primeiro ("Aguardando você", emergência, atenção),
   assumir, responder, devolver à SelenIA e a janela de 24h do WhatsApp.
+  O menu e cada conversa mostram quantas mensagens ainda não foram lidas.
 - **Alertas** com a trilha de auditoria (disparo, o que a SelenIA fez,
   e-mail, visto, revisado, liberação), sem editar nem apagar, e o
   número de alertas sem revisar no menu.

@@ -20,6 +20,7 @@ const buttonStyles = {
   primary: "border-0 bg-primary text-white hover:bg-primary-dark",
   soft: "border-0 bg-primary-soft text-primary hover:bg-[#dfeae1]",
   ghost: "border-0 bg-transparent text-slate hover:bg-canvas",
+  danger: "border-0 bg-danger text-white hover:opacity-90",
 };
 
 export function Button({ variant = "primary", className = "", ...props }) {

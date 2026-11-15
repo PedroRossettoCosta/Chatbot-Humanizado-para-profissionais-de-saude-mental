@@ -7,6 +7,7 @@ import logging
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
@@ -96,6 +97,7 @@ def list_conversations(
         .order_by(models.Message.conversation_id, models.Message.seq.desc())
         .distinct(models.Message.conversation_id)
     } if rows else {}
+    unread = _unread_counts(db, professional.id)
 
     summaries = []
     for conversation in rows:
@@ -111,11 +113,42 @@ def list_conversations(
                 )
                 if last
                 else None,
+                unread_count=unread.get(conversation.id, 0),
             )
         )
     summaries.sort(key=lambda s: s.last_message_at.timestamp() if s.last_message_at else 0, reverse=True)
     summaries.sort(key=lambda s: _PRIORITY[_priority(s)])
     return summaries
+
+
+def _unread_counts(db: Session, professional_id: str) -> dict[str, int]:
+    """Mensagens do contato depois da última leitura, por conversa."""
+    rows = (
+        db.query(models.Message.conversation_id, func.count())
+        .join(models.Conversation, models.Message.conversation_id == models.Conversation.id)
+        .filter(
+            models.Conversation.professional_id == professional_id,
+            models.Message.role == models.MessageRole.USER,
+            (models.Conversation.read_at.is_(None)) | (models.Message.created_at > models.Conversation.read_at),
+        )
+        .group_by(models.Message.conversation_id)
+        .all()
+    )
+    return dict(rows)
+
+
+@router.post("/{conversation_id}/read", status_code=204)
+def mark_read(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
+):
+    """A profissional está com a conversa aberta na tela: o que chegou até
+    agora deixa de contar como não lido."""
+    conversation = _get(db, conversation_id, user)
+    conversation.read_at = models._now()
+    db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/{conversation_id}", response_model=schemas.ConversationOut)
