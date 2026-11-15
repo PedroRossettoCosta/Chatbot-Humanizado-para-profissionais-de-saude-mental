@@ -7,18 +7,40 @@ import { loadGoogle } from "../google.js";
 
 // Tela de login (protótipo: login_e_acesso_maria). Um botão só: quem
 // entra pela primeira vez cai no cadastro; quem já tem conta, no painel.
+// Quando `DEMO_LOGIN_*` está configurado, aparece também o formulário de
+// e-mail e senha da conta de demonstração da banca.
 export default function Login({ onLogin }) {
   const buttonRef = useRef(null);
   const [error, setError] = useState("");
   const [notInvited, setNotInvited] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [passwordLogin, setPasswordLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handlePasswordSubmit(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setNotInvited(false);
+    try {
+      onLogin(await api.loginWithPassword(email, password));
+    } catch (err) {
+      if (err.status === 403) setNotInvited(true);
+      else setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
 
     async function setup() {
       try {
-        const { google_client_id: clientId } = await api.getAuthConfig();
+        const { google_client_id: clientId, password_login: hasPassword } = await api.getAuthConfig();
+        if (cancelled) return;
+        setPasswordLogin(Boolean(hasPassword));
         if (!clientId) {
           setError("O login com Google ainda não foi configurado (GOOGLE_CLIENT_ID).");
           return;
@@ -77,6 +99,43 @@ export default function Login({ onLogin }) {
 
             <div className="mt-8 flex min-h-11 justify-center" ref={buttonRef} aria-busy={busy} />
             <p className="mt-3 text-sm text-muted">Primeiro acesso? Entre com o Google e complete seu cadastro.</p>
+
+            {passwordLogin && (
+              <form onSubmit={handlePasswordSubmit} className="mx-auto mt-8 max-w-xs text-left">
+                <p className="mb-3 text-center text-sm text-muted">Conta de demonstração: entre com e-mail e senha.</p>
+                <label className="block text-sm font-medium text-slate" htmlFor="login-email">
+                  E-mail
+                </label>
+                <input
+                  id="login-email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                />
+                <label className="mt-3 block text-sm font-medium text-slate" htmlFor="login-password">
+                  Senha
+                </label>
+                <input
+                  id="login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="mt-4 w-full cursor-pointer rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
+                >
+                  Entrar
+                </button>
+              </form>
+            )}
 
             {busy && <p className="mt-4 text-sm text-muted">Entrando...</p>}
 

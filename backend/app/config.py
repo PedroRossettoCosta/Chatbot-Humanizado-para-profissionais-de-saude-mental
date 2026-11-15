@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     # ninguém entra (falha fechada): no MVP a SelenIA é só para convidados.
     allowed_emails: str = ""
     session_days: int = 7
+    # Login por e-mail e senha só para a conta de demonstração da banca
+    # (Pedro, 15/11/2026), para não depender da janela do Google na
+    # defesa. A conta precisa já existir (um login com o Google antes) e
+    # estar em `allowed_emails`. Vazio, ou senha com menos de 8
+    # caracteres = desligado. Segredo: só no `.env` / na Railway.
+    demo_login_email: str = ""
+    demo_login_password: str = ""
     # Ligar em produção (HTTPS). Em desenvolvimento o painel roda em
     # http://localhost e um cookie `Secure` não seria enviado.
     session_cookie_secure: bool = False

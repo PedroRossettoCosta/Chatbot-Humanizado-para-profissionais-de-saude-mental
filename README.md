@@ -136,6 +136,7 @@ Funcionando:
   SelenIA quando perguntam como pagar.
 - **Login com Google**, só para e-mails convidados, com todas as rotas
   de gestão protegidas e cada profissional vendo só os próprios dados.
+  A conta de demonstração da banca também entra por e-mail e senha.
 - **Cadastro em 7 etapas** no primeiro acesso, no visual do protótipo,
   com aceite das regras da SelenIA.
 - **Conectar o WhatsApp pelo painel** (etapa 6 e tela WhatsApp do menu): número, código

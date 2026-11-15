@@ -412,3 +412,10 @@ Detalhes em [Conversas](funcionalidades/conversas.md).
 **Resolvida em 15/11 (Pedro):** a tela WhatsApp ganha o botão vermelho
 **Remover número**, com confirmação na própria tela. Detalhes em
 [Conectar o WhatsApp](funcionalidades/conectar-whatsapp.md).
+
+
+**Decidida em 15/11 (Pedro):** a banca testa a SelenIA numa conta de
+demonstração (perfil fictício da Camila Nogueira, número +55 21
+98487-0438), que entra por **e-mail e senha** para não depender da
+janela do Google na defesa. O cadastro continua fechado por convite.
+Detalhes em [Login com Google](funcionalidades/login-com-google.md).

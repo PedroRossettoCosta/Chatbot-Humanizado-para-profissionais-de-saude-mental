@@ -37,8 +37,8 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
     credentials: "include",
   });
 
-  // No login com o Google, 401 é credencial recusada, não sessão perdida.
-  if (response.status === 401 && path !== "/auth/google") onSessionLost();
+  // Nas rotas de login, 401 é credencial recusada, não sessão perdida.
+  if (response.status === 401 && path !== "/auth/google" && path !== "/auth/password") onSessionLost();
 
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
@@ -54,6 +54,7 @@ async function request(path, { method = "GET", body, isFormData = false } = {}) 
 export const api = {
   getAuthConfig: () => request("/auth/config"),
   loginWithGoogle: (credential) => request("/auth/google", { method: "POST", body: { credential } }),
+  loginWithPassword: (email, password) => request("/auth/password", { method: "POST", body: { email, password } }),
   me: () => request("/auth/me"),
   logout: () => request("/auth/logout", { method: "POST" }),
   createProfessional: (payload) => request("/professionals", { method: "POST", body: payload }),

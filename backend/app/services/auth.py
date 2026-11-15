@@ -7,7 +7,9 @@ Como funciona:
 2. `verify_google_credential` confere a assinatura, se o token foi
    emitido para o nosso Client ID e se o e-mail foi verificado.
 3. Só entra quem está em `settings.allowed_emails` (MVP por convite).
-4. A sessão é um código aleatório num cookie `httpOnly`; o banco guarda
+4. Exceção: a conta de demonstração da banca também entra por e-mail e
+   senha (`login_with_password`), com os dois em variáveis de ambiente.
+5. A sessão é um código aleatório num cookie `httpOnly`; o banco guarda
    só o hash dele (`UserSession`).
 
 Toda rota de gestão depende de `current_user`, e toda ação sobre dados
@@ -22,6 +24,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from fastapi import Depends, HTTPException, Request
+from sqlalchemy import func
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
@@ -97,8 +100,38 @@ def login(db: Session, identity: GoogleIdentity) -> tuple[models.User, str]:
     user.email = identity.email
     user.name = identity.name
     user.picture_url = identity.picture_url
-    user.last_login_at = models._now()
+    return user, _open_session(db, user)
 
+
+def password_login_enabled() -> bool:
+    return bool(settings.demo_login_email.strip()) and len(settings.demo_login_password) >= 8
+
+
+def login_with_password(db: Session, email: str, password: str) -> tuple[models.User, str]:
+    """Login da conta de demonstração. Mesma sessão do login com o Google.
+
+    Só serve para uma conta, configurada no ambiente, e que já exista no
+    banco: não cria conta nem cadastro. A comparação é em tempo
+    constante, e a mensagem de erro não diz se errou o e-mail ou a senha.
+    """
+    if not password_login_enabled():
+        raise AuthError("Login com senha desligado.")
+    email = email.strip().lower()
+    expected = settings.demo_login_email.strip().lower()
+    email_ok = secrets.compare_digest(email.encode(), expected.encode())
+    password_ok = secrets.compare_digest(password.encode(), settings.demo_login_password.encode())
+    if not (email_ok and password_ok):
+        raise AuthError("E-mail ou senha incorretos.")
+    if not is_allowed(email):
+        raise NotInvited("Acesso ainda não liberado para este e-mail.")
+    user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
+    if user is None:
+        raise AuthError("Esta conta ainda não foi criada: entre uma vez com o Google.")
+    return user, _open_session(db, user)
+
+
+def _open_session(db: Session, user: models.User) -> str:
+    user.last_login_at = models._now()
     token = secrets.token_urlsafe(32)
     db.add(
         models.UserSession(
@@ -109,7 +142,7 @@ def login(db: Session, identity: GoogleIdentity) -> tuple[models.User, str]:
     )
     db.commit()
     db.refresh(user)
-    return user, token
+    return token
 
 
 def user_for_token(db: Session, token: str | None) -> models.User | None:

@@ -39,6 +39,8 @@ def google_fake(monkeypatch, db):
     monkeypatch.setattr(auth.id_token, "verify_oauth2_token", verify)
     monkeypatch.setattr(settings, "google_client_id", "client-id-de-teste")
     monkeypatch.setattr(settings, "allowed_emails", f"{CONVIDADA}, {OUTRA.upper()}")
+    monkeypatch.setattr(settings, "demo_login_email", "")
+    monkeypatch.setattr(settings, "demo_login_password", "")
     _cleanup(db)
     yield
     _cleanup(db)
@@ -76,7 +78,10 @@ def test_management_routes_require_login(anon_client):
 def test_public_routes_stay_open(anon_client):
     assert anon_client.get("/health").status_code == 200
     assert anon_client.get("/assistant/guidelines").status_code == 200
-    assert anon_client.get("/auth/config").json() == {"google_client_id": "client-id-de-teste"}
+    assert anon_client.get("/auth/config").json() == {
+        "google_client_id": "client-id-de-teste",
+        "password_login": False,
+    }
 
 
 def test_first_login_then_signup_then_logout(anon_client, db):
@@ -152,3 +157,67 @@ def test_login_attempts_are_limited(anon_client):
     for _ in range(10):
         anon_client.post("/auth/google", json={"credential": "invalido"})
     assert _login(anon_client).status_code == 429
+
+
+SENHA = "senha-de-demonstracao-123"
+
+
+@pytest.fixture
+def demo_login(monkeypatch):
+    monkeypatch.setattr(settings, "demo_login_email", CONVIDADA.upper())
+    monkeypatch.setattr(settings, "demo_login_password", SENHA)
+
+
+def _password_login(client, email=CONVIDADA, password=SENHA):
+    return client.post("/auth/password", json={"email": email, "password": password})
+
+
+def test_password_login_is_off_by_default(anon_client):
+    assert _login(anon_client).status_code == 200
+    anon_client.post("/auth/logout")
+    response = _password_login(anon_client)
+    assert response.status_code == 401
+    assert auth.SESSION_COOKIE not in response.cookies
+
+
+def test_short_password_keeps_password_login_off(anon_client, monkeypatch):
+    monkeypatch.setattr(settings, "demo_login_email", CONVIDADA)
+    monkeypatch.setattr(settings, "demo_login_password", "curta")
+    assert anon_client.get("/auth/config").json()["password_login"] is False
+    assert _password_login(anon_client, password="curta").status_code == 401
+
+
+def test_password_login_opens_the_same_account(anon_client, demo_login):
+    assert anon_client.get("/auth/config").json()["password_login"] is True
+    # Conta criada antes pelo Google, com cadastro.
+    assert _login(anon_client).status_code == 200
+    anon_client.post("/professionals", json={"name": "Dra. Márcia Teste Login"})
+    anon_client.post("/auth/logout")
+    assert anon_client.get("/auth/me").status_code == 401
+
+    response = _password_login(anon_client, email=f"  {CONVIDADA.upper()} ")
+    assert response.status_code == 200
+    assert response.cookies.get(auth.SESSION_COOKIE)
+    assert response.json()["professional"]["name"] == "Dra. Márcia Teste Login"
+    assert anon_client.get("/auth/me").json()["email"] == CONVIDADA
+
+
+def test_password_login_refuses_wrong_credentials(anon_client, demo_login):
+    assert _login(anon_client).status_code == 200
+    anon_client.post("/auth/logout")
+    wrong_password = _password_login(anon_client, password="outra-senha-qualquer")
+    wrong_email = _password_login(anon_client, email=OUTRA)
+    assert wrong_password.status_code == wrong_email.status_code == 401
+    # Mesma mensagem: não diz qual dos dois errou.
+    assert wrong_password.json() == wrong_email.json()
+    assert anon_client.get("/auth/me").status_code == 401
+
+
+def test_password_login_needs_existing_invited_account(anon_client, demo_login, monkeypatch):
+    # Conta ainda não criada pelo Google: não cria conta nova.
+    assert _password_login(anon_client).status_code == 401
+    assert _login(anon_client).status_code == 200
+    anon_client.post("/auth/logout")
+    # Tirada da lista de convidados: recusada mesmo com a senha certa.
+    monkeypatch.setattr(settings, "allowed_emails", OUTRA)
+    assert _password_login(anon_client).status_code == 403

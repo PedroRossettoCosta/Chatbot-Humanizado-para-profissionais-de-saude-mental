@@ -1,6 +1,6 @@
 # Login com Google
 
-> Situação: funcionando; falta o Client ID do Google no `.env`. Última atualização: 27/09/2026.
+> Situação: funcionando. Última atualização: 15/11/2026.
 
 ## O que é
 
@@ -41,6 +41,11 @@ Decisões:
 Se aparecer **"Acesso ainda não liberado"**, o e-mail não está na lista
 de convidados.
 
+**Conta de demonstração (banca):** quando o login por senha está ligado,
+a tela mostra também um formulário de e-mail e senha. Ele só aceita a
+conta configurada em `DEMO_LOGIN_EMAIL` e abre o mesmo painel que o
+login com o Google.
+
 ## Como funciona
 
 1. O botão do Google (script oficial, no navegador) devolve um token
@@ -64,9 +69,27 @@ de convidados.
    exceção é o próprio `POST /auth/google`, onde 401 é credencial
    recusada.
 
+### Login por senha da conta de demonstração
+
+Decisão do Pedro em 15/11/2026: a banca entra numa conta de
+demonstração (perfil fictício da Camila Nogueira) e não pode depender
+da janela do Google na defesa (app em modo de teste, aviso de app não
+verificado, conta errada aberta no navegador).
+
+1. `GET /auth/config` diz se o formulário aparece (`password_login`):
+   só com `DEMO_LOGIN_EMAIL` preenchido e `DEMO_LOGIN_PASSWORD` com pelo
+   menos 8 caracteres.
+2. `POST /auth/password` compara e-mail (sem diferenciar maiúsculas) e
+   senha em tempo constante, com a mesma mensagem para qualquer erro.
+3. O e-mail ainda precisa estar em `ALLOWED_EMAILS`, e a conta precisa
+   já existir no banco (criada por um login com o Google antes). O login
+   por senha não cria conta nem cadastro.
+4. Daí em diante é igual ao Google: mesma sessão, mesmo cookie, mesmo
+   limite de tentativas.
+
 Rotas abertas, sem login: `/health`, `/auth/config` (Client ID, que
-não é segredo), `/auth/google` e `/assistant/guidelines` (regras fixas
-do produto).
+não é segredo), `/auth/google`, `/auth/password` e
+`/assistant/guidelines` (regras fixas do produto).
 
 O painel chama a API em `/api`, no mesmo endereço dele (proxy do Vite
 em desenvolvimento, do servidor web em produção). Assim o cookie é do
@@ -89,6 +112,8 @@ Não se aplica: nenhum texto vai para o contato. As mensagens da tela
 | `ALLOWED_EMAILS` | E-mails convidados, separados por vírgula. Vazio = ninguém entra |
 | `SESSION_DAYS` | Validade da sessão. Padrão: 7 dias |
 | `SESSION_COOKIE_SECURE` | `true` em produção (HTTPS) |
+| `DEMO_LOGIN_EMAIL` | E-mail da conta de demonstração que pode entrar com senha. Vazio = formulário escondido |
+| `DEMO_LOGIN_PASSWORD` | Senha dessa conta, com 8 caracteres ou mais (segredo: só no `.env` e na Railway) |
 
 No Google Cloud (projeto da SelenIA), uma vez só: tela de consentimento
 externa em modo **teste**, com os e-mails convidados como usuários de
@@ -99,7 +124,8 @@ URI de redirecionamento nem Client secret.
 ## Segurança e LGPD
 
 - **Dados guardados da conta:** identificador do Google, e-mail, nome e
-  endereço da foto. Nenhuma senha.
+  endereço da foto. Nenhuma senha no banco: a única senha (a da conta
+  de demonstração) fica numa variável de ambiente, como as chaves.
 - **Sessão:** cookie `httpOnly` (o JavaScript não lê), `SameSite=Lax`
   (não vai em requisições de outros sites) e `Secure` em produção. O
   banco guarda o hash do código, então quem ler o banco não se passa
@@ -108,6 +134,11 @@ URI de redirecionamento nem Client secret.
   sessão aberta.
 - **Tentativas de login:** no máximo 10 a cada 5 minutos por IP.
 - **Isolamento:** cada rota confere se o dado é da profissional logada.
+- **Login por senha restrito:** uma conta só, desligado por padrão,
+  comparação em tempo constante, sem dizer se o erro foi no e-mail ou
+  na senha, e sujeito à lista de convidados e ao limite de tentativas.
+  Para encerrar o acesso da banca depois da defesa, basta apagar
+  `DEMO_LOGIN_PASSWORD` (ou tirar o e-mail de `ALLOWED_EMAILS`).
 
 ## Limitações e pendências
 
@@ -125,13 +156,17 @@ URI de redirecionamento nem Client secret.
   Para abrir a mais pessoas, o app precisa ser publicado no Google
   (sem verificação, porque só usa nome, e-mail e foto).
 - Sem papéis nem mais de um usuário por profissional.
+- O login por senha serve só para a demonstração: não tem troca de
+  senha, recuperação nem mais de uma conta.
 
 ## Como testar
 
 Automático: `tests/test_auth.py` (rotas fechadas sem login, primeiro
 acesso e cadastro, convite, token inválido, e-mail não verificado,
 perda de acesso ao sair da lista, isolamento entre profissionais,
-limite de tentativas). Os outros testes rodam com uma conta de teste
+limite de tentativas; login por senha desligado por padrão, senha
+curta, mesma conta e cadastro, credencial errada com a mesma mensagem,
+conta inexistente e e-mail fora da lista). Os outros testes rodam com uma conta de teste
 dona de tudo (`conftest.py`).
 
 Manual:
@@ -143,7 +178,10 @@ Manual:
 3. Clique em **Sair** e entre de novo: vai direto ao painel.
 4. Entre com um e-mail fora da lista: aparece "Acesso ainda não
    liberado".
-5. Com o painel aberto numa aba, abra `http://localhost:5173/?sair` em
+5. Com `DEMO_LOGIN_EMAIL` e `DEMO_LOGIN_PASSWORD` no `.env`, o
+   formulário aparece abaixo do botão do Google. Senha errada mostra
+   "E-mail ou senha incorretos."; a certa abre o painel da conta.
+6. Com o painel aberto numa aba, abra `http://localhost:5173/?sair` em
    outra. Volte à primeira e troque de tela: ela vai para o login, sem
    mostrar "Faça login para continuar." dentro do painel.
 
@@ -161,3 +199,6 @@ Manual:
 - 28/09/2026: com `?sair`, a tela de login aparece direto. Antes, em
   desenvolvimento, o painel aparecia por um instante e depois ia para o
   login (o React roda o efeito de abertura duas vezes).
+- 15/11/2026: login por e-mail e senha para a conta de demonstração da
+  banca (`DEMO_LOGIN_EMAIL` e `DEMO_LOGIN_PASSWORD`), desligado por
+  padrão.

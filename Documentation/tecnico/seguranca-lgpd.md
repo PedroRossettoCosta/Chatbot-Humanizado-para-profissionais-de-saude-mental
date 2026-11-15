@@ -264,6 +264,10 @@ vazaria para um terceiro.
 - **Isolamento:** cada rota confere se o dado é da profissional logada
   e responde 404 quando não é.
 - **Limite de tentativas de login:** 10 a cada 5 minutos por IP.
+- **Senha só da conta de demonstração** (desde 15/11/2026): uma conta,
+  senha em variável de ambiente (nunca no banco), comparação em tempo
+  constante, mesma lista de convidados e mesmo limite de tentativas.
+  Desligado por padrão; apagar `DEMO_LOGIN_PASSWORD` encerra o acesso.
 
 Dados pessoais da conta: e-mail, nome, foto (endereço) e o
 identificador do Google.

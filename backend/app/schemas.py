@@ -357,6 +357,8 @@ class ProfessionalMessage(BaseModel):
 
 class AuthConfig(BaseModel):
     google_client_id: str
+    # Mostra o formulário de e-mail e senha (conta de demonstração).
+    password_login: bool = False
 
 
 class CalendarStatus(BaseModel):
@@ -415,6 +417,11 @@ class AppointmentOut(BaseModel):
     replaces_label: Optional[str] = None
     # Espera decisão da profissional: pedido provisório ou cancelamento pedido.
     awaiting_decision: bool = False
+
+
+class PasswordLogin(BaseModel):
+    email: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=1, max_length=256)
 
 
 class GoogleLogin(BaseModel):

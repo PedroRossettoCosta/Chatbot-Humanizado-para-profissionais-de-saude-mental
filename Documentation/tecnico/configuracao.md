@@ -40,6 +40,8 @@ Variáveis de ambiente e as integrações externas (Google, Meta).
 | `ALLOWED_EMAILS` | para o login | E-mails convidados, separados por vírgula. Vazio = ninguém entra |
 | `SESSION_DAYS` | não | Validade da sessão do painel. Padrão: 7 |
 | `SESSION_COOKIE_SECURE` | em produção | `true` com HTTPS. Padrão: `false` (desenvolvimento em http) |
+| `DEMO_LOGIN_EMAIL` | não | Conta de demonstração da banca que pode entrar com senha ([login](../funcionalidades/login-com-google.md)). Vazio = desligado |
+| `DEMO_LOGIN_PASSWORD` | não | Senha dessa conta, com 8 caracteres ou mais. Segredo |
 
 Para declarar uma variável nova, adicione o campo em
 `app/config.py` **e** a linha correspondente no `.env.example`. Se a
