@@ -286,7 +286,11 @@ def test_approve_confirms_the_event_and_tells_the_person(client, db, professiona
     assert sent.endswith("é só entrar por este link: https://meet.google.com/abc-defg-hij")
     assert body["meet_link"] == "https://meet.google.com/abc-defg-hij"
     # A SelenIA sabe o link se a pessoa perguntar depois.
-    assert "https://meet.google.com/abc-defg-hij" in appointments.pending_note(db, conversation)
+    note = appointments.pending_note(db, conversation)
+    assert "https://meet.google.com/abc-defg-hij" in note
+    # "Marcar" outro horário num dia com sessão confirmada é troca, pela
+    # ferramenta de remarcação, e não aviso à profissional (teste de 15/11).
+    assert "é uma troca" in note and "use pedir_remarcacao (não avisar_profissional)" in note
 
     assert client.post(f"/calendar/appointments/{booking.appointment_id}/reject").status_code == 409
 

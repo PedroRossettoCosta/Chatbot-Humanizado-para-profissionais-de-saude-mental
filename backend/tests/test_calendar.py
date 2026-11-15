@@ -286,3 +286,11 @@ def test_add_meet_reads_the_event_again_while_the_room_is_pending(monkeypatch):
     answers = [pending, ready]
     monkeypatch.setattr(calendar, "_events_call", lambda c, method, url, body=None: answers.pop(0))
     assert calendar.add_meet(None, "evento-1", "selenia-1") == "https://meet.google.com/xyz-abcd-efg"
+
+
+def test_booking_prompt_treats_marking_a_listed_time_as_a_reschedule():
+    # Teste real de 15/11/2026: "quero marcar para segunda às 12h", com
+    # sessão confirmada às 11h, virou aviso à profissional em vez de troca.
+    text = llm.AGENDA_BOOKING.format(name="Ana", max_pending=4)
+    assert 'mesmo que a pessoa diga "marcar"' in text
+    assert "nunca use avisar_profissional para isso" in text

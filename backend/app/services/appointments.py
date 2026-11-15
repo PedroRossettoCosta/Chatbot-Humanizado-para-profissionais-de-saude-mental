@@ -191,7 +191,10 @@ def pending_note(db: Session, conversation: models.Conversation, now: datetime |
     return (
         "Esta pessoa já tem:\n" + "\n".join(lines) + "\n"
         "Ela pode ter uma sessão por dia: um pedido novo num dia que ainda aguarda confirmação troca o "
-        "horário daquele dia; num dia com sessão confirmada, não dá para marcar outra. Ela pode ter no "
+        "horário daquele dia; num dia com sessão confirmada, não dá para marcar outra. Se ela pedir para "
+        "marcar outro horário livre num dia em que já tem sessão confirmada, é uma troca: pergunte se quer "
+        "trocar a sessão daquele dia pelo horário novo e, com o sim, use pedir_remarcacao (não "
+        "avisar_profissional). Ela pode ter no "
         f"máximo {settings.max_pending_requests} pedidos aguardando confirmação ao mesmo tempo."
     )
 

@@ -67,6 +67,12 @@ procurar atendimento, e a SelenIA não sabia responder.
   a antiga continua. Cancelar uma sessão confirmada só vale quando ela
   confirmar o cancelamento. Um pedido que ainda não foi confirmado a
   pessoa pode desfazer na hora, porque nada estava marcado.
+- **"Marcar" outro horário num dia com sessão confirmada é troca
+  (15/11/2026):** no teste da conta de demonstração, "quero marcar para
+  segunda às 12h", com sessão confirmada às 11h, virou aviso à
+  profissional, e nenhum pedido apareceu na Agenda. Agora o prompt diz
+  que troca para um horário da lista é sempre `pedir_remarcacao`: a
+  SelenIA pergunta se a pessoa quer trocar e, com o sim, faz o pedido.
 - **No máximo 4 pedidos aguardando confirmação por pessoa (Pedro,
   12/10/2026):** sem teto, uma pessoa podia pedir um horário em cada dia
   e segurar a agenda por 24h. Ver
@@ -380,3 +386,6 @@ Manual:
   novo, e o cancelamento avisa que o link não vale mais. Botão **Abrir
   Google Meet** no painel. Campo `appointments.meet_link` (migração
   `d4a8c2e7f513`).
+- 15/11/2026: pedir outro horário da lista num dia com sessão
+  confirmada vira pedido de troca (`pedir_remarcacao`), não aviso à
+  profissional, mesmo quando a pessoa diz "marcar".
