@@ -12,6 +12,7 @@ Sem `--apagar`, só mostra o que seria apagado.
 Uso (de dentro de backend/):
     python scripts/reset_demo.py camila            # só lista
     python scripts/reset_demo.py camila --apagar   # apaga de verdade
+    python scripts/reset_demo.py camila --contato pedro --apagar   # só os contatos com "pedro" no nome
 
 O primeiro argumento é parte do nome ou do slug da profissional; se
 corresponder a mais de uma, o script para sem apagar nada.
@@ -33,6 +34,7 @@ from app.services import calendar  # noqa: E402
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("profissional", help="parte do nome ou do slug")
+    parser.add_argument("--contato", help="só os contatos com este trecho no nome")
     parser.add_argument("--apagar", action="store_true", help="apaga de verdade (sem isto, só lista)")
     args = parser.parse_args()
 
@@ -50,7 +52,12 @@ def main():
         prof = found[0]
 
         contacts = db.query(models.Contact).filter_by(professional_id=prof.id).all()
-        conversations = db.query(models.Conversation).filter_by(professional_id=prof.id).all()
+        if args.contato:
+            # O nome é cifrado no banco, então o filtro é feito aqui.
+            wanted = args.contato.casefold()
+            contacts = [c for c in contacts if wanted in (c.display_name or "").casefold()]
+        contact_ids = [c.id for c in contacts]
+        conversations = db.query(models.Conversation).filter(models.Conversation.contact_id.in_(contact_ids)).all()
         conv_ids = [c.id for c in conversations]
         n_messages = db.query(models.Message).filter(models.Message.conversation_id.in_(conv_ids)).count()
         n_alerts = db.query(models.SafetyAlert).filter(models.SafetyAlert.conversation_id.in_(conv_ids)).count()
