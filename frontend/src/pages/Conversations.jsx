@@ -13,6 +13,7 @@ import {
   SearchIcon,
   SendIcon,
 } from "../components/icons.jsx";
+import { SPLIT_GRID, Splitter, useListWidth } from "../components/ResizableSplit.jsx";
 import { Button, ErrorBox, Tag, dayKey, dayLabel, formatTime as time, shortWhen } from "../components/ui.jsx";
 import { usePanel } from "../panel/PanelContext.jsx";
 
@@ -88,97 +89,6 @@ function Avatar({ conversation, size = "h-11 w-11" }) {
   );
 }
 
-// Largura da lista no computador, ajustável pelo divisor e lembrada neste
-// navegador. Em tela dividida, a conversa aberta fica com o resto.
-const LIST_WIDTH_KEY = "selenia.conversationListWidth";
-const LIST_WIDTH_DEFAULT = 400;
-const LIST_WIDTH_MIN = 240;
-const CONVERSATION_MIN = 320;
-const SPLITTER_SPACE = 24; // divisor + espaçamento entre as colunas
-
-function useListWidth() {
-  const gridRef = useRef(null);
-  const [width, setWidth] = useState(() => {
-    try {
-      const saved = Number(localStorage.getItem(LIST_WIDTH_KEY));
-      return saved >= LIST_WIDTH_MIN ? saved : LIST_WIDTH_DEFAULT;
-    } catch {
-      return LIST_WIDTH_DEFAULT;
-    }
-  });
-
-  const clamp = useCallback((value) => {
-    const total = gridRef.current?.clientWidth || window.innerWidth;
-    const max = Math.max(LIST_WIDTH_MIN, total - CONVERSATION_MIN - SPLITTER_SPACE);
-    return Math.round(Math.min(Math.max(value, LIST_WIDTH_MIN), max));
-  }, []);
-
-  const save = useCallback((value) => {
-    try {
-      localStorage.setItem(LIST_WIDTH_KEY, String(value));
-    } catch {
-      // Sem armazenamento (aba anônima, por exemplo): vale só nesta visita.
-    }
-  }, []);
-
-  // Janela encolheu (tela dividida): a conversa não pode ficar espremida.
-  useEffect(() => {
-    const fit = () => setWidth((w) => clamp(w));
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [clamp]);
-
-  const startDrag = useCallback(
-    (event) => {
-      event.preventDefault();
-      const handle = event.currentTarget;
-      handle.setPointerCapture(event.pointerId);
-      const left = gridRef.current.getBoundingClientRect().left;
-      let last = null;
-      const move = (e) => {
-        last = clamp(e.clientX - left);
-        setWidth(last);
-      };
-      const end = () => {
-        handle.removeEventListener("pointermove", move);
-        handle.removeEventListener("pointerup", end);
-        handle.removeEventListener("pointercancel", end);
-        document.body.style.userSelect = "";
-        if (last !== null) save(last);
-      };
-      document.body.style.userSelect = "none";
-      handle.addEventListener("pointermove", move);
-      handle.addEventListener("pointerup", end);
-      handle.addEventListener("pointercancel", end);
-    },
-    [clamp, save]
-  );
-
-  const onSplitterKey = useCallback(
-    (event) => {
-      const step = event.shiftKey ? 80 : 20;
-      const delta = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
-      if (!delta) return;
-      event.preventDefault();
-      setWidth((w) => {
-        const next = clamp(w + delta);
-        save(next);
-        return next;
-      });
-    },
-    [clamp, save]
-  );
-
-  const resetWidth = useCallback(() => {
-    const next = clamp(LIST_WIDTH_DEFAULT);
-    setWidth(next);
-    save(next);
-  }, [clamp, save]);
-
-  return { gridRef, listWidth: width, startDrag, onSplitterKey, resetWidth };
-}
-
 // Conversas (protótipo: conversas_inbox_maria; no celular, M1 a M3). No
 // computador, lista e conversa lado a lado; no celular, uma de cada vez.
 export default function Conversations() {
@@ -215,13 +125,13 @@ export default function Conversations() {
     );
   }, [list, filter, search]);
 
-  const { gridRef, listWidth, startDrag, onSplitterKey, resetWidth } = useListWidth();
+  const { gridRef, gridStyle, splitterProps } = useListWidth("selenia.conversationListWidth", 400);
 
   return (
     <div
       ref={gridRef}
-      style={{ "--list-w": `${listWidth}px` }}
-      className="mx-auto grid h-[calc(100dvh-8.5rem)] min-h-[480px] max-w-7xl gap-6 lg:grid-cols-[var(--list-w)_auto_1fr] lg:gap-x-1 [&>*]:min-w-0"
+      style={gridStyle}
+      className={`mx-auto grid h-[calc(100dvh-8.5rem)] min-h-[480px] max-w-7xl gap-6 ${SPLIT_GRID} [&>*]:min-w-0`}
     >
       {/* Lista */}
       <section className={`min-h-0 flex-col ${conversationId ? "hidden lg:flex" : "flex"}`}>
@@ -325,21 +235,7 @@ export default function Conversations() {
         </ul>
       </section>
 
-      {/* Divisor: arrastar muda a largura da lista; duplo clique volta ao padrão. */}
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Ajustar a largura da lista de conversas"
-        aria-valuenow={listWidth}
-        tabIndex={0}
-        title="Arraste para ajustar (duplo clique volta ao padrão)"
-        onPointerDown={startDrag}
-        onKeyDown={onSplitterKey}
-        onDoubleClick={resetWidth}
-        className="group hidden w-4 cursor-col-resize touch-none items-center justify-center outline-none lg:flex"
-      >
-        <span className="h-12 w-1 rounded-full bg-line transition-colors group-hover:bg-primary group-focus-visible:bg-primary" />
-      </div>
+      <Splitter label="Ajustar a largura da lista de conversas" {...splitterProps} />
 
       {/* Conversa aberta */}
       <section className={`min-h-0 ${conversationId ? "flex" : "hidden lg:flex"}`}>

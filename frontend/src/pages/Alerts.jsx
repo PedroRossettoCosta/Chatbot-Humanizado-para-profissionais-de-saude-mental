@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api } from "../api.js";
 import { AlertIcon, ArrowLeftIcon, BellIcon, ChatIcon, LockIcon } from "../components/icons.jsx";
+import { SPLIT_GRID, Splitter, useListWidth } from "../components/ResizableSplit.jsx";
 import { Button, ErrorBox, Tag, formatDateTime, formatTime, shortWhen } from "../components/ui.jsx";
 import { usePanel } from "../panel/PanelContext.jsx";
 
@@ -71,8 +72,14 @@ export default function Alerts() {
   const visible = useMemo(() => (list || []).filter(FILTERS.find((f) => f.key === filter).test), [list, filter]);
   const unreviewed = (list || []).filter((a) => a.status === "new").length;
 
+  const { gridRef, gridStyle, splitterProps } = useListWidth("selenia.alertListWidth", 440);
+
   return (
-    <div className="mx-auto grid h-[calc(100dvh-8.5rem)] min-h-[480px] max-w-7xl gap-6 lg:grid-cols-[440px_1fr] [&>*]:min-w-0">
+    <div
+      ref={gridRef}
+      style={gridStyle}
+      className={`mx-auto grid h-[calc(100dvh-8.5rem)] min-h-[480px] max-w-7xl gap-6 ${SPLIT_GRID} [&>*]:min-w-0`}
+    >
       {/* Lista */}
       <section className={`min-h-0 flex-col ${alertId ? "hidden lg:flex" : "flex"}`}>
         <div className="rounded-3xl border border-line bg-white p-4">
@@ -150,6 +157,8 @@ export default function Alerts() {
           ))}
         </ul>
       </section>
+
+      <Splitter label="Ajustar a largura da lista de alertas" {...splitterProps} />
 
       {/* Alerta aberto */}
       <section className={`min-h-0 ${alertId ? "flex" : "hidden lg:flex"}`}>
