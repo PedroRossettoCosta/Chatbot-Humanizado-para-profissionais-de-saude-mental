@@ -208,7 +208,16 @@ def _triage(
         usage.record(db, conversation, calls)
     if risk:
         result.triage_level = risk.level
-    if risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK):
+    # Já em espera de emergência, o episódio está aberto e a profissional já
+    # foi avisada: a mensagem nova ainda recebe o texto de emergência, mas
+    # não abre outro alerta nem manda outro e-mail. Com o histórico de
+    # risco, o modelo marcava emergência em todo "pode me ajudar?" (caso
+    # real, 19/11/2026, decisão do Pedro). Depois que ela libera, um sinal
+    # novo volta a abrir alerta normalmente.
+    on_hold = conversation.state == ConversationState.EMERGENCY_HOLD
+    if risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK) and on_hold:
+        pass
+    elif risk and risk.level in (AlertLevel.EMERGENCY, AlertLevel.POSSIBLE_RISK):
         alert = conversations.raise_safety_alert(db, conversation, message, risk.level, risk.trigger, risk.excerpt)
         result.alert_id = alert.id
     elif risk and risk.level == AlertLevel.INTENSE_SUFFERING:

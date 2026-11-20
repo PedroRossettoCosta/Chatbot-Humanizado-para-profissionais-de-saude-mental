@@ -134,6 +134,22 @@ def test_released_emergency_is_not_triggered_again_by_a_greeting(db, client, pro
     assert len(db.get(models.Conversation, first["conversation_id"]).alerts) == 1
 
 
+def test_message_during_emergency_hold_repeats_the_text_without_a_new_alert(db, client, professional, monkeypatch):
+    # Caso real (19/11/2026): na espera, o modelo via o risco no histórico e
+    # cada "pode me ajudar?" abria outro alerta e outro e-mail.
+    _model_reads_context(monkeypatch)
+    first = _send(client, "to pensando em me matar")
+    assert first["state"] == ConversationState.EMERGENCY_HOLD
+
+    again = _send(client, "pode me ajudar?", first["session_id"])
+
+    assert again["reply"] == triage.EMERGENCY_MESSAGE
+    assert again["state"] == ConversationState.EMERGENCY_HOLD
+    assert again["alert_created"] is False
+    db.expire_all()
+    assert len(db.get(models.Conversation, first["conversation_id"]).alerts) == 1
+
+
 def test_new_broken_signal_after_release_still_triggers(db, client, professional):
     first = _send(client, "quero me matar")
     assert first["state"] == ConversationState.EMERGENCY_HOLD
