@@ -1,5 +1,9 @@
 # SelenIA
 
+> [!IMPORTANT]
+> **Banca avaliadora:** 👉 [**Clique aqui para ver como acessar e testar a SelenIA**](#acesso-para-a-banca-avaliadora)
+> (link do painel, login da conta de demonstração e número do WhatsApp).
+
 Assistente virtual humanizado para o atendimento inicial de
 profissionais autônomos de saúde mental (psicólogas, psicanalistas).
 
@@ -16,6 +20,136 @@ risco à vida e encaminha imediatamente aos serviços de emergência.
 Trabalho de Conclusão de Curso — Engenharia da Computação, Ibmec Barra
 da Tijuca. Autor: Pedro Henrique Rossetto Costa. Orientador: Thiago
 Souza.
+
+---
+
+## Acesso para a banca avaliadora
+
+> **Ambiente de teste.** A conta abaixo é de uma profissional fictícia,
+> criada só para a demonstração. Use apenas dados fictícios: nunca
+> informações reais de saúde, nem nomes ou telefones de outras pessoas.
+> As mensagens enviadas pelo WhatsApp ficam registradas no painel da
+> conta de demonstração.
+
+| | |
+|---|---|
+| Painel | https://chatbot-humanizado-para-profissiona.vercel.app |
+| Profissional fictícia | Camila Nogueira |
+| E-mail de acesso ao painel | `selenia.demo.camila@gmail.com` |
+| Senha | `123selenIA!` |
+| WhatsApp da SelenIA (número da Camila) | +55 21 98487-0438 |
+
+### Como entrar no painel
+
+1. Abra o link do painel.
+2. Não use o botão do Google. Logo abaixo dele fica o quadro
+   "Conta de demonstração: entre com e-mail e senha."
+3. Preencha os campos **E-mail** e **Senha** com os dados da tabela.
+4. Clique em **Entrar**. O painel abre na tela Conversas.
+
+Se a senha for digitada errado, aparece "E-mail ou senha incorretos.".
+Depois de muitas tentativas seguidas, o login bloqueia por um tempo:
+aguarde 5 minutos e tente de novo.
+
+### O que dá para ver no painel
+
+O menu fica à esquerda (no celular, no botão de menu no topo):
+
+- **Conversas**: todas as conversas, do WhatsApp e de teste, com o que a
+  SelenIA e a profissional responderam.
+- **Alertas**: os casos de risco que a triagem detectou, com tudo o que
+  aconteceu depois de cada um.
+- **Agenda**: o calendário, os pedidos de horário feitos pela SelenIA e
+  o horário de atendimento.
+- **Clientes**: quem já tem sessão confirmada com a profissional.
+- **Perfil do atendimento**: como a SelenIA apresenta a profissional, o
+  tom de voz e os limites do atendimento.
+- **WhatsApp**: o número em que a SelenIA recebe e responde as
+  mensagens.
+- **Base de conhecimento**: os documentos da profissional que a
+  SelenIA usa para responder dúvidas.
+- **Testar o chat**: uma conversa de teste dentro do painel (veja
+  "Se o WhatsApp não funcionar").
+
+### Como testar pelo WhatsApp
+
+1. Do seu próprio WhatsApp, mande uma mensagem para +55 21 98487-0438.
+2. A primeira resposta é sempre um aviso fixo: quem responde é a
+   SelenIA, uma assistente virtual com inteligência artificial, que não
+   é uma pessoa e não substitui atendimento clínico.
+3. As respostas chegam alguns segundos depois, porque a SelenIA espera
+   a pessoa terminar de escrever para responder tudo de uma vez.
+4. Abra **Conversas** no painel para acompanhar a mesma conversa.
+
+Sugestões de teste:
+
+**a) Dúvida sobre o atendimento.** Pergunte o valor da sessão ou como
+funciona o atendimento. A SelenIA responde com base nos documentos e no
+perfil da Camila.
+
+**b) Marcar um horário.** Peça para marcar uma sessão. A SelenIA oferece
+horários livres da agenda e, quando você escolhe um, cria um
+pré-agendamento. Nada é confirmado sem a profissional. No painel:
+
+1. Abra **Agenda** e a aba **Pedidos de horário**. O pedido aparece com
+   a etiqueta "Aguardando você".
+2. Clique em **✓ Confirmar horário** (ou em **Recusar**).
+3. Depois da confirmação, a pessoa recebe no WhatsApp a mensagem fixa
+   de confirmação, com o link do Google Meet.
+
+**c) Falar com a profissional ou pedir desconto.** A SelenIA não decide
+esses casos. Ela avisa que a profissional vai responder (no caso do
+desconto, que vai perguntar a ela) e vira um pedido para a
+profissional. Em **Conversas**, a conversa aparece com a etiqueta
+"Aguardando você", e a profissional responde por ali.
+
+**d) Teste de segurança.** Escreva uma mensagem fictícia que indique
+risco à vida. O que acontece:
+
+- a pessoa recebe a mensagem fixa de emergência (SAMU 192, CVV 188 e
+  outros contatos);
+- aparece um alerta em **Alertas** no painel;
+- a SelenIA fica em silêncio nessa conversa até a profissional revisar
+  o alerta e liberá-la.
+
+Para revisar e liberar:
+
+1. Abra **Alertas** e clique no alerta (marcado como "Novo").
+2. Leia o que aconteceu e clique em **Marcar como revisado**.
+3. Clique em **Liberar a SelenIA para responder** e confirme em **Sim**.
+
+A partir daí a SelenIA volta a responder nessa conversa.
+
+Observações:
+
+- A SelenIA só lê texto. Áudio, foto ou documento recebem um aviso
+  pedindo para escrever.
+- O alerta também gera um e-mail de aviso, que vai para a caixa da
+  conta de demonstração. A banca vê o mesmo alerta pelo painel.
+
+### Se o WhatsApp não funcionar
+
+Use **Testar o chat**, no menu do painel. Abre a janela "Testar a
+SelenIA", onde você escreve como se fosse uma pessoa procurando
+atendimento. A mensagem passa pelo mesmo caminho do WhatsApp (triagem,
+resposta, alertas e pedidos de horário), mas nada é enviado ao WhatsApp.
+Cada resposta mostra etiquetas com o resultado da triagem e os
+documentos usados. As conversas de teste aparecem em Conversas e em
+Alertas com a etiqueta "Teste".
+
+### Assumir a conversa
+
+A profissional pode assumir uma conversa a qualquer momento:
+
+1. Em **Conversas**, abra a conversa e clique em **Assumir conversa**,
+   no topo, à direita. A SelenIA para de responder, e o que a
+   profissional escrever no campo de baixo vai para a pessoa.
+2. Para devolver, clique em **Devolver à SelenIA**, no mesmo lugar.
+
+Na janela "Testar a SelenIA", os botões equivalentes são **Assumir esta
+conversa** e **Devolver para a SelenIA**.
+
+Dúvidas: pedro.rossetto.costa@gmail.com
 
 ---
 
