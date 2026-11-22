@@ -30,11 +30,14 @@ na entrevista de protocolo com a profissional:
 ### Política de privacidade
 
 O texto público está em [politica-de-privacidade.md](../politica-de-privacidade.md)
-e publicado num repositório público separado
-(<https://github.com/PedroRossettoCosta/SelenIA-Privacidade/blob/main/politica-de-privacidade.md>),
-porque este repositório é privado e tem materiais da Marília. É o link
-cadastrado na Meta para publicar o app. Mudou o tratamento de dados?
-Atualize os dois arquivos juntos.
+e publicado num repositório público separado, só com a política
+(<https://github.com/PedroRossettoCosta/MarIA-Privacidade/blob/main/politica-de-privacidade.md>).
+O repositório manteve o nome da época da MarIA porque esse é o link
+cadastrado na Meta para publicar o app (27/09/2026). A troca de nome de
+13/10 tinha mudado o endereço aqui para `SelenIA-Privacidade`, que não
+existe; corrigido em 22/11/2026. Mudou o tratamento de dados? Atualize
+os dois arquivos juntos (última atualização: 22/11/2026, com Brevo,
+Railway, Vercel, triagem na Anthropic e retenção).
 
 ## 2. Criptografia em repouso
 

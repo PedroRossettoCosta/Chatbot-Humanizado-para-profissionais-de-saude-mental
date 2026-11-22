@@ -1,8 +1,9 @@
 # Política de Privacidade da SelenIA
 
-Vigente desde 27 de setembro de 2026.
+Vigente desde 27 de setembro de 2026; atualizada em 22 de novembro de 2026.
 
-A SelenIA é uma assistente virtual de atendimento inicial para
+A SelenIA (chamada MarIA até outubro de 2026) é uma assistente virtual
+de atendimento inicial para
 profissionais de saúde mental (psicólogos, psicoterapeutas e
 psicanalistas). Ela responde, pelo WhatsApp, dúvidas de quem procura a
 profissional (como funciona o atendimento, valores, horários) e avisa a
@@ -85,9 +86,11 @@ Só com os fornecedores necessários para a SelenIA funcionar:
 | Fornecedor | Para quê |
 |---|---|
 | **Meta (WhatsApp)** | Entregar as mensagens entre a pessoa e a SelenIA |
-| **Anthropic (Claude)** | Processar o texto das mensagens para gerar as respostas e para a triagem de segurança. Pelos termos comerciais da Anthropic, os dados enviados pela API não são usados para treinar os modelos |
+| **Anthropic (Claude)** | Processar o texto das mensagens para gerar as respostas e para a triagem de segurança. A triagem recebe trechos de quase toda mensagem de texto (as mensagens mais recentes da conversa), não só das que recebem resposta. A Anthropic guarda essas chamadas por até 30 dias, conforme a central de privacidade dela. Pelos termos comerciais da Anthropic, os dados enviados pela API não são usados para treinar os modelos |
 | **Google** | Login das profissionais no painel e, quando ativada, a agenda da profissional |
-| **Serviço de e-mail (Google)** | Avisar a profissional de alertas e pedidos. **Esses e-mails não levam o conteúdo da conversa** |
+| **Brevo** | Enviar os e-mails de aviso à profissional (alertas e pedidos). **Esses e-mails não levam o conteúdo da conversa.** Os dados ficam na União Europeia |
+| **Railway** | Servidor e banco de dados da SelenIA, nos Estados Unidos |
+| **Vercel** | Painel da profissional, que repassa as requisições ao servidor |
 
 Alguns desses fornecedores processam dados fora do Brasil (por
 exemplo, nos Estados Unidos). Essa transferência é feita para cumprir a
@@ -112,8 +115,12 @@ Dados também podem ser fornecidos a autoridades quando a lei obrigar.
 ## 7. Por quanto tempo guardamos
 
 Conversas sem nenhuma mensagem nova há **90 dias** são excluídas, junto
-com as mensagens e os registros de segurança ligados a elas. A conta da
-profissional é mantida enquanto ela usar a SelenIA e excluída a pedido.
+com as mensagens e os registros de segurança (alertas) ligados a elas.
+Permanecem o cadastro do contato (número de telefone e nome do perfil do
+WhatsApp, guardados criptografados) e os eventos criados na agenda da
+profissional. Nesta fase de protótipo, essa exclusão é feita
+manualmente, e não de forma automática. A conta da profissional é
+mantida enquanto ela usar a SelenIA e excluída a pedido.
 
 ## 8. Seus direitos e como pedir a exclusão dos seus dados
 
