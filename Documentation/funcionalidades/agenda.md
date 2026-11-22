@@ -131,6 +131,27 @@ conexão é recusada; sem a de eventos, a SelenIA só consulta. Ao
 reconectar a mesma conta, se o Google não mandar um acesso novo, o
 anterior continua valendo com as permissões novas.
 
+**Sessões e pedidos da pessoa em toda resposta** (desde 22/11/2026).
+Antes de cada resposta, o pipeline lê do banco as sessões e os pedidos de
+pé da pessoa (`appointments.pending_note`) e põe no fim do prompt, na
+seção "SESSÕES E PEDIDOS DESTA PESSOA AGORA" (`llm.SESSIONS_NOW`), em
+qualquer assunto, não só quando a conversa é sobre horário. A lista é só
+para consulta: a SelenIA não fala das sessões por conta própria, só
+quando a pessoa pergunta ou fala de sessão, horário, remarcação ou
+cancelamento (pedido do Pedro, 22/11/2026). A seção diz
+que ela vale mais do que o que foi dito antes na conversa, inclusive pela
+própria SelenIA, e que a situação de um pedido (aguardando confirmação,
+confirmada, troca ou cancelamento pedido) só pode ser dita com base nela,
+nunca de memória. Sem nada de pé, vai "Nenhuma sessão nem pedido de pé
+registrado no sistema", com o aviso de que isso não quer dizer que a
+pessoa não tenha sessão combinada direto com a profissional. É só uma
+consulta ao banco, sem chamar o Google. Motivo (caso real de 21/11/2026):
+num "oi", a SelenIA disse que a sessão de 23/11 ainda aguardava
+confirmação, mas ela tinha sido confirmada em 20/11; num "oi" a situação
+não ia para o prompt e ela leu de memória as próprias mensagens antigas
+("o pedido foi registrado"). Em assunto de horário, "HORÁRIOS DE AGORA"
+continua trazendo os horários livres, sem repetir as sessões da pessoa.
+
 **Horários livres** (`services/calendar.free_slots`):
 
 - todo início de meia em meia hora (10:00, 10:30, ...) dentro do
@@ -389,3 +410,7 @@ Manual:
 - 15/11/2026: pedir outro horário da lista num dia com sessão
   confirmada vira pedido de troca (`pedir_remarcacao`), não aviso à
   profissional, mesmo quando a pessoa diz "marcar".
+- 22/11/2026: as sessões e os pedidos da pessoa vão em toda resposta,
+  lidos do banco, na seção "SESSÕES E PEDIDOS DESTA PESSOA AGORA"; a
+  SelenIA só diz a situação de um pedido com base nela (caso de 21/11:
+  disse "aguardando confirmação" de uma sessão já confirmada).

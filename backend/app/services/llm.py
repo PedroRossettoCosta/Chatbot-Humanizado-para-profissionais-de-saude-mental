@@ -90,7 +90,7 @@ TOM DE VOZ
 {context_header}
 Use as informações abaixo, extraídas dos documentos de {name}, para responder com precisão. Se o contexto não cobrir a pergunta, diga que não tem certeza.
 
-{context}{in_session}{agenda_now}
+{context}{in_session}{sessions_now}{agenda_now}
 """
 
 # Tudo antes deste título é igual de uma mensagem para outra da mesma
@@ -124,6 +124,20 @@ Consulta da agenda feita para esta mensagem, já com as condições que {name} d
 <agenda_agora>
 {agenda}
 </agenda_agora>"""
+
+# Sessões e pedidos desta pessoa, lidos do banco a cada mensagem
+# (`appointments.pending_note`), em qualquer assunto. Fica no fim, fora do
+# cache. Decisão do Pedro em 22/11/2026: num "oi", a SelenIA disse que uma
+# sessão confirmada dois dias antes ainda aguardava confirmação, lendo de
+# memória as próprias mensagens antigas ("o pedido foi registrado").
+SESSIONS_NOW = """
+
+SESSÕES E PEDIDOS DESTA PESSOA AGORA
+Situação lida do sistema para esta mensagem, só para consulta. Não fale das sessões nem dos pedidos por conta própria: use esta lista apenas quando a pessoa perguntar ou falar de sessão, horário, remarcação ou cancelamento. Ela vale mais do que qualquer coisa dita antes nesta conversa, inclusive por você: um pedido pode ter sido confirmado, recusado, trocado ou vencido depois. Só diga a situação de uma sessão ou de um pedido (aguardando confirmação, confirmada, troca ou cancelamento pedido) com base nesta lista, nunca de memória. Se a lista não trouxer o que a pessoa pergunta, não suponha: diga que vai confirmar com {name}. A lista só tem o que foi marcado pela SelenIA ou pelo painel; lista vazia não quer dizer que a pessoa não tem sessão combinada direto com {name}.
+<sessoes_agora>
+{sessions}
+</sessoes_agora>"""
+NO_SESSIONS = "Nenhuma sessão nem pedido de pé registrado no sistema."
 
 DEFAULT_VOICE_TONE = "Acolhedor, claro e profissional."
 NO_CONTEXT_MESSAGE = "(nenhum documento relevante encontrado na base de conhecimento)"
@@ -339,10 +353,18 @@ def _format_in_session(name: str, now_status) -> str:
     return IN_SESSION_UNTIL.format(name=name, until=until)
 
 
-def build_system_prompt(professional, context_chunks: list[str], now_status=None, agenda_now: Optional[str] = None) -> str:
+def build_system_prompt(
+    professional,
+    context_chunks: list[str],
+    now_status=None,
+    agenda_now: Optional[str] = None,
+    sessions_now: Optional[str] = None,
+) -> str:
     """`now_status`: `availability.Availability` de agora, ou None (fora de consulta).
     `agenda_now`: resposta de `calendar.describe_for_assistant` para esta
-    mensagem, ou None se a conversa não está em assunto de horário."""
+    mensagem, ou None se a conversa não está em assunto de horário.
+    `sessions_now`: sessões e pedidos da pessoa (`appointments.pending_note`
+    ou `NO_SESSIONS`), ou None para não mostrar a seção."""
     name = professional.name
     pronouns = guidelines.PRONOUNS.get(professional.pronouns or "", guidelines.PRONOUNS[guidelines.DEFAULT_PRONOUNS])
     return SYSTEM_TEMPLATE.format(
@@ -360,6 +382,7 @@ def build_system_prompt(professional, context_chunks: list[str], now_status=None
         context_header=CONTEXT_HEADER,
         context=_format_context(context_chunks),
         in_session=_format_in_session(name, now_status),
+        sessions_now=SESSIONS_NOW.format(name=name, sessions=sessions_now) if sessions_now else "",
         agenda_now=AGENDA_NOW.format(name=name, agenda=agenda_now) if agenda_now else "",
     )
 

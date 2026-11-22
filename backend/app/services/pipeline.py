@@ -317,21 +317,30 @@ def reply(
     notified = []
     agenda_ready = calendar.is_ready(professional)
 
-    def agenda_text():
+    def agenda_text(with_sessions: bool = True):
         # Horário especial só para cliente ativo com a permissão (tela
         # Clientes), nunca pelo que a pessoa diz na conversa.
         return calendar.describe_for_assistant(
             professional,
-            pending=appointments.pending_note(db, conversation),
+            pending=appointments.pending_note(db, conversation) if with_sessions else None,
             contact=conversation.contact,
         )
 
+    # As sessões e os pedidos da pessoa vão em toda resposta, lidos do
+    # banco agora, em qualquer assunto: a SelenIA não pode dizer de
+    # memória que um pedido "aguarda confirmação" quando já foi confirmado
+    # (caso real de 21/11/2026, decisão do Pedro em 22/11). Só banco, sem
+    # chamar o Google.
+    sessions_now = appointments.pending_note(db, conversation) or llm.NO_SESSIONS
     # Em assunto de horário, a agenda e a permissão do painel são lidas de
     # novo a cada mensagem, sem depender de o modelo chamar a ferramenta:
     # ele podia repetir a lista de antes, de quando a pessoa ainda não
-    # era cliente especial (pedido do Pedro, 04/11/2026).
-    agenda_now = agenda_text() if agenda_ready and _about_scheduling(text, history) else None
-    system_prompt = llm.build_system_prompt(professional, chunks, availability.current(professional), agenda_now)
+    # era cliente especial (pedido do Pedro, 04/11/2026). As sessões da
+    # pessoa já estão na seção acima, por isso não se repetem aqui.
+    agenda_now = agenda_text(with_sessions=False) if agenda_ready and _about_scheduling(text, history) else None
+    system_prompt = llm.build_system_prompt(
+        professional, chunks, availability.current(professional), agenda_now, sessions_now
+    )
 
     def run_tool(name, tool_input):
         if name == llm.ASK_PROFESSIONAL_TOOL["name"]:
