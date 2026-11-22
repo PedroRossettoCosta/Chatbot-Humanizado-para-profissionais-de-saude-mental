@@ -123,8 +123,9 @@ Arquivos: `services/triage.py`, `services/llm.py` (prompt da camada 2),
 ## Segurança e LGPD
 
 O alerta guarda o trecho que disparou, **cifrado**, e a regra que
-disparou (sem conteúdo, sobrevive à retenção para medir falsos
-positivos). Alertas são imutáveis; mudanças viram eventos na trilha.
+disparou (sem conteúdo, para medir falsos positivos; a retenção de 90
+dias apaga o alerta junto com a conversa). Alertas são imutáveis;
+mudanças viram eventos na trilha.
 
 ## Limitações e pendências
 
@@ -141,6 +142,16 @@ positivos). Alertas são imutáveis; mudanças viram eventos na trilha.
   conjunto novo. Ver [triagem-conjunto-teste.md](../triagem-conjunto-teste.md).
 - Paciente em acompanhamento ativo: a Marília quer "algo a mais" além
   do alerta padrão (a definir).
+- **Piora durante a espera de emergência não gera novo aviso.** Desde
+  19/11/2026 (35c9021), uma mensagem nova durante a espera não abre outro
+  alerta nem manda outro e-mail: a pessoa só recebe de novo o texto fixo
+  de emergência. Isso vale mesmo quando a mensagem nova é ela mesma uma
+  emergência, por exemplo uma mensagem de risco mais grave que a
+  primeira. A profissional só vê a mensagem nova ao abrir a conversa. A
+  regra evita alerta e e-mail repetidos a cada "pode me ajudar?" (caso
+  real de 19/11), e o Pedro decidiu mantê-la em 21/11/2026. Um novo aviso
+  para mensagem que seja ela mesma uma emergência fica como **trabalho
+  futuro**.
 
 ## Como testar
 
@@ -169,3 +180,10 @@ Manual no simulador (cada caso numa conversa nova):
   conversa em até 5 minutos, em vez das últimas 12.
 - 30/09/2026: a resposta da SelenIA deixa de ver mensagens de risco e o
   texto de emergência com mais de 5 minutos.
+- 19/11/2026: mensagem nova durante a espera de emergência não abre
+  outro alerta nem manda outro e-mail; o texto fixo sai de novo (35c9021).
+- 21/11/2026: o Pedro mantém a regra de 19/11. O teste
+  `test_new_emergency_during_hold_repeats_the_text_and_release_still_needs_review`
+  (test_handoff) confere que nem uma segunda emergência abre alerta e que
+  a liberação continua exigindo revisar o alerta. A limitação está
+  registrada acima.

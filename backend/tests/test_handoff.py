@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 import pytest
 
 from app import models
+from app.config import settings
 from app.models import AlertEventType, AlertLevel, ConversationState, SentBy
-from app.services import availability, handoff, llm
+from app.services import availability, handoff, llm, triage
 
 TEST_SLUG = "test-pytest-handoff"
 
@@ -205,17 +206,38 @@ def test_release_after_emergency_needs_review_first(db, client, professional):
     assert released.json()["state"] == ConversationState.ACTIVE
 
 
-def test_every_emergency_alert_must_be_reviewed(db, client, professional):
-    # Duas emergências na mesma conversa: revisar só a primeira não basta.
-    first = _send(client, "to pensando em me matar")
-    _send(client, "tomei todos os remedios da caixa", first["session_id"])
-    db.expire_all()
-    older, newer = sorted(db.get(models.Conversation, first["conversation_id"]).alerts, key=lambda a: a.created_at)
-    client.post(f"/alerts/{older.id}/review", json={})
+def test_new_emergency_during_hold_repeats_the_text_and_release_still_needs_review(
+    db, client, professional, no_real_email, monkeypatch
+):
+    # Regra de 19/11/2026 (35c9021), mantida pelo Pedro em 21/11: durante a
+    # espera de emergência, mesmo uma mensagem que é ela mesma uma
+    # emergência não abre outro alerta nem manda outro e-mail; a pessoa
+    # recebe de novo o texto fixo. Limitação registrada em
+    # funcionalidades/triagem-de-seguranca.md.
+    monkeypatch.setattr(settings, "smtp_host", "smtp.teste.local")
+    monkeypatch.setattr(settings, "brevo_api_key", "")
+    db.query(models.Professional).filter_by(slug=TEST_SLUG).one().alert_email = "alerta@teste.local"
+    db.commit()
 
-    opened = client.get(f"/conversations/{first['conversation_id']}").json()
-    assert opened["unreviewed_alert_id"] == newer.id
-    assert client.post(f"/conversations/{first['conversation_id']}/release").status_code == 409
+    first = _send(client, "to pensando em me matar")
+    assert first["state"] == ConversationState.EMERGENCY_HOLD
+    assert first["alert_created"] is True
+    assert len(no_real_email) == 1
+
+    again = _send(client, "tomei todos os remedios da caixa", first["session_id"])
+    assert again["reply"] == triage.EMERGENCY_MESSAGE
+    assert again["state"] == ConversationState.EMERGENCY_HOLD
+    assert again["alert_created"] is False
+    assert len(no_real_email) == 1
+    db.expire_all()
+    conversation_id = first["conversation_id"]
+    (alert,) = db.get(models.Conversation, conversation_id).alerts
+
+    # O que importa continua valendo: só libera depois de revisar o alerta.
+    assert client.get(f"/conversations/{conversation_id}").json()["unreviewed_alert_id"] == alert.id
+    assert client.post(f"/conversations/{conversation_id}/release").status_code == 409
+    assert client.post(f"/alerts/{alert.id}/review", json={}).status_code == 200
+    assert client.post(f"/conversations/{conversation_id}/release").status_code == 200
 
 
 def test_release_after_emergency_is_audited(db, client, professional):

@@ -60,31 +60,29 @@ e US$ 0,0098 por resposta.
 - WhatsApp e e-mail a US$ 0;
 - 1 profissional: Railway Hobby (US$ 5) e Vercel Hobby (US$ 0);
 - 50 profissionais: planos Pro da Railway e da Vercel divididos por 50,
-  US$ 0,40 por profissional.
+  US$ 0,40 cada um por profissional (US$ 0,80 de infraestrutura).
 
 **Conta do modelo:**
 
 | | Artigo (0,0103 e 0,0119) | Confirmado (0,0108 e 0,0098) |
 |---|---|---|
-| Triagem | 350 × 0,0103 = US$ 3,605 | 350 × 0,0108 = **US$ 3,780** |
-| Resposta | 280 × 0,0119 = US$ 3,332 | 280 × 0,0098 = **US$ 2,744** |
+| Triagem | 350 × 0,0103 = US$ 3,605 | 350 × 0,0108 = **US$ 3,78** |
+| Resposta | 280 × 0,0119 = US$ 3,332 | 280 × 0,0098 = **US$ 2,74** |
 | **Modelo por mês** | **US$ 6,94** | **US$ 6,52** |
 
-**Custo mensal por profissional:**
+**Custo mensal por profissional** (corrigido em 21/11/2026: a primeira
+versão desta tabela esqueceu a Vercel no cenário de 50 profissionais e
+comparava com valores do artigo que não eram os dele):
 
-| Cenário | Artigo | Confirmado |
+| Cenário | Confirmado | Artigo dizia |
 |---|---|---|
-| **1 profissional** | 6,94 + 5,00 (Railway) + 0 (Vercel) = **US$ 11,94** | 6,52 + 5,00 + 0 = **US$ 11,52** |
-| **50 profissionais** | 6,94 + 0,40 = **US$ 7,34** por profissional (US$ 366,85 no total) | 6,52 + 0,40 = **US$ 6,92** por profissional (US$ 346,20 no total) |
+| **1 profissional** | 3,78 (triagem) + 2,74 (respostas) + 5,00 (Railway Hobby) + 0 (Vercel Hobby) = **US$ 11,52** | US$ 11,93 |
+| **50 profissionais** | 3,78 + 2,74 + 0,40 (Railway Pro ÷ 50) + 0,40 (Vercel Pro ÷ 50) = **US$ 7,32** por profissional, **US$ 366,00** no total | US$ 7,73 |
 
-Contas do confirmado em 50 profissionais:
-
-- modelo: 6,524 × 50 = US$ 326,20;
-- infraestrutura: 0,40 × 50 = US$ 20,00;
-- total: US$ 346,20.
-
-Com as médias sem arredondar (0,010796 e 0,009841), o modelo dá US$ 6,53
-por mês. A diferença não aparece nos totais com duas casas.
+Os valores do artigo usavam 0,0103 e 0,0119, com a Vercel incluída. Com
+as médias sem arredondar (0,010796 e 0,009841), o modelo dá US$ 6,53 por
+mês, e o total de 50 profissionais fica em US$ 366,70. A diferença está
+dentro do arredondamento.
 
 **Ressalvas:**
 
@@ -133,6 +131,8 @@ os testes.
 ### Suíte inteira
 
 **320 testes: 319 passam, 1 falha.** Antes desta rodada eram 318.
+(**Atualização, 21/11/2026:** o teste que falhava foi ajustado à regra
+atual, como descrito abaixo, e **os 320 passam**.)
 
 O que falha é um teste antigo, não um dos novos:
 `tests/test_handoff.py::test_every_emergency_alert_must_be_reviewed`.
@@ -154,6 +154,24 @@ O que falha é um teste antigo, não um dos novos:
     Hoje ela não gera alerta nem e-mail; a pessoa recebe de novo o texto
     fixo.
 - **Não corrigi nada**, como pedido.
+- **Decisão do Pedro (21/11/2026): manter a regra de 35c9021.** O teste
+  virou `test_new_emergency_during_hold_repeats_the_text_and_release_still_needs_review`,
+  sem mudar código de produção. Ele confere:
+  - uma segunda mensagem de emergência durante a espera não cria alerta
+    nem e-mail;
+  - o texto fixo de emergência sai de novo;
+  - a SelenIA só é liberada depois que o alerta da conversa é revisado.
+
+  Ele não foi removido porque os outros testes não cobriam tudo:
+  - `test_release_after_emergency_needs_review_first` (test_handoff) cobre
+    "liberar exige revisar";
+  - `test_message_during_emergency_hold_repeats_the_text_without_a_new_alert`
+    (test_triage_fragments) usa uma mensagem neutra e não confere o
+    e-mail. A segunda mensagem *grave* não estava coberta.
+
+  A limitação (uma piora durante a espera não gera novo aviso) está em
+  [triagem de segurança](../funcionalidades/triagem-de-seguranca.md) e no
+  [modelo de ameaças](../modelo-de-ameacas.md).
 
 ## 3. Tarefa T4 da validação de 03/11 ("Erro para clientes especiais")
 

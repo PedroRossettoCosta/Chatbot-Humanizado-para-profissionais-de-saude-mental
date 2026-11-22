@@ -92,6 +92,13 @@ nem serviços externos.
 - **Quem está com o celular "é" a pessoa:** não há verificação de
   identidade além do número (palavra-chave combinada fica como trabalho
   futuro).
+- **Piora durante a espera de emergência não gera novo aviso:** uma
+  mensagem nova durante a espera, mesmo uma emergência mais grave, não
+  abre outro alerta nem manda outro e-mail (regra de 19/11/2026, mantida
+  em 21/11). A pessoa recebe de novo o texto fixo; a profissional só vê a
+  mensagem nova ao abrir a conversa. Novo aviso para mensagem que seja
+  ela mesma uma emergência fica como trabalho futuro. Coberto por
+  `test_new_emergency_during_hold_repeats_the_text_and_release_still_needs_review`.
 - **Áudio, imagem e documento não passam pela triagem**: um áudio com risco
   não gera alerta (cenário 8 de 21/11).
 - **Entrega do e-mail de alerta** não é confirmada (só o aceite da Brevo),
