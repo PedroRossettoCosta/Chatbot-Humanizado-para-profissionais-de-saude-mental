@@ -4,6 +4,11 @@ O SelenIA lida com dados sensíveis: mensagens de pessoas em sofrimento
 emocional procurando atendimento psicológico. Este documento reúne as
 proteções implementadas, o protocolo de risco e o que ainda falta.
 
+Ver também o [modelo de ameaças](../modelo-de-ameacas.md) (ativos,
+fronteiras de confiança e o teste que verifica cada controle) e o
+[mapa do caminho dos dados](../mapa-caminho-dos-dados.md) (o que cada
+serviço externo recebe, onde fica e por quanto tempo).
+
 ---
 
 ## 1. Princípios

@@ -4,6 +4,8 @@ A verificação do token do Google é substituída por um dicionário de
 claims; o resto (conta, sessão, cookie, proteção das rotas) é o real.
 """
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from app import models
@@ -151,6 +153,59 @@ def test_professional_cannot_see_another_ones_data(anon_client, db, monkeypatch)
     assert anon_client.get("/conversations", params={"professional_slug": slug_a}).status_code == 404
     assert anon_client.get("/alerts", params={"professional_slug": slug_a}).status_code == 404
     assert anon_client.post(f"/conversations/{conversation_id}/take-over").status_code == 404
+
+
+def test_routes_by_id_refuse_another_professional(anon_client, db, monkeypatch):
+    """As rotas que recebem só o id (sem o slug) também conferem a dona.
+
+    Pedido de horário, alerta, conversa e documento da profissional A,
+    chamados pela profissional B: 404 em todas, e nada muda no banco.
+    """
+    monkeypatch.setattr(llm, "generate_reply", lambda system_prompt, history, **_: "resposta de teste")
+    _login(anon_client)
+    slug_a = anon_client.post("/professionals", json={"name": "Dra. Teste A"}).json()["slug"]
+    conversation_id = anon_client.post(
+        "/chat/simulate", json={"professional_slug": slug_a, "message": "oi"}
+    ).json()["conversation_id"]
+
+    professional_a = db.query(models.Professional).filter_by(slug=slug_a).one()
+    conversation = db.get(models.Conversation, conversation_id)
+    conversation.state = models.ConversationState.HUMAN
+    start = datetime.now(timezone.utc) + timedelta(days=3)
+    appointment = models.Appointment(
+        professional_id=professional_a.id,
+        conversation_id=conversation_id,
+        starts_at=start,
+        ends_at=start + timedelta(minutes=50),
+        status=models.AppointmentStatus.TENTATIVE,
+        expires_at=start,
+    )
+    alert = models.SafetyAlert(
+        professional_id=professional_a.id,
+        conversation_id=conversation_id,
+        level=models.AlertLevel.POSSIBLE_RISK,
+        trigger="teste",
+    )
+    document = models.Document(professional_id=professional_a.id, filename="material.txt", chunk_count=0)
+    db.add_all([appointment, alert, document])
+    db.commit()
+    ids = {"appointment": appointment.id, "alert": alert.id, "document": document.id}
+
+    anon_client.cookies.clear()
+    _login(anon_client, email=OUTRA, sub="2")
+    anon_client.post("/professionals", json={"name": "Dra. Teste B"})
+
+    assert anon_client.post(f"/calendar/appointments/{ids['appointment']}/approve").status_code == 404
+    assert anon_client.post(f"/calendar/appointments/{ids['appointment']}/reject").status_code == 404
+    assert anon_client.post(f"/alerts/{ids['alert']}/review", json={"note": None}).status_code == 404
+    assert anon_client.post(f"/conversations/{conversation_id}/release").status_code == 404
+    assert anon_client.delete(f"/documents/{ids['document']}").status_code == 404
+
+    db.expire_all()
+    assert db.get(models.Appointment, ids["appointment"]).status == models.AppointmentStatus.TENTATIVE
+    assert not [e for e in db.get(models.SafetyAlert, ids["alert"]).events if e.event_type == "reviewed"]
+    assert db.get(models.Conversation, conversation_id).state == models.ConversationState.HUMAN
+    assert db.get(models.Document, ids["document"]) is not None
 
 
 def test_login_attempts_are_limited(anon_client):

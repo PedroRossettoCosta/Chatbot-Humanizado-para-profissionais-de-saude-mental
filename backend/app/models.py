@@ -507,13 +507,15 @@ class SafetyAlert(Base):
     id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     professional_id = Column(UUID(as_uuid=False), ForeignKey("professionals.id"), nullable=False)
     conversation_id = Column(UUID(as_uuid=False), ForeignKey("conversations.id"), nullable=False, index=True)
-    # Mensagem que disparou o alerta. Fica nulo se a mensagem for apagada
-    # pela política de retenção — o alerta em si permanece.
+    # Mensagem que disparou o alerta. Fica nulo se só a mensagem for
+    # apagada. A retenção (`scripts/purge_old_conversations.py`) apaga a
+    # conversa inteira, e o alerta vai junto com ela (cascade).
     message_id = Column(UUID(as_uuid=False), ForeignKey("messages.id", ondelete="SET NULL"), nullable=True)
     level = Column(String(30), nullable=False)
     # Qual camada e regra da triagem disparou (ex.: "camada1:suicidio").
-    # Sem conteúdo da mensagem, então não precisa de cifra e sobrevive à
-    # retenção: é o que permite medir falsos positivos depois.
+    # Sem conteúdo da mensagem, então não precisa de cifra. É o que
+    # permite medir falsos positivos depois, mas só enquanto a conversa
+    # existe: a retenção apaga o alerta junto com a conversa.
     trigger = Column(String(64), nullable=True)
     # Trecho que motivou o disparo, para a profissional entender o porquê
     # sem precisar abrir a conversa inteira.

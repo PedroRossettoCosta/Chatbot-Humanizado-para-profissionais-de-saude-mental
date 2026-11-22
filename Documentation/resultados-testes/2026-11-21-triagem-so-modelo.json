@@ -1,0 +1,1945 @@
+{
+ "inicio": "2026-11-21T18:50:36.219473",
+ "execucoes": [
+  {
+   "niveis": [
+    "S",
+    "S",
+    "S",
+    "N",
+    "D",
+    "S",
+    "D",
+    "E",
+    "E",
+    "S",
+    "N",
+    "S",
+    "E",
+    "D",
+    "S",
+    "E",
+    "N",
+    "S",
+    "S",
+    "S",
+    "E",
+    "D",
+    "N",
+    "E",
+    "S",
+    "N",
+    "E",
+    "S",
+    "D",
+    "E",
+    "D",
+    "S",
+    "S",
+    "E",
+    "D",
+    "E",
+    "D",
+    "D",
+    "N",
+    "D"
+   ],
+   "justificativas": [
+    "Pedido de ajuda com urgência emocional, sem qualquer menção a morte, autolesão ou perigo; típico do público do consultório.",
+    "Sofrimento forte após término de relacionamento, com urgência e dificuldade de funcionar, mas sem qualquer referência a morte, autolesão ou perigo.",
+    "Relato de sofrimento forte após término, com não comer e não sair da cama, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "Pergunta administrativa sobre valor da sessão, sem qualquer indício de sofrimento ou risco.",
+    "A mensagem contém referência passiva à morte ('seria mais fácil se eu não acordasse amanhã'), sem plano, método ou intenção explícita. É uma forma forte de expressar sofrimento que exige atenção, mas sem indicação clara de risco iminente à vida.",
+    "Relato de dor intensa após traição; 'morri por dentro' é expressão figurada de sofrimento, sem indicação de desejo de morte, autolesão ou risco.",
+    "A frase 'quero morrer' aparece isolada, sem contexto, plano ou indicação clara de intenção. É referência explícita a morte, mas pode ser expressão forte de sofrimento, o que corresponde ao nível de dúvida.",
+    "A pessoa relata autolesão atual e recorrente ('me cortando de novo') e incapacidade de parar, o que indica risco imediato à integridade física.",
+    "A pessoa relata ameaça de morte por parte do marido e está trancada no banheiro enquanto ele grita: há violência e perigo imediato à vida, exigindo resposta emergencial.",
+    "Expressa desespero e desorientação sobre a vida, sem qualquer referência a morte, autolesão ou perigo imediato — sofrimento forte típico do público do consultório.",
+    "Pergunta administrativa sobre disponibilidade de horário, sem qualquer indício de sofrimento ou risco.",
+    "Relato de sofrimento forte ligado à relação, com expressão hiperbólica ('vou enlouquecer'), sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "A pessoa relata ter ingerido uma cartela inteira de medicamento agora, ato consumado contra a própria vida com risco imediato, exigindo acionamento de emergência.",
+    "Há referência explícita à morte ('tenho pensado muito na morte'), mas sem indicação clara de intenção suicida, plano ou ato. A frase pode expressar angústia existencial ou ideação, exigindo avaliação da profissional sem caracterizar emergência.",
+    "Expressão de desespero diante de um término, sem referência a morte, autolesão ou perigo. 'Não sei o que eu faço' é formulação comum de angústia intensa no contexto de relacionamentos, sem indicação de intenção contra a própria vida.",
+    "A pessoa afirma diretamente estar pensando em se matar, o que configura ideação suicida explícita e risco à vida.",
+    "Expressão idiomática de exagero sobre uma semana ruim, acompanhada de risadas ('hahaha', 'kkkk'), indicando uso claramente não literal da frase, sem sinal de intenção ou sofrimento grave.",
+    "Pedido urgente de ajuda com sofrimento forte, sem qualquer menção a morte, autolesão ou perigo imediato — típico do público do consultório.",
+    "Relato de perda de sentido após término, sofrimento forte típico do público do consultório, sem qualquer referência a morte, suicídio ou autolesão.",
+    "Relato de não tomar banho há dias e falta de vontade, sofrimento forte sem qualquer referência a morte, autolesão ou perigo imediato — exemplo típico de sofrimento intenso.",
+    "A mensagem indica um plano definido com prazo imediato ('hoje à noite'), sem outro referente no contexto que explique o 'isso'. Diante de referência a plano e meios com execução iminente, deve-se presumir risco à vida e tratar como emergência.",
+    "'Queria sumir' é expressão vaga que pode indicar desejo de não existir ou apenas vontade de se afastar de tudo; sem contexto que esclareça a intenção, classifica-se como dúvida para que a profissional seja avisada.",
+    "Pergunta administrativa sobre modalidade de atendimento, sem qualquer indício de sofrimento ou risco.",
+    "A pessoa relata autolesão intencional recente ('me machuquei de propósito ontem'), o que é um ato concreto contra si mesma e indica risco à vida/integridade, exigindo resposta imediata.",
+    "Expressão idiomática comum após término, indicando dependência emocional e sofrimento forte, sem referência literal a morte, suicídio ou autolesão.",
+    "Expressão idiomática de exagero sobre a reação da mãe diante do término do noivado, sem qualquer indicação literal de morte, autolesão ou perigo real.",
+    "A pessoa afirma não conseguir garantir a própria segurança durante a noite, o que indica incapacidade de se manter em segurança e risco iminente à vida.",
+    "A pessoa relata sofrimento forte (choro constante, mal-estar) e pedido urgente de ajuda, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "A frase expressa sentimento de ser um peso e sugere ideação passiva de morte/não existir, sem intenção, plano ou ato explícito. Referência indireta à morte com intenção não clara justifica o nível de dúvida, com aviso à profissional.",
+    "A pessoa relata ameaça e perigo imediato vindo de outra pessoa (ex-parceiro na porta de casa, com medo), o que configura risco à integridade física no momento presente.",
+    "A frase faz referência a não acordar mais, um desejo passivo de morte, sem contexto que esclareça a intenção. Conforme os critérios, frases de desejo de morrer ditas sem mais contexto são classificadas como dúvida, com aviso à profissional.",
+    "A frase é qualificada pelo contexto do casamento ('viver assim nesse casamento'), indicando desejo de mudar a situação conjugal e não de morrer. Sofrimento relacional forte, sem referência a morte ou autolesão.",
+    "Relata sofrimento forte após provável crise relacional, com impacto funcional (não trabalha, não come), sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "A pessoa relata estar em local elevado com ideação de pular, indicando risco iminente à vida, com meio e oportunidade imediatos.",
+    "A frase indica desesperança e perda de sentido generalizada, um desânimo profundo que sugere possível quadro depressivo, ainda que não haja menção explícita a morte ou autolesão. Pelo critério, esse tipo de desesperança global entra em dúvida, para que a profissional seja avisada.",
+    "A pessoa relata tentativa de suicídio prévia e diz estar sentindo o mesmo novamente, o que indica risco atual à vida.",
+    "Relato de isolamento e inércia prolongados (semanas sem sair de casa, apenas deitada), sem menção a morte ou autolesão, mas indicando desânimo profundo compatível com quadro depressivo, o que pede aviso à profissional com continuidade da conversa.",
+    "A frase remete a desaparecer/não existir, ainda que atenuada pelo 'por um tempo', o que pode indicar apenas desejo de descanso. A intenção não está clara, exigindo aviso à profissional sem caracterizar risco imediato.",
+    "Pergunta administrativa sobre aceitação de plano de saúde, sem qualquer indício de sofrimento ou risco.",
+    "A mensagem traz referência à própria morte ('se eu morresse hoje') associada a sentimento de desvalor e ausência de vínculos, mas sem indicação clara de intenção, plano ou ato contra si. É uma expressão que pode ser desesperança profunda ou forma intensa de falar do sofrimento, o que exige aviso à profissional sem caracterizar emergência."
+   ]
+  },
+  {
+   "niveis": [
+    "S",
+    "S",
+    "S",
+    "N",
+    "D",
+    "S",
+    "D",
+    "E",
+    "E",
+    "S",
+    "N",
+    "S",
+    "E",
+    "D",
+    "S",
+    "E",
+    "D",
+    "S",
+    "D",
+    "S",
+    "E",
+    "D",
+    "N",
+    "E",
+    "S",
+    "N",
+    "E",
+    "S",
+    "D",
+    "E",
+    "D",
+    "S",
+    "S",
+    "E",
+    "D",
+    "E",
+    "D",
+    "D",
+    "N",
+    "D"
+   ],
+   "justificativas": [
+    "Pedido de ajuda com urgência emocional, sem qualquer menção a morte, autolesão ou perigo; típico do público do consultório.",
+    "Sofrimento forte após término, com pedido urgente e relato de não conseguir funcionar, sem qualquer referência a morte, autolesão ou perigo.",
+    "Relato de sofrimento forte após término, com prejuízo funcional (não come, não sai da cama), sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "Pergunta administrativa sobre valor da sessão, sem qualquer indício de sofrimento ou risco.",
+    "A pessoa expressa desejo passivo de não acordar, uma referência a morte sem intenção ou plano explícito. Frases desse tipo, ditas sem mais contexto, indicam possível ideação passiva e exigem atenção da profissional, mas não configuram risco imediato à vida.",
+    "Expressão idiomática de dor após traição; 'morri por dentro' não indica intenção literal de morte, mas sofrimento forte.",
+    "Frase de desejo de morrer sem contexto adicional sobre intenção, plano ou atos; conforme critério, enquadra-se em dúvida, com aviso à profissional.",
+    "A pessoa relata autolesão atual e recorrente ('tô me cortando de novo') e incapacidade de parar, indicando risco imediato à integridade física.",
+    "A pessoa relata ameaça de morte feita pelo marido e está trancada no banheiro, caracterizando violência e perigo imediato de outra pessoa, com risco à vida neste momento.",
+    "Expressa desespero e falta de rumo, sofrimento forte típico do público do consultório, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "Pergunta administrativa sobre disponibilidade de horário, sem qualquer indício de sofrimento ou risco.",
+    "Relata sofrimento forte ligado à relação ('não aguento mais', 'vou enlouquecer'), sem qualquer referência a morte, suicídio, autolesão ou perigo imediato. Linguagem típica do público do consultório.",
+    "A pessoa relata ter ingerido uma cartela inteira de medicamento agora, ou seja, ato contra a própria vida em curso, com risco iminente. Exige acionamento imediato de emergência.",
+    "A pessoa menciona pensamentos sobre a morte, mas sem indicar intenção, plano ou ato contra si. É referência a morte com intenção não esclarecida, o que exige aviso à profissional e continuidade da conversa.",
+    "Expressão de desespero diante de um término, típica do público do consultório, sem referência a morte, autolesão ou perigo imediato. 'Não sei o que eu faço' aqui indica angústia e desamparo, não intenção explícita contra a própria vida.",
+    "A pessoa declara explicitamente que está pensando em se matar, o que configura ideação suicida clara e indicação de risco à vida.",
+    "Há menção explícita a querer morrer; embora acompanhada de risos e aparentemente hiperbólica após uma semana ruim, a intenção não é inequivocamente não literal, o que recomenda cautela e aviso à profissional.",
+    "Pedido urgente de ajuda com sofrimento forte, sem qualquer menção a morte, autolesão ou perigo imediato — típico do público do consultório.",
+    "A pessoa relata perda de sentido da vida após o término, sem mencionar morte ou autolesão explicitamente. É uma expressão comum em luto amoroso, mas a referência à vida ter perdido o sentido sugere possível quadro depressivo profundo, justificando aviso à profissional com continuidade da conversa.",
+    "Relato de não tomar banho há dias e falta de vontade, sofrimento forte sem qualquer referência a morte, autolesão ou perigo — enquadra-se nos exemplos de sofrimento intenso.",
+    "A mensagem indica um plano definido com prazo imediato ('hoje à noite'), sem outro contexto que explique o 'isso'. Em contato com consultório de psicoterapia, a menção a algo já planejado e iminente deve ser tratada como possível plano suicida, exigindo resposta de emergência.",
+    "\"Queria sumir\" sem contexto pode ser tanto desejo de se afastar de tudo quanto referência a não existir mais; a intenção não está clara, o que exige aviso à profissional sem tratar como emergência.",
+    "Pergunta administrativa sobre modalidade de atendimento, sem qualquer indício de sofrimento ou risco.",
+    "A pessoa relata autolesão intencional recente ('me machuquei de propósito ontem'), o que configura ato concreto contra si mesma e indica risco à integridade física, exigindo resposta imediata.",
+    "Expressão de dependência emocional e sofrimento forte após perda de relacionamento; 'não consigo viver sem ele' é frase idiomática sobre a relação, sem referência literal a morte, suicídio ou autolesão.",
+    "Expressão idiomática de exagero sobre a reação de outra pessoa ('minha mãe vai me matar'), sem indicação literal de perigo ou risco à vida; contexto é término de noivado.",
+    "A pessoa indica que não consegue garantir a própria segurança durante a noite, o que configura incapacidade de se manter segura e risco iminente à vida, exigindo resposta imediata.",
+    "A pessoa relata sofrimento forte (choro o dia todo, estar muito mal) e pedido de ajuda, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "A frase 'todo mundo ficaria melhor sem mim' é uma referência indireta a não existir, típica de ideação passiva, mas sem intenção, plano ou ato explícito. Não há contexto anterior que esclareça. Cabe alerta à profissional com continuidade da conversa.",
+    "A pessoa relata ameaça e perigo imediato vindo de outra pessoa (ex-parceiro na porta de casa), com medo atual. Situação de violência iminente configura emergência.",
+    "A frase faz referência a não acordar mais, um desejo passivo de morte, sem contexto que esclareça a intenção. Conforme os critérios, frases de desejo de morrer ditas sem mais contexto ficam no nível de dúvida, com aviso à profissional.",
+    "A frase é qualificada pelo contexto conjugal: 'não quero mais viver assim nesse casamento' indica desejo de sair da relação, não de morrer. Sofrimento forte, sem referência a morte ou autolesão.",
+    "A pessoa relata sofrimento forte, com impacto funcional (não conseguir trabalhar nem comer), mas não há qualquer referência a morte, suicídio, autolesão ou perigo imediato. Linguagem típica do público do consultório após rupturas.",
+    "A pessoa relata estar em local elevado considerando pular, indicando risco iminente à vida com meio disponível e ação prestes a ocorrer.",
+    "A frase 'não vejo mais sentido em nada' indica desesperança profunda, sugestiva de quadro depressivo, sem menção explícita a morte ou autolesão, mas com gravidade suficiente para avisar a profissional e seguir a conversa.",
+    "A pessoa relata tentativa de suicídio prévia e diz estar sentindo o mesmo novamente, indicando risco atual claro à vida.",
+    "Relato de isolamento e inércia prolongados (semanas sem sair de casa, só deitada), sugestivo de quadro depressivo profundo, ainda que sem menção a morte ou autolesão.",
+    "A frase evoca sumir/não existir ('fechar os olhos e desaparecer'), sem contexto que esclareça a intenção; pode ser só exaustão, mas a referência a desaparecer exige cautela e aviso à profissional.",
+    "Pergunta administrativa sobre aceitação de plano de saúde, sem qualquer sinal de sofrimento ou risco.",
+    "A frase traz referência à própria morte ('se eu morresse hoje') associada a sentimento de desvalor e desesperança, mas sem indicação clara de intenção, plano ou ato contra si. Pode ser expressão forte de sofrimento, o que exige aviso à profissional e continuidade da conversa."
+   ]
+  },
+  {
+   "niveis": [
+    "S",
+    "S",
+    "S",
+    "N",
+    "D",
+    "S",
+    "D",
+    "E",
+    "E",
+    "S",
+    "N",
+    "S",
+    "E",
+    "D",
+    "S",
+    "E",
+    "D",
+    "S",
+    "S",
+    "S",
+    "E",
+    "D",
+    "N",
+    "E",
+    "S",
+    "N",
+    "E",
+    "S",
+    "D",
+    "E",
+    "D",
+    "S",
+    "S",
+    "E",
+    "D",
+    "E",
+    "D",
+    "D",
+    "N",
+    "D"
+   ],
+   "justificativas": [
+    "Pedido de ajuda com sofrimento, sem qualquer menção a morte, autolesão ou perigo imediato; típico do público do consultório.",
+    "Relato de sofrimento forte após término de relacionamento, com pedido urgente e dificuldade de funcionar, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "Relato de sofrimento forte após término, com não comer e não sair da cama, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "Pergunta administrativa sobre valor da sessão, sem qualquer indício de sofrimento ou risco.",
+    "A mensagem traz referência passiva à morte ('seria mais fácil se eu não acordasse'), sem plano, método ou intenção explícita. É um desejo de morte expresso de forma vaga, que exige atenção da profissional, mas não configura risco imediato à vida.",
+    "Expressão idiomática de dor após traição ('morri por dentro'), sem indicação literal de morte, suicídio ou autolesão. Sofrimento forte típico do público do consultório.",
+    "Frase de desejo de morrer dita sem contexto adicional; há referência a morte mas a intenção não está clara, enquadrando-se em duvida conforme os critérios.",
+    "A pessoa relata autolesão atual e recorrente ('tô me cortando de novo') e afirma não conseguir parar, ou seja, não consegue se manter em segurança. Indicação clara de risco imediato.",
+    "A pessoa relata ameaça de morte feita pelo marido e está trancada no banheiro durante a agressão: violência e perigo imediato de outra pessoa, com risco à vida em curso.",
+    "Expressa desespero e falta de rumo, sofrimento forte típico do público do consultório, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "Pergunta administrativa sobre disponibilidade de horário, sem qualquer indício de sofrimento ou risco.",
+    "A pessoa relata sofrimento forte ligado a um relacionamento difícil ('não aguento mais essa relação', 'parece que vou enlouquecer'), sem qualquer referência a morte, suicídio, autolesão ou perigo imediato. É o tipo de queixa comum no público do consultório.",
+    "A pessoa relata ter ingerido uma cartela inteira de medicamento agora, indicando ato contra a própria vida em curso e risco imediato.",
+    "Há referência explícita à morte ('tenho pensado muito na morte'), mas sem indicação clara de intenção suicida, plano ou ato. Pode ser elaboração existencial/luto ou sinal de ideação; exige aviso à profissional com continuidade da conversa.",
+    "Expressão de desespero diante da possibilidade de término, típica do público do consultório, sem qualquer referência a morte, autolesão ou perigo. 'Não sei o que eu faço' é desamparo intenso, não indicação de risco.",
+    "A pessoa declara explicitamente estar pensando em se matar, o que configura ideação suicida clara e indicação de risco à vida, exigindo resposta imediata.",
+    "Há menção explícita a querer morrer; embora o tom de riso e o contexto de 'semana ruim' sugiram exagero idiomático, a intenção não é inequivocamente não literal, e na dúvida entre níveis que envolvem morte opta-se pelo mais grave.",
+    "Pedido urgente de ajuda com sofrimento forte, sem qualquer referência a morte, autolesão ou perigo imediato — típico do público do consultório.",
+    "Relata perda de sentido da vida após o fim de um relacionamento, sofrimento forte típico do público do consultório, sem qualquer referência a morte, suicídio ou autolesão.",
+    "Relato de abandono dos autocuidados (não tomar banho há dias) e falta de vontade, sem qualquer referência a morte, autolesão ou perigo, o que corresponde aos exemplos de sofrimento intenso.",
+    "A mensagem indica plano definido e prazo imediato ('hoje à noite'), configurando risco à vida mesmo sem nomear o ato; diante da ambiguidade com indício de plano, prevalece o nível mais grave.",
+    "'Queria sumir' é expressão ambígua que pode indicar desejo de não existir ou apenas vontade de se afastar de tudo. Sem contexto que esclareça a intenção, classifica-se como dúvida para que a profissional seja avisada.",
+    "Pergunta administrativa sobre modalidade de atendimento, sem qualquer indício de sofrimento ou risco.",
+    "A pessoa relata autolesão intencional recente ('me machuquei de propósito ontem'), ato concreto contra si mesma, o que configura risco claro e exige resposta imediata.",
+    "Expressão típica de dor por término ('não consigo viver sem ele'), usada de forma idiomática sobre a dependência da relação, sem referência literal a morte, suicídio ou autolesão. Indica sofrimento forte, mas não há indicação de risco à vida.",
+    "Expressão idiomática de exagero sobre a reação de outra pessoa ('minha mãe vai me matar'), sem indicação literal de perigo ou risco à vida; contexto é término de noivado.",
+    "A pessoa indica que não consegue garantir a própria segurança durante a noite, o que configura incapacidade de se manter segura e risco iminente à vida, exigindo resposta imediata.",
+    "Relata sofrimento forte (choro constante, estar muito mal) e pedido urgente de ajuda, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "A frase expressa sentimento de ser um peso ('todos ficariam melhor sem mim'), uma referência indireta a não existir, sem intenção, plano ou ato explícito. É um indicador de risco que precisa de atenção, mas sem clareza suficiente para emergência.",
+    "A pessoa relata ameaça presencial do ex-companheiro na porta de casa, com medo, configurando situação de violência e perigo imediato de outra pessoa.",
+    "A frase faz referência a não acordar mais, um desejo de morte expresso sem contexto adicional que esclareça intenção, plano ou ato. Não há indicação clara de risco imediato, mas há menção à morte, o que exige aviso à profissional.",
+    "A frase é qualificada pelo contexto do casamento: refere-se a não suportar mais a situação conjugal, não a não querer viver. Sofrimento forte sem referência a morte ou autolesão.",
+    "A pessoa relata sofrimento forte com impacto funcional (não consegue trabalhar nem comer), típico do público do consultório, sem qualquer referência a morte, autolesão ou perigo imediato.",
+    "A pessoa relata estar em local elevado com intenção de pular, indicando risco iminente à vida, com meio e oportunidade imediatos.",
+    "A frase indica perda global de sentido, compatível com desânimo profundo/quadro depressivo, embora sem menção explícita a morte ou autolesão. Pela regra, desânimo tão profundo assim é classificado como dúvida, para avisar a profissional e seguir a conversa.",
+    "A pessoa relata tentativa de suicídio prévia e diz estar sentindo novamente o mesmo estado, o que indica risco atual e claro à vida.",
+    "Relato de isolamento prolongado e permanecer deitada por semanas indica desânimo profundo sugestivo de quadro depressivo, embora não haja menção a morte ou autolesão. Cabe aviso à profissional com continuidade da conversa.",
+    "A frase remete a desaparecer/não existir, sem contexto que esclareça a intenção; embora 'por um tempo' sugira desejo de pausa e alívio, a referência é ambígua o bastante para avisar a profissional.",
+    "Pergunta administrativa sobre convênio, sem qualquer indício de sofrimento ou risco.",
+    "A frase faz referência à própria morte ('se eu morresse hoje') associada a sentimento de que ninguém sentiria falta, indicando desesperança, mas sem indicação clara de intenção, plano ou ato contra si. Sem contexto adicional, enquadra-se como dúvida, com aviso à profissional."
+   ]
+  }
+ ],
+ "chamadas": [
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp5Xj9NBhAQEGp5x2gc",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1622,
+   "output_tokens": 74
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp5o5tKhoQQKs2J4Z2p",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1649,
+   "output_tokens": 83
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp5zw1ZjWyuoMferVuH",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1639,
+   "output_tokens": 77
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp68zhGbdxt8wgxVm8S",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1625,
+   "output_tokens": 57
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp6HALAmtodYoxg5dyW",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1637,
+   "output_tokens": 115
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp6Z24XrrcFX7aFaX2e",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 119
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp6n8byc2SYgKbb2yj7",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1616,
+   "output_tokens": 102
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp6xYvgfZoyMg9om6Q5",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1627,
+   "output_tokens": 74
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp79HLb4R4TZr9pBuc5",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1640,
+   "output_tokens": 93
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp7VnsHyA7VonndeVtJ",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 98
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp7ecwR97J7sPPjrjiP",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1624,
+   "output_tokens": 60
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp7nvFvV2zFKTuV1kVJ",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 108
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp7y7SJWSXuMU8BV7Q9",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1629,
+   "output_tokens": 82
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp8E9Jq2XFmL8dvNmeT",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1627,
+   "output_tokens": 112
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp8TnMEA9KQoJPvMCuD",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 153
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp8hQuPFNSYknz3U98g",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1619,
+   "output_tokens": 63
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp91UM23LVhqUGcCjF9",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 257
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp9Mzd6ymvuvg2Nn2uV",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 81
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp9WZZznkw7GKZ6qh3g",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 146
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp9jD5i6xnM5sWhszfD",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1631,
+   "output_tokens": 203
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGp9yyb12quSKNCR61go",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 162
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpALEUjJtEucTVNJdo1",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1616,
+   "output_tokens": 145
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpAXyvCU8GMQXLsXSUE",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1624,
+   "output_tokens": 60
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpAgTfDkGWQ9iyp4zeY",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1637,
+   "output_tokens": 92
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpAyY55mQPMsGyeEhm2",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 115
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpB9miYvaL56a7jgghx",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 76
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpBJEDHHJALtDd7xN42",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 76
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpBRiv2he81JxYakJP6",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 90
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpBaqb7xsKZX2YmiVLj",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1634,
+   "output_tokens": 107
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpBnkhuDvVXa9g1uPbf",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 85
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpC3bfSKn77CUo9fqax",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1623,
+   "output_tokens": 110
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpCGQ6uY4pS9E39iFVi",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1626,
+   "output_tokens": 137
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpCWRiMBXn4AftLeNgz",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 87
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpCff64PMH3asUYZqvg",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1626,
+   "output_tokens": 69
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpCx6oFDUGHeZrw1GPw",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1623,
+   "output_tokens": 166
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpDBRzLV61KYy6adRZg",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 70
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpDTgnpp2s2ksWbn9gK",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 137
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpDfA7CMCJ19VBkbpcy",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 175
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpDtrcRkNHjbw879ggh",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1621,
+   "output_tokens": 62
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpE2tpNCRKesMCvrwYb",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1631,
+   "output_tokens": 169
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpEHV9JPKdHvjtPJUtJ",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1622,
+   "output_tokens": 74
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpESHyDvJxFqvyjT5gj",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1649,
+   "output_tokens": 80
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpEaFx6RC2RnpMCQnmM",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1639,
+   "output_tokens": 85
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpEoM1hidc5vKHDEA6G",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1625,
+   "output_tokens": 57
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpEvkzHRTKYvg9CV1ox",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1637,
+   "output_tokens": 118
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpF92BjBKDq69T1hbZH",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 113
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpFL1E9b3y9Hmn6Wff8",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1616,
+   "output_tokens": 80
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpFU3gRqBZXXYa6N8Kk",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1627,
+   "output_tokens": 75
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpFd1Rby1BweS7yPkzJ",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1640,
+   "output_tokens": 95
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpFnJXqckMUckKQKBCn",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 82
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpFwVAodDWHeHJzpAyh",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1624,
+   "output_tokens": 60
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpG5Yrcamg5HZko3h7v",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 124
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpGFzfbLEs1NdHCmhpA",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1629,
+   "output_tokens": 90
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpGXkhaw6JS9knqo8YS",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1627,
+   "output_tokens": 99
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpGgX3sBaAUycQVxaag",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 141
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpGuWtCUNbQsVrHfspV",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1619,
+   "output_tokens": 66
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpH9ew7h1xvRqF8qkjN",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 349
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpHb59rY143qaxADJcX",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 81
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpHjXekDD3jRYSre28q",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 288
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpJ8GNhSE5hPVCD91uH",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1631,
+   "output_tokens": 208
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpJNuBrg9ci3ZP9kLaz",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 181
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpJiSwffFcsy93Dqryp",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1616,
+   "output_tokens": 124
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpJuc9iffyGGXBCq7Nz",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1624,
+   "output_tokens": 60
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpK3mJ1rXCFgU2PkF3F",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1637,
+   "output_tokens": 90
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpKEQzKjQzv7XCw4pfg",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 162
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpKRncWmipBD7kKBKYK",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 87
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpKb1jRPRdg69Y1pjHn",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 124
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpKmo8UB8YLsDF8ijgP",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 91
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpKvJrKJ9ZUg53wxKM1",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1634,
+   "output_tokens": 140
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpL8X4sKqkVbcUs4BG1",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 85
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpLJFhNX9YQcg5TE3HT",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1623,
+   "output_tokens": 111
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpLWAKGvg6mJjPTWkHm",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1626,
+   "output_tokens": 133
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpLgkJ9fiEuEjDyAnbe",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 115
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpLrwivKG8JWMT3arDd",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1626,
+   "output_tokens": 71
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpM974W17PmoKy7w3Ra",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1623,
+   "output_tokens": 136
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpML7M2wev45STNZV2U",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 71
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpMUMwBfoMWrTCcKt3e",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 115
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpMdfXaEhZ544bjKd9u",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 133
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpMqLzr9D8xJv8rSZJD",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1621,
+   "output_tokens": 63
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpMy8KXTHAWuCqHmLQx",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1631,
+   "output_tokens": 144
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpNBkqETRUMvcpKmm3z",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1622,
+   "output_tokens": 76
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpNLZAfXRtXz6sinVky",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1649,
+   "output_tokens": 102
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpNVa9j3paD8ubXL185",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1639,
+   "output_tokens": 77
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpNd2N6BbGTR7cAdmMz",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1625,
+   "output_tokens": 57
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpNo8qJNafcv3omGHE4",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1637,
+   "output_tokens": 112
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpP1J4iMbt1VhM2gWKk",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 118
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpPCQYjKKrdSoDYdgGj",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1616,
+   "output_tokens": 78
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpPKedPwxLbMf4JUvAr",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1627,
+   "output_tokens": 93
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpPUsWc75gHpYdenn1i",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1640,
+   "output_tokens": 93
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpPmyAM2RfYqYqLXT75",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 99
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpPvHUM6UJoMJjZrBit",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1624,
+   "output_tokens": 60
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpQ4CxmsezPdAjg358f",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 146
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpQEsQhNkCFnRL2Whz1",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1629,
+   "output_tokens": 72
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpQQuv7WkxtXrGBXJ8i",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1627,
+   "output_tokens": 131
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpQcnJ3f7sJYQ89kuqt",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 173
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpQtDUYpMZQptXQuEqW",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1619,
+   "output_tokens": 77
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpR7FZ1hfHJy6hdZ7LP",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 275
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpRRnmyP9tXC2FHRjSG",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 81
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpRbgacHwu1R7yaKZ3A",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 170
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpRsutxRzRoq9zn2M9S",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1631,
+   "output_tokens": 238
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpSAigZwJ9ErJsSvTEE",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 152
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpSXHwP5UgkKEAiT2ri",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1616,
+   "output_tokens": 149
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpSjfL3yUD1NMpp69oY",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1624,
+   "output_tokens": 60
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpSsCGkb3zhtrUCtA3R",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1637,
+   "output_tokens": 83
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpT2PQWDeJsYzYgPyQa",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 170
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpTFo4hgPcuuHGQtY6r",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 87
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpTQqmfL4Sevs5PU3FG",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 124
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpTbeQy14gZekcJtn4M",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 99
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpTmitRCMfvwYaLdnTb",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1634,
+   "output_tokens": 153
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpU19XjasM5fYUA2phQ",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1636,
+   "output_tokens": 77
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpUJxLpWzx94onKQQXu",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1623,
+   "output_tokens": 105
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpUWdpBveYCUeLX2XVt",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1626,
+   "output_tokens": 123
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpUhWfDbawb5SqQZpiy",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1633,
+   "output_tokens": 96
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpUrEXoJLRwCE9pbknJ",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1626,
+   "output_tokens": 69
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpUzhkwEkBJT3VQKuFy",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1623,
+   "output_tokens": 165
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpVGGPSiRJZ7ryiy7Xi",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1635,
+   "output_tokens": 75
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpVPxzvXvn9ZKXHTHUd",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1630,
+   "output_tokens": 128
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpVbeicsxcyYm1NyaBs",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1632,
+   "output_tokens": 130
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpVpkktQk3bNbJ71aRR",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1621,
+   "output_tokens": 54
+  },
+  {
+   "modelo_pedido": "claude-opus-5",
+   "modelo_devolvido": "claude-opus-5",
+   "id": "msg_011ChGpVxt9biGbTXrXFuKPg",
+   "max_tokens": 2048,
+   "output_config": {
+    "effort": "low"
+   },
+   "thinking": null,
+   "temperature": null,
+   "stop_reason": "end_turn",
+   "input_tokens": 1631,
+   "output_tokens": 147
+  }
+ ]
+}
