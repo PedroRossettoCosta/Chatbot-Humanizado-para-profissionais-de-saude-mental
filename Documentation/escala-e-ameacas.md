@@ -102,7 +102,28 @@ ChromaDB num volume local, Postgres sem backup automático.
 ## 4. Custo do modelo
 
 - Custo por profissional ativa (triagem e resposta), que precisa caber
-  no preço da assinatura.
+  no preço da assinatura. Valores confirmados em 21/11/2026 pela tabela
+  `llm_usage` (13/10 a 05/11, 9 conversas de teste, banco local):
+  **US$ 0,0108 por mensagem na triagem** e **US$ 0,0098 por resposta**.
+  Os dois são médias; na resposta, as chamadas da mesma resposta
+  (consulta à agenda) contam juntas. Substituem os US$ 0,0103 e
+  US$ 0,0119 da versão anterior. Detalhes e conta em
+  [2026-11-21-custo-isolamento-t4.md](resultados-testes/2026-11-21-custo-isolamento-t4.md).
+  Aplicados à estimativa do consultório cheio (seção 1: 350 mensagens e
+  280 respostas por mês), dão uma ordem de grandeza, não um custo
+  medido:
+
+  | | 1 profissional | 50 profissionais (por profissional) |
+  |---|---|---|
+  | Triagem: 350 × 0,0108 | US$ 3,78 | US$ 3,78 |
+  | Respostas: 280 × 0,0098 | US$ 2,74 | US$ 2,74 |
+  | Railway | US$ 5,00 (Hobby) | US$ 0,40 (Pro ÷ 50) |
+  | Vercel | US$ 0 (Hobby) | US$ 0,40 (Pro ÷ 50) |
+  | **Total por mês** | **US$ 11,52** | **US$ 7,32** (US$ 366,00 para as 50) |
+
+  Com os valores antigos (0,0103 e 0,0119), o artigo dizia US$ 11,93 e
+  US$ 7,73. WhatsApp (dentro da franquia) e e-mail (plano grátis da
+  Brevo) entram a US$ 0.
 - Limites de requisição da Anthropic por nível de conta.
 - Cache de prompt: o perfil da profissional se repete em toda mensagem.
 - Teto de uso **por profissional**, além do que já existe por contato,
