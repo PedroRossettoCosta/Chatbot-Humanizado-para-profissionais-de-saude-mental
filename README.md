@@ -7,7 +7,7 @@
 Assistente virtual humanizado para o atendimento inicial de
 profissionais autônomos de saúde mental (psicólogas, psicanalistas).
 
-O SelenIA responde às primeiras mensagens de quem procura a profissional:
+A SelenIA responde às primeiras mensagens de quem procura a profissional:
 tira dúvidas sobre a abordagem e o funcionamento do atendimento, ajuda
 no pré-agendamento e — o ponto mais importante — reconhece sinais de
 risco à vida e encaminha imediatamente aos serviços de emergência.
@@ -20,6 +20,11 @@ risco à vida e encaminha imediatamente aos serviços de emergência.
 Trabalho de Conclusão de Curso — Engenharia da Computação, Ibmec Barra
 da Tijuca. Autor: Pedro Henrique Rossetto Costa. Orientador: Thiago
 Souza.
+
+Os resultados do artigo correspondem à versão marcada com a tag
+`artigo-tcc` (21/11/2026, 318 testes). Depois dela, entraram ajustes na
+agenda (sessão online ou presencial ao confirmar e sessões da pessoa na
+resposta), com testes próprios.
 
 ---
 
@@ -203,6 +208,10 @@ perfil e regras da SelenIA, handoff e "Em consulta", alerta por e-mail).
 | [Requisitos e MVP](Documentation/levantamento-requisitos-mvp.md) | Features priorizadas, requisitos funcionais, critérios de triagem |
 | [Plano do MVP](Documentation/planejamento-mvp-9out.md) | Cronograma semanal, escopo congelado, riscos |
 | [Telas web e mobile](Documentation/descricao-app-web-mobile.md) | Descrição das interfaces |
+| [Modelo de ameaças](Documentation/modelo-de-ameacas.md) | Ameaças, controles e testes que os verificam |
+| [Caminho dos dados](Documentation/mapa-caminho-dos-dados.md) | Por onde passam os dados e onde ficam |
+| [Resultados dos testes](Documentation/resultados-testes/) | Resultados das avaliações citadas no artigo |
+| [Manual de rotulagem](Documentation/rotulagem-manual.md) | Manual usado pelas avaliadoras |
 
 ## Começando rápido
 
@@ -294,8 +303,7 @@ Funcionando:
 - **WhatsApp**: fotos, áudios e documentos aparecem na conversa do painel (buscados na Meta na hora, sem guardar). Webhook com assinatura conferida, triagem assim que a
   mensagem chega, espera de alguns segundos para juntar mensagens
   quebradas, resposta pela API da Meta, resposta do painel enviada ao
-  WhatsApp e túnel fixo (ngrok) que só deixa passar o webhook. Falta
-  publicar o app da Meta para chegarem mensagens reais.
+  WhatsApp.
 - **Agenda**: a profissional conecta o Google Agenda pelo painel e
   informa o horário de atendimento; a SelenIA oferece até 3 horários
   livres e reserva provisoriamente o que a pessoa escolher; a
@@ -312,7 +320,8 @@ Funcionando:
 - **Custo medido**: tokens de cada chamada ao modelo gravados sem
   conteúdo, resumo em dólar e reais (`scripts/custo.py`), e cache da
   parte fixa do prompt.
-- **Backup** do banco com restauração testada (`scripts/backup.py`).
+- Backup manual do banco (`scripts/backup.py`), com restauração testada
+  no banco local; não há backup automático na produção.
 - **Testes de comportamento** no modelo real: 22 ataques de prompt
   injection e 31 mensagens sensíveis, com relatório
   (`scripts/avaliar_respostas.py`); se o modelo recusar a resposta, a
@@ -323,8 +332,7 @@ Funcionando:
 Em construção, na ordem do
 [plano do MVP](Documentation/planejamento-mvp-9out.md):
 
-- Publicação do app na Meta (política de privacidade) e teste com mensagens reais
-- Textos fixos da agenda aprovados pela Marília
+- Textos fixos da agenda aprovados pela profissional participante
 
 ## Estrutura do repositório
 
