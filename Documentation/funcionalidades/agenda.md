@@ -33,6 +33,12 @@ procurar atendimento, e a SelenIA não sabia responder.
   confirmação, para ela saber onde entrar no dia e horário marcados.
   Remarcar troca o link (a data antiga sai da agenda com o dela);
   cancelar avisa que o link não vale mais.
+- **Online ou presencial (20/11/2026, Pedro):** ao confirmar, a
+  profissional escolhe na caixa **Sessão online (enviar link do Meet)**,
+  marcada por padrão. Desmarcada, a sessão é presencial: não se cria
+  link e a mensagem diz "A sessão é presencial." Antes, toda sessão
+  confirmada ganhava Meet, e a mensagem dizia "online" até para quem
+  atende no consultório.
 - **Permissão mínima para ler (28/09/2026):** só livre/ocupado. Para
   oferecer horário basta saber o que está ocupado; o nome de um evento
   pode ser o de um paciente e não tem por que chegar ao sistema.
@@ -110,10 +116,13 @@ A tela tem três abas: **Calendário**, **Pedidos de horário** e
    Aguardando**, com o número no menu, e você recebe um e-mail. Clique
    em **Confirmar horário** ou **Recusar**. A pessoa recebe a resposta
    pela conversa; se a janela de 24h do WhatsApp já tiver fechado, a
-   tela avisa para você falar com ela. Ao confirmar, o evento ganha um
-   link do **Google Meet**, que vai na mesma mensagem; na sessão
-   confirmada, **Abrir Google Meet ↗** abre a sala. Você é a
-   organizadora: no horário, entre pelo link e admita a pessoa.
+   tela avisa para você falar com ela. Com **Sessão online (enviar link
+   do Meet)** marcada (o padrão), o evento ganha um link do **Google
+   Meet**, que vai na mesma mensagem; na sessão confirmada, **Abrir
+   Google Meet ↗** abre a sala. Você é a organizadora: no horário, entre
+   pelo link e admita a pessoa. Para uma sessão presencial, desmarque a
+   caixa antes de confirmar: sem link, e a mensagem diz que é
+   presencial.
 7. Para trocar de conta, **Trocar de conta**; para tirar o acesso,
    **Desconectar**.
 
@@ -247,6 +256,8 @@ Enviados à pessoa sem passar pelo modelo (`services/appointments.py`).
 | Recusa uma troca | "{nome} não vai conseguir atender em {quinta, 01/10 às 11:00}. Sua sessão de {terça, 29/09 às 10:00} continua marcada. Se quiser, posso ver outros horários com você." |
 | Junto da confirmação, com o link do Meet | "A sessão é online, pelo Google Meet. No dia e horário marcados, é só entrar por este link: {link}" |
 | Junto da troca confirmada, com o link novo | "A sessão é online, pelo Google Meet. O link da data anterior não vale mais: no dia e horário novos, é só entrar por este link: {link}" |
+| Junto da confirmação presencial ("Sessão online" desmarcada) | "A sessão é presencial." |
+| Junto da troca confirmada como presencial, se a sessão antiga tinha Meet | "A sessão é presencial. O link do Google Meet da data anterior não vale mais." |
 | Confirma um cancelamento | "{nome} confirmou o cancelamento da sua sessão de {terça, 29/09 às 10:00}." Se a sessão tinha Meet, acrescenta: "O link do Google Meet desta sessão não vale mais." |
 | Mantém a sessão (recusa o cancelamento) | "{nome} não confirmou o cancelamento: sua sessão de {terça, 29/09 às 10:00} continua marcada. Se precisar, fale direto com {nome} por aqui." |
 
@@ -335,9 +346,11 @@ minutos.
   Google não entram na conta, só ocupam o horário.
 - Pelo calendário do painel ainda não dá para mover nem apagar eventos;
   isso é feito no Google Agenda.
-- **Meet em toda sessão confirmada:** ainda não há opção para quem
-  atende presencialmente; a mensagem diz que a sessão é online. Texto
-  pendente de aprovação da Marília.
+- **Online ou presencial é escolhido a cada confirmação:** a caixa
+  vem sempre marcada (online), sem lembrar a escolha anterior nem um
+  padrão no perfil. A mensagem presencial não leva endereço: a
+  profissional manda pela conversa, se precisar. Textos do Meet e da
+  sessão presencial pendentes de aprovação da Marília.
 - Se o Google não criar o link (falha ou demora), a sessão é confirmada
   mesmo assim e a mensagem sai sem link; a profissional manda o link
   pela conversa. Sessões confirmadas antes de 15/11/2026 e as marcadas
@@ -358,8 +371,9 @@ mesma pessoa no mesmo dia, uma sessão por dia com vários dias
 permitidos, teto de pedidos pendentes por pessoa, remarcar e cancelar (confirmar, recusar, regras, desistência), pedido vencido, limite por dia, confirmar e recusar com e
 sem janela do WhatsApp, e-mail, ferramenta só com a permissão de
 eventos, sessão e compromisso marcados pelo painel, calendário da
-semana, link do Meet na confirmação, na troca e no cancelamento, e
-confirmação sem link quando o Google falha). `test_calendar.py` cobre o
+semana, link do Meet na confirmação, na troca e no cancelamento,
+confirmação sem link quando o Google falha, e confirmação presencial,
+nova ou de troca, sem Meet). `test_calendar.py` cobre o
 pedido do Meet ao Google e a leitura do link com a sala ainda pendente.
 
 Manual:
@@ -375,8 +389,11 @@ Manual:
    confirmação aparece na conversa (tela Conversas), com o link do
    Meet. O evento no Google mostra "Participar com o Google Meet", e o
    pedido confirmado tem **Abrir Google Meet ↗**.
-6. Repita e clique em **Recusar**: o evento sai da agenda.
-7. Peça de novo o mesmo horário: ele não aparece mais (se confirmado).
+6. Repita, desmarque **Sessão online (enviar link do Meet)** e
+   confirme: a mensagem termina com "A sessão é presencial.", sem link,
+   e o evento no Google não tem Meet.
+7. Repita e clique em **Recusar**: o evento sai da agenda.
+8. Peça de novo o mesmo horário: ele não aparece mais (se confirmado).
 
 ## Histórico
 - 28/09/2026: primeira versão (conexão pelo painel, horário de
@@ -410,6 +427,11 @@ Manual:
 - 15/11/2026: pedir outro horário da lista num dia com sessão
   confirmada vira pedido de troca (`pedir_remarcacao`), não aviso à
   profissional, mesmo quando a pessoa diz "marcar".
+- 20/11/2026: caixa **Sessão online (enviar link do Meet)** ao
+  confirmar. Desmarcada, a sessão é presencial: sem Meet, e a mensagem
+  diz "A sessão é presencial." (`approve(..., online=)`, corpo
+  `{"online": false}` em `POST /calendar/appointments/{id}/approve`;
+  sem corpo continua online).
 - 22/11/2026: as sessões e os pedidos da pessoa vão em toda resposta,
   lidos do banco, na seção "SESSÕES E PEDIDOS DESTA PESSOA AGORA"; a
   SelenIA só diz a situação de um pedido com base nela (caso de 21/11:

@@ -306,6 +306,35 @@ def test_a_meet_failure_does_not_stop_the_confirmation(client, db, professional,
     assert sent.startswith("Sua sessão com Ana Reserva está confirmada") and "meet.google.com" not in sent
 
 
+def test_in_person_confirmation_has_no_meet_link(client, db, professional, google, no_real_whatsapp):
+    # "Sessão online" desmarcado no painel (20/11/2026): nada de Meet.
+    conversation = _conversation(db, professional)
+    booking = appointments.request(db, professional, conversation, _next_tuesday_code(), "Beatriz")
+
+    response = client.post(f"/calendar/appointments/{booking.appointment_id}/approve", json={"online": False})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "confirmed" and body["meet_link"] is None
+    assert google.meet_requests == []
+    sent = _last_text(no_real_whatsapp)
+    assert sent.startswith("Sua sessão com Ana Reserva está confirmada")
+    assert sent.endswith(appointments.IN_PERSON_MESSAGE) and "meet.google.com" not in sent
+
+
+def test_in_person_reschedule_of_an_online_session_says_the_old_link_is_gone(
+    client, db, professional, google, no_real_whatsapp
+):
+    conversation, old = _confirmed_session(client, db, professional)
+    assert old.meet_link
+    booking = appointments.request_reschedule(db, professional, conversation, _next_tuesday_code(), _next_code(3))
+    requests_before = len(google.meet_requests)
+
+    response = client.post(f"/calendar/appointments/{booking.appointment_id}/approve", json={"online": False})
+    assert response.status_code == 200 and response.json()["meet_link"] is None
+    assert len(google.meet_requests) == requests_before
+    assert _last_text(no_real_whatsapp).endswith(appointments.IN_PERSON_RESCHEDULE_MESSAGE)
+
+
 def test_reject_frees_the_slot_even_with_the_whatsapp_window_closed(client, db, professional, google, no_real_whatsapp):
     conversation = _conversation(db, professional)
     booking = appointments.request(db, professional, conversation, _next_tuesday_code(), "Beatriz")

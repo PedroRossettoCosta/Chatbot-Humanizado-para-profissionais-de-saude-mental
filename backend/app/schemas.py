@@ -389,6 +389,12 @@ class FreeSlot(BaseModel):
     label: str
 
 
+class AppointmentApprove(BaseModel):
+    # Sessão online (cria o link do Meet) ou presencial. Sem corpo = online,
+    # como era antes de 20/11/2026.
+    online: bool = True
+
+
 class AppointmentOut(BaseModel):
     id: str
     # tentative, confirmed, rejected, expired ou cancelled.

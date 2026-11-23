@@ -62,8 +62,20 @@ grátis por mês**; a cobrança começa na 1.001ª, e só com forma de
 pagamento cadastrada (sem ela, o que passa de 1.000 não é enviado).
 Contam as respostas da SelenIA, as da profissional pelo painel e os
 textos fixos (aviso de IA, emergência, confirmações, link do Meet). Com
-um número por profissional, um consultório cheio (cerca de 280 respostas
-por mês, mais os textos fixos) fica dentro da franquia. Em escala, cada
+um número por profissional, um consultório cheio fica dentro da
+franquia.
+
+**Estimativa de um consultório cheio** (a mesma do TCC; é uma
+suposição, não uma medição de uso real):
+
+- 25 pacientes em acompanhamento e 10 primeiros contatos por mês;
+- cerca de 10 mensagens por pessoa no mês: 25 × 10 + 10 × 10 =
+  **350 mensagens recebidas**;
+- cerca de 80% delas recebem resposta da SelenIA: **280 respostas**;
+- mais os textos fixos, que também contam na franquia.
+
+Mesmo que o volume real fosse o dobro, ainda caberia nas 1.000
+mensagens grátis. Em escala, cada
 profissional precisa de forma de pagamento na própria conta para não
 travar no limite. Conferir a tabela vigente antes de qualquer plano de
 preço.

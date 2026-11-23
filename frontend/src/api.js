@@ -95,7 +95,8 @@ export const api = {
   listAppointments: (slug) => request(`/calendar/${slug}/appointments`),
   getEvents: (slug, start) => request(`/calendar/${slug}/events?start=${start}`),
   createEvent: (slug, payload) => request(`/calendar/${slug}/events`, { method: "POST", body: payload }),
-  approveAppointment: (id) => request(`/calendar/appointments/${id}/approve`, { method: "POST" }),
+  approveAppointment: (id, online = true) =>
+    request(`/calendar/appointments/${id}/approve`, { method: "POST", body: { online } }),
   rejectAppointment: (id) => request(`/calendar/appointments/${id}/reject`, { method: "POST" }),
   getWhatsApp: (slug) => request(`/professionals/${slug}/whatsapp`),
   startWhatsApp: (slug, number, displayName, method) =>

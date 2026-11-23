@@ -95,7 +95,9 @@ pré-agendamento. Nada é confirmado sem a profissional. No painel:
    a etiqueta "Aguardando você".
 2. Clique em **✓ Confirmar horário** (ou em **Recusar**).
 3. Depois da confirmação, a pessoa recebe no WhatsApp a mensagem fixa
-   de confirmação, com o link do Google Meet.
+   de confirmação. Se a caixa **Sessão online (enviar link do Meet)**
+   estiver marcada (o padrão), a mensagem leva o link do Google Meet;
+   desmarcada, diz que a sessão é presencial.
 
 **c) Falar com a profissional ou pedir desconto.** A SelenIA não decide
 esses casos. Ela avisa que a profissional vai responder (no caso do
@@ -300,8 +302,9 @@ Funcionando:
   profissional confirma ou recusa no painel (24h de validade), e a
   pessoa recebe a resposta pela conversa. Remarcar e cancelar também
   vão pela conversa, sempre como pedido que a profissional confirma.
-  Ao confirmar, o evento ganha um link do Google Meet, enviado à pessoa
-  com a confirmação (um link novo na troca).
+  Ao confirmar, a profissional escolhe se a sessão é online (o evento
+  ganha um link do Google Meet, enviado à pessoa com a confirmação; um
+  link novo na troca) ou presencial (sem link).
 - **Limites por pessoa**: até 4 pedidos de horário aguardando
   confirmação e 50 mensagens por hora; acima disso, a SelenIA pausa as
   respostas àquela pessoa (a triagem por regras continua) e marca a

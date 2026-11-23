@@ -72,6 +72,11 @@ MEET_RESCHEDULE_MESSAGE = (
     "no dia e horário novos, é só entrar por este link: {link}"
 )
 MEET_CANCELLED_MESSAGE = "O link do Google Meet desta sessão não vale mais."
+# Vai junto da confirmação quando a profissional desmarca "Sessão online"
+# no painel: sem link do Meet. Decisão do Pedro em 20/11/2026.
+IN_PERSON_MESSAGE = "A sessão é presencial."
+# Troca confirmada como presencial de uma sessão que tinha Meet.
+IN_PERSON_RESCHEDULE_MESSAGE = "A sessão é presencial. O link do Google Meet da data anterior não vale mais."
 REJECTED_MESSAGE = (
     "{name} não vai conseguir atender em {when}. "
     "Se quiser, posso ver outros horários com você."
@@ -436,8 +441,13 @@ def _awaiting_cancel(appointment: models.Appointment) -> bool:
     return appointment.status == AppointmentStatus.CONFIRMED and appointment.cancel_requested_at is not None
 
 
-def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
-    """Confirma o que está pendente: horário novo, troca ou cancelamento."""
+def approve(db: Session, appointment: models.Appointment, online: bool = True) -> models.Appointment:
+    """Confirma o que está pendente: horário novo, troca ou cancelamento.
+
+    `online`: a profissional escolhe no painel se a sessão é online (cria
+    o link do Meet e manda à pessoa) ou presencial (sem link). Não vale
+    para cancelamento.
+    """
     db.refresh(appointment)
     professional = appointment.professional
     if _awaiting_cancel(appointment):
@@ -461,7 +471,8 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
         calendar.update_event(connection, appointment.calendar_event_id, _event_body(appointment, confirmed=True))
     except calendar.CalendarError as err:
         raise AppointmentError(str(err))
-    _add_meet(connection, appointment)
+    if online:
+        _add_meet(connection, appointment)
     now = models._now()
     appointment.status = AppointmentStatus.CONFIRMED
     appointment.decided_at = now
@@ -485,6 +496,8 @@ def approve(db: Session, appointment: models.Appointment) -> models.Appointment:
     if appointment.meet_link:
         template = MEET_RESCHEDULE_MESSAGE if old is not None and old.meet_link else MEET_MESSAGE
         message += "\n\n" + template.format(link=appointment.meet_link)
+    elif not online:
+        message += "\n\n" + (IN_PERSON_RESCHEDULE_MESSAGE if old is not None and old.meet_link else IN_PERSON_MESSAGE)
     appointment.contact_notified = _tell_contact(db, appointment, message)
     db.commit()
     return appointment

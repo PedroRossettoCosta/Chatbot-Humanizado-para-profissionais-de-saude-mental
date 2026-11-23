@@ -139,10 +139,16 @@ def _get_appointment(db: Session, appointment_id: str, user: models.User) -> mod
 
 
 @router.post("/appointments/{appointment_id}/approve", response_model=schemas.AppointmentOut)
-def approve(appointment_id: str, db: Session = Depends(get_db), user: models.User = Depends(auth.current_user)):
+def approve(
+    appointment_id: str,
+    payload: schemas.AppointmentApprove | None = None,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.current_user),
+):
     appointment = _get_appointment(db, appointment_id, user)
+    online = payload.online if payload is not None else True
     try:
-        appointments.approve(db, appointment)
+        appointments.approve(db, appointment, online=online)
     except appointments.AppointmentError as err:
         raise HTTPException(status_code=409, detail=str(err))
     return _appointment_out(appointment)

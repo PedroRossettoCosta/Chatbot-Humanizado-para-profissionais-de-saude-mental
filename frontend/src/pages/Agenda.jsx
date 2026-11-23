@@ -83,6 +83,8 @@ function RequestBox({ item }) {
 // confirmar ou recusar.
 function AppointmentCard({ item, busy, onDecide }) {
   const cancelAsked = item.kind === "cancel" && item.awaiting_decision;
+  // Online cria o link do Meet e manda à pessoa; presencial, não.
+  const [online, setOnline] = useState(true);
   const [tone, label] = cancelAsked
     ? ["danger", "Pediu cancelamento"]
     : item.kind === "reschedule" && item.status === "tentative"
@@ -129,10 +131,14 @@ function AppointmentCard({ item, busy, onDecide }) {
           <Link to={`/conversas/${item.conversation_id}`} className="text-sm font-semibold text-primary">
             Ver conversa →
           </Link>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate">
+            <input type="checkbox" checked={online} onChange={(e) => setOnline(e.target.checked)} />
+            Sessão online (enviar link do Meet)
+          </label>
           <Button variant="ghost" onClick={() => onDecide(item, "reject")} disabled={busy}>
             Recusar
           </Button>
-          <Button onClick={() => onDecide(item, "approve")} disabled={busy}>
+          <Button onClick={() => onDecide(item, "approve", online)} disabled={busy}>
             {item.kind === "reschedule" ? "✓ Confirmar troca" : "✓ Confirmar horário"}
           </Button>
         </div>
@@ -248,7 +254,7 @@ export default function Agenda() {
     return () => clearInterval(id);
   }, [loadRequests]);
 
-  async function decide(item, action) {
+  async function decide(item, action, online = true) {
     const question =
       item.kind === "cancel" && item.awaiting_decision
         ? action === "approve"
@@ -263,7 +269,7 @@ export default function Agenda() {
     setDeciding(item.id);
     setError("");
     try {
-      if (action === "approve") await api.approveAppointment(item.id);
+      if (action === "approve") await api.approveAppointment(item.id, online);
       else await api.rejectAppointment(item.id);
     } catch (err) {
       setError(err.message);
